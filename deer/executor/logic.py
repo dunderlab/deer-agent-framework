@@ -1,17 +1,21 @@
 import ast
 import math
-from typing import Any, Mapping
+from typing import Any, Dict, Mapping
 
 
 class UnsafeLogicError(ValueError):
-    """Raised when a logic expression contains unsupported or unsafe syntax."""
+    """Raised when the code contains disallowed or dangerous syntax."""
 
 
+# Allowed nodes to permit mathematical logic, strings, and basic assignments
 _ALLOWED_NODE_TYPES = (
-    ast.Expression,
-    ast.Constant,
-    ast.Name,
+    ast.Module,
+    ast.Assign,
+    ast.Expr,
+    ast.Store,
     ast.Load,
+    ast.Name,
+    ast.Constant,
     ast.BinOp,
     ast.UnaryOp,
     ast.Add,
@@ -42,83 +46,100 @@ _ALLOWED_NODE_TYPES = (
     ast.FormattedValue,
 )
 
-
-_ALLOWED_FUNCTIONS = {
+_SAFE_GLOBALS = {
+    "__builtins__": {},
+    "pi": math.pi,
+    "e": math.e,
     "abs": abs,
     "min": min,
     "max": max,
     "round": round,
+    "pow": pow,
+    "sum": sum,
+    "sqrt": math.sqrt,
+    "log": math.log,
+    "exp": math.exp,
+    "ceil": math.ceil,
+    "floor": math.floor,
+    "sin": math.sin,
+    "cos": math.cos,
+    "tan": math.tan,
     "str": str,
     "int": int,
     "float": float,
     "len": len,
+    "bool": bool,
+    "list": list,
+    "dict": dict,
+    "enumerate": enumerate,
+    "zip": zip,
+    "range": range,
 }
 
 
-_ALLOWED_NAMES = {
-    "pi": math.pi,
-}
+def _is_safe_variable_name(name: str) -> bool:
+    return name.isidentifier() and not name.startswith("_")
 
 
 def evaluate_logic(
-    expression: str,
+    logic_code: str,
     *,
     input_value: Any,
     params: Mapping[str, Any],
     context: Mapping[str, Any],
 ) -> Any:
-    """Evaluate a restricted Python expression.
+    """Safely executes Python code and returns the value of 'result'."""
 
-    The expression must be a single expression, not statements.
-    """
+    # 1. Parse and Validate AST
+    try:
+        tree = ast.parse(logic_code, mode="exec")
+    except SyntaxError as e:
+        raise UnsafeLogicError(f"Syntax error in logic: {e}")
 
-    tree = ast.parse(expression, mode="eval")
     _validate_ast(tree)
 
-    scope = {
-        **_ALLOWED_NAMES,
-        **_ALLOWED_FUNCTIONS,
+    # 2. Prepare Scope
+    local_scope = {
         "input": input_value,
         "params": dict(params),
         "context": dict(context),
     }
 
-    compiled = compile(tree, filename="<step.logic>", mode="eval")
-    return eval(compiled, {"__builtins__": {}}, scope)
+    # Flatten dictionaries for direct access
+    if isinstance(input_value, dict):
+        for key, value in input_value.items():
+            if _is_safe_variable_name(key):
+                local_scope[key] = value
+
+    for key, value in params.items():
+        if _is_safe_variable_name(key):
+            local_scope[key] = value
+
+    # 3. Execute
+    try:
+        compiled = compile(tree, filename="<step.logic>", mode="exec")
+        exec(compiled, _SAFE_GLOBALS, local_scope)
+    except Exception as e:
+        raise RuntimeError(f"Runtime error in logic execution: {e}")
+
+    if "result" not in local_scope:
+        raise UnsafeLogicError("Logic must assign a value to the 'result' variable.")
+
+    return local_scope["result"]
 
 
 def _validate_ast(tree: ast.AST) -> None:
     for node in ast.walk(tree):
         if not isinstance(node, _ALLOWED_NODE_TYPES):
-            raise UnsafeLogicError(
-                f"Unsupported syntax in logic expression: {type(node).__name__}"
-            )
+            raise UnsafeLogicError(f"Disallowed syntax: {type(node).__name__}")
 
-        if isinstance(node, ast.Call):
-            if not isinstance(node.func, ast.Name):
+        # Do not allow access to private attributes (._secret)
+        if isinstance(node, ast.Attribute) and node.attr.startswith("_"):
+            raise UnsafeLogicError("Access to private attributes is not allowed.")
+
+        # Do not allow assignments to protected variables
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store):
+            if node.id.startswith("_") or node.id in _SAFE_GLOBALS:
                 raise UnsafeLogicError(
-                    "Only direct calls to allowed functions are supported."
+                    f"Cannot assign a value to protected variable: {node.id}"
                 )
-
-            if node.func.id not in _ALLOWED_FUNCTIONS:
-                raise UnsafeLogicError(f"Unsupported function call: {node.func.id}")
-
-        if isinstance(node, ast.Attribute):
-            if node.attr.startswith("_"):
-                raise UnsafeLogicError(
-                    "Private attributes are not allowed in logic expressions."
-                )
-
-        if isinstance(node, ast.Name):
-            allowed_names = (
-                set(_ALLOWED_NAMES)
-                | set(_ALLOWED_FUNCTIONS)
-                | {
-                    "input",
-                    "params",
-                    "context",
-                }
-            )
-
-            if node.id not in allowed_names:
-                raise UnsafeLogicError(f"Unknown name in logic expression: {node.id}")
