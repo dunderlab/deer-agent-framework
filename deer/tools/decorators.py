@@ -55,7 +55,7 @@ class MethodTool(Tool):
         super().__init__()
 
     def run(self, value: Any, params: dict[str, Any] | None = None) -> Any:
-        return self._method(params=params)
+        return self._method(**params)
 
 
 def is_tool_method(obj: Any) -> bool:
@@ -87,13 +87,17 @@ def _build_tool_metadata(
     #     type_hints=type_hints,
     #     parameter_name="value",
     # )
-    params_type = _required_type_hint(
-        func=func,
-        signature=signature,
-        type_hints=type_hints,
-        parameter_name="params",
-    )
-    return_type = type_hints.get("return", _MISSING)
+    # params_type = _required_type_hint(
+    #     func=func,
+    #     signature=signature,
+    #     type_hints=type_hints,
+    #     # parameter_name="params",
+    # )
+    #
+    return_type = type_hints.pop("return")
+    params_type = type_hints
+
+    # return_type = type_hints.get("return", _MISSING)
 
     if return_type is _MISSING:
         raise TypeError(
@@ -122,22 +126,26 @@ def _required_type_hint(
     func: Callable[..., Any],
     signature: inspect.Signature,
     type_hints: dict[str, Any],
-    parameter_name: str,
+    # parameter_name: str,
 ) -> Any:
-    if parameter_name not in signature.parameters:
-        raise TypeError(
-            f"Tool method {func.__qualname__} must declare a '{parameter_name}' "
-            "parameter."
-        )
+    # if parameter_name not in signature.parameters:
+    #     raise TypeError(
+    #         f"Tool method {func.__qualname__} must declare a '{parameter_name}' "
+    #         "parameter."
+    #     )
 
-    type_hint = type_hints.get(parameter_name, _MISSING)
+    type_hints.pop("return")
 
-    if type_hint is _MISSING:
-        raise TypeError(
-            f"Tool method {func.__qualname__} must type '{parameter_name}'."
-        )
+    parameter_name = "1"
 
-    return type_hint
+    # type_hint = type_hints.get(parameter_name, _MISSING)
+    #
+    # if type_hint is _MISSING:
+    #     raise TypeError(
+    #         f"Tool method {func.__qualname__} must type '{parameter_name}'."
+    #     )
+
+    return type_hints
 
 
 def _build_description(
@@ -158,13 +166,16 @@ def _build_description(
 
 
 def _describe_type(type_hint: Any) -> str:
-    if _is_typed_dict(type_hint):
-        return _describe_structured_fields(type_hint.__annotations__)
+    # if _is_typed_dict(type_hint):
+    #     return _describe_structured_fields(type_hint.__annotations__)
 
     if _is_pydantic_model(type_hint):
         return _describe_structured_fields(
             {name: field.annotation for name, field in type_hint.model_fields.items()}
         )
+
+    if isinstance(type_hint, dict):
+        return _describe_args_fields(type_hint)
 
     origin = get_origin(type_hint)
     args = get_args(type_hint)
@@ -198,6 +209,18 @@ def _describe_structured_fields(fields: dict[str, Any]) -> str:
         return "object with no declared fields"
 
     return "object with fields " + ", ".join(field_descriptions)
+
+
+def _describe_args_fields(fields: dict[str, Any]) -> str:
+    field_descriptions = [
+        f"'{field_name}' ({_describe_type(field_type)})"
+        for field_name, field_type in fields.items()
+    ]
+
+    if not field_descriptions:
+        return "method with no declared fields"
+
+    return "method with parameters " + ", ".join(field_descriptions)
 
 
 def _type_name(type_hint: Any) -> str:
