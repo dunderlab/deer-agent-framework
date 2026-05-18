@@ -62,40 +62,65 @@ RESPONSE_IMPROVEMENT_PROMPT = """
 Response to process:
 {response}
 
-Transformation rules:
-- Preserve the original semantic content.
-- Preserve the original JSON structure unless a simplification rule explicitly applies.
-- Do not invent, remove, or reinterpret information.
+Objective:
+Transform the response into the flattest and most user-readable textual representation possible.
 
-JSON simplification rule:
-- If the response is a JSON object containing exactly one top-level key whose value is user-facing textual content, extract and return only that value.
-- Ignore the wrapper key entirely.
-- This simplification applies ONLY when the single value is plain textual content intended for end-user display.
-- Do NOT apply simplification to:
-  - executable logic,
-  - tool payloads,
-  - structured objects,
-  - arrays,
-  - machine-readable data,
-  - or configuration objects.
+Extraction rules:
+- If the response is a JSON object containing a single meaningful textual value, extract and return only that value.
+- Ignore wrapper keys, metadata containers, and unnecessary structural nesting.
+- Prefer direct textual output over serialized structures whenever possible.
 
 Formatting rules:
-- Only user-facing natural language content may be formatted.
-- All such content MUST use the "{format_response}" format.
+- All user-facing text MUST use the "{format_response}" format.
+
+Supported formats:
+- "plaintext": plain unformatted text
+- "markdown": GitHub-flavored Markdown
 
 Hard constraints:
 - Do NOT wrap output in markdown code fences.
-- Do NOT alter executable logic or structured machine-readable content.
-- Do NOT apply formatting to JSON syntax, keys, tool identifiers, or serialized structures.
+- Do NOT expose unnecessary JSON structure.
+- Do NOT include machine-oriented fields unless required for meaning.
+- Preserve the original semantic meaning of the response.
 
-Supported formats:
-- "plaintext": unformatted raw text
-- "markdown": GitHub-flavored Markdown
+Exceptions:
+- Preserve structured data only when flattening would lose essential information.
+- Never alter executable logic or code expressions.
 
 Output requirement:
-Return the transformed response with only the allowed simplifications and formatting applied.
+Return the simplest, flattest, and most readable end-user response possible.
 """
 
+EXPLAIN_ERROR_PROMPT = """
+Execution error:
+{error}
+
+Available tools:
+{tools}
+
+Analysis task:
+Determine whether the failure was caused by one of the following:
+
+1. Missing capability
+- The required operation cannot be performed because no suitable tool exists.
+
+2. Incorrect tool selection
+- A valid tool exists, but the wrong tool was selected.
+
+3. Invalid tool usage
+- A valid tool exists, but it was invoked with invalid arguments, invalid sequencing, or incompatible data.
+
+4. Logic or execution failure
+- The failure originated from executable logic, runtime behavior, or tool-side execution.
+
+Requirements:
+- Analyze the error using ONLY the available tools listed above.
+- Do NOT invent capabilities that are not explicitly available.
+- Explicitly state whether the system lacks the required tooling to complete the task.
+- If a missing capability is detected, identify the exact missing operation.
+- If a valid tool exists, identify which tool should have been used and why.
+- Keep the explanation concise, deterministic, and technical.
+"""
 
 BASE_PLANNER_PROMPT = """
 System role:
