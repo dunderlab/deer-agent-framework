@@ -1,3 +1,7 @@
+from traceback import extract_tb
+
+from pip._internal.utils import logging
+
 from deer.drivers.base_driver import LLMDriver
 from deer.planner.planner import Planner
 from deer.validator.validator import PlanValidator
@@ -9,7 +13,7 @@ from deer.schema.io import AgentInput, AgentOutput
 from rich.console import Console
 from rich.markdown import Markdown
 
-from deer.planner.prompts import RESPONSE_IMPROVEMENT_PROMPT
+from deer.planner.prompts import RESPONSE_IMPROVEMENT_PROMPT, EXPLAIN_ERROR_PROMPT
 
 
 class DeterministicAgent:
@@ -49,12 +53,24 @@ class DeterministicAgent:
 
     def run(self, agent_input: AgentInput) -> AgentOutput:
 
-        self.plan = self.planner.plan(agent_input)
-        self.validator.validate(self.plan)
-        response = self.executor.execute(
-            self.plan,
-            agent_input,
-        )
+        try:
+            feedback = {}
+            for i in range(3):
+
+                self.plan = self.planner.plan(agent_input, feedback)
+                try:
+                    self.validator.validate(self.plan)
+                except Exception as validation_error:
+                    logging.warning(f"Validation error ({i}/3): {validation_error}")
+                    feedback = {"previous error": validation_error}
+
+            response = self.executor.execute(
+                self.plan,
+                agent_input,
+            )
+        except Exception as e:
+            # raise ValueError(f"Error running agent: {e}")
+            return self.explain_error(e)
 
         self.history.append(
             {
@@ -90,7 +106,7 @@ class DeterministicAgent:
             },
         )
         output = self.run(user_input)
-        self.improve_result(output)
+        output = self.improve_result(output)
 
         return output
 
@@ -99,12 +115,16 @@ class DeterministicAgent:
         console.print(Markdown(out))
 
     def improve_result(self, response: str):
-
-        result_improved = self.driver.generate(
-            RESPONSE_IMPROVEMENT_PROMPT.format(
-                format_response=self.planner._format_response,
-                response=response.result,
-            )
+        improve_prompt = RESPONSE_IMPROVEMENT_PROMPT.format(
+            format_response=self.planner._format_response,
+            response=response,
         )
+        result_improved = self.driver.generate_text(improve_prompt)
+        return result_improved
 
-        response.result = result_improved
+    def explain_error(self, error: str):
+        error_prompt = EXPLAIN_ERROR_PROMPT.format(
+            error=error, tools=self.registry.describe()
+        )
+        error_explained = self.driver.generate_text(error_prompt)
+        return error_explained
