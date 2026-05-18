@@ -1,3 +1,4 @@
+import re
 from typing import Set
 import inspect
 import logging
@@ -19,7 +20,6 @@ class Rules:
         for name, method in checkers:
             if name.startswith("check_"):
                 logging.info(f"Validating rule: {name}")
-                # Ensure the method receives the plan for validation
                 method(self.plan)
 
     def check_unique_step_ids(self, plan: Plan) -> None:
@@ -52,3 +52,18 @@ class Rules:
         for s in plan.steps:
             if s.tool and not self.registry.has(s.tool):
                 raise ValueError(f"Tool not found in ToolRegistry: {s.tool}")
+
+    def check_execution(self, plan: Plan) -> None:
+        for s in plan.steps:
+            if not s.tool and not s.logic:
+                raise ValueError(
+                    f"Step '{s.id}' is invalid: it must define either a 'tool' or a 'logic' block to be executed."
+                )
+
+    def check_logic_assignment(self, plan: Plan) -> None:
+        for s in plan.steps:
+            if logic := s.logic:
+                if not re.search(r"\bresult\s*=", logic):
+                    raise ValueError(
+                        f"Step '{s.id}' has invalid logic: it must assign a value to 'result' (e.g., 'result = ...')."
+                    )
