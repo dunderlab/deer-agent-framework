@@ -7,6 +7,8 @@ from deer.tracing.store import TraceStore
 from deer.tools.registry import ToolRegistry
 from .logic import evaluate_logic
 
+from deer.tracing import logger
+
 
 class Executor:
     def __init__(self, registry: ToolRegistry, trace_store: TraceStore) -> None:
@@ -20,6 +22,7 @@ class Executor:
 
         for step in plan.steps:
             value = self.resolve_input(step.input_from, step.id, agent_input, context)
+            logger.debug(f"Executing step {step.id} with input '{step.input_from}'")
 
             try:
                 if step.logic is not None:
@@ -90,6 +93,7 @@ class Executor:
         tool = self.registry.get(tool_name)
         valid_input = tool.validate_input(input_value)
         output = tool.run(valid_input, params=params)
+        logger.info(f"Executed tool {tool_name} with output: {output}")
         return tool.validate_output(output)
 
     def execute_logic(
@@ -99,7 +103,8 @@ class Executor:
         params: Dict[str, Any],
         context: Dict[str, Any],
     ) -> Any:
-        logic = self.normalize_logic(logic)
+        # logic = self.normalize_logic(logic)
+        logger.debug(f"Executing logic: {logic}")
         return evaluate_logic(
             logic,
             input_value=input_value,
@@ -107,21 +112,21 @@ class Executor:
             context=context,
         )
 
-    def normalize_logic(self, logic: str) -> str:
-        logic = logic.strip()
-
-        # multiline JSON escapes
-        logic = logic.replace("\\n", "\n")
-
-        # Caso: string completo serializado
-        try:
-            parsed = json.loads(logic)
-            if isinstance(parsed, str):
-                logic = parsed
-        except Exception:
-            pass
-
-        # Caso: código Python contaminado con escaping JSON
-        logic = logic.replace('\\"', '"')
-
-        return logic
+    # def normalize_logic(self, logic: str) -> str:
+    #     logic = logic.strip()
+    #
+    #     # multiline JSON escapes
+    #     logic = logic.replace("\\n", "\n")
+    #
+    #     # Caso: string completo serializado
+    #     try:
+    #         parsed = json.loads(logic)
+    #         if isinstance(parsed, str):
+    #             logic = parsed
+    #     except Exception:
+    #         pass
+    #
+    #     # Caso: código Python contaminado con escaping JSON
+    #     logic = logic.replace('\\"', '"')
+    #
+    #     return logic
