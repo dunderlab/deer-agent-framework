@@ -29,7 +29,7 @@ class MathTools:
 
 
 registry = default_registry()
-registry.register_methods(MathTools())
+registry.register([MathTools()])
 
 
 agent = DeterministicAgent(
