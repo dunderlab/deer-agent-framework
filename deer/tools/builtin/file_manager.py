@@ -1,3 +1,5 @@
+import os.path
+
 from deer.tools.decorators import tool
 from deer.schema.io import Struct
 from dataclasses import dataclass
@@ -52,13 +54,13 @@ class FileManager:
         description="Creates a new file with the given content.",
     )
     def new_file(self, path: str, content: str) -> Struct(status=str):
+        safe_path = self.jailed_path(path)
 
-        path = self.jailed_path(path)
-
-        with open(path, "w") as f:
+        with open(safe_path, "w") as f:
             f.write(content)
+
         return {
-            "status": "success",
+            "status": safe_path.exists(),
         }
 
     @tool(
@@ -66,11 +68,45 @@ class FileManager:
         description="Reads the content of a file.",
     )
     def read_file(self, path: str) -> Struct(content=str):
+        safe_path = self.jailed_path(path)
 
-        path = self.jailed_path(path)
-
-        with open(path, "r") as f:
+        with open(safe_path, "r") as f:
             content = f.read()
         return {
             "content": content,
+        }
+
+    @tool(
+        name="list_directory",
+        description="Lists the files in a directory.",
+    )
+    def list_directory(self, path: str) -> Struct(files=list[str]):
+        safe_path = self.jailed_path(path)
+        files = [item.name for item in safe_path.iterdir()]
+
+        return {
+            "files": files,
+        }
+
+    @tool(
+        name="delete_file",
+        description="Deletes a file.",
+    )
+    def delete_file(self, path: str) -> Struct(status=str):
+        safe_path = self.jailed_path(path)
+
+        if safe_path.is_file():
+            safe_path.unlink()
+        else:
+            raise ValueError(f"'{path}' is not a file or does not exist.")
+
+        return {
+            "status": not safe_path.exists(),
+        }
+
+    def create_directory(self, path:str) -> Struct(status=str):
+        safe_path = self.jailed_path(path)
+        safe_path.mkdir(parents=True, exist_ok=True)
+        return {
+            "status": "success"
         }
