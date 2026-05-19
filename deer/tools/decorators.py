@@ -1,4 +1,5 @@
 import inspect
+from tkinter.messagebox import RETRY
 from types import NoneType, UnionType
 from typing import Any, Callable, Union, get_args, get_origin, get_type_hints
 
@@ -28,7 +29,8 @@ def tool(
             _TOOL_METADATA_ATTR,
             metadata,
         )
-        return staticmethod(func)
+        return func
+        # return staticmethod(func)
 
     return decorator
 
