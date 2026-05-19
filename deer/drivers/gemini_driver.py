@@ -1,60 +1,47 @@
 import json
-from typing import TypeVar, Type
+from typing import TypeVar, Type, reveal_type
 
 from pydantic import BaseModel
 from google import genai
 
 from .base_driver import LLMDriver
+from .ollama_driver import logger
 
 T = TypeVar("T", bound=BaseModel)
 
 
 class GeminiDriver(LLMDriver):
-    def __init__(self, model_name="gemini-2.0-flash"):
+    def __init__(self, model_name: str):
         self.client = genai.Client()
         self.model_name = model_name
 
-    #
-    # def generate(self, prompt: str, response_model: Type[T] = None, mime_type: str = "application/json") -> T:
-    #
-    #     response = self.client.models.generate_content(
-    #         model=self.model_name,
-    #         contents=prompt,
-    #         config={
-    #             "response_mime_type": mime_type,
-    #         },
-    #     )
-    #
-    #     if mime_type == "application/json":
-    #         response_text = response.text
-    #         response_text = escape_logic(response_text)
-    #         data = json.loads(response_text)
-    #     else:
-    #         data = response.text
-    #
-    #     if response_model is None:
-    #         return data
-    #
-    #     return response_model.model_validate(data)
-
     def generate_text(self, prompt: str) -> str:
-        response = self.client.models.generate_content(
-            model=self.model_name,
-            contents=prompt,
-            config={
-                "response_mime_type": "text/plain",
-            },
-        )
-        return response.text
+        try:
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config={
+                    "response_mime_type": "text/plain",
+                },
+            )
+            return response.text
+        except genai.errors.ServerError as e:
+            logger.error(f"Error generating text with Gemini: {e}")
+            return e
 
     def generate_json(self, prompt: str, response_model: Type[T] = None) -> T:
-        response = self.client.models.generate_content(
-            model=self.model_name,
-            contents=prompt,
-            config={
-                "response_mime_type": "application/json",
-            },
-        )
+
+        try:
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config={
+                    "response_mime_type": "application/json",
+                },
+            )
+        except genai.errors.ServerError as e:
+            logger.error(f"Error generating text with Gemini: {e}")
+            return {"error": str(e)}
 
         response_text = response.text
         response_text = self.escape_logic(response_text)
