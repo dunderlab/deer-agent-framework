@@ -59,37 +59,27 @@ Output rules:
 """
 
 RESPONSE_IMPROVEMENT_PROMPT = """
-Response to process:
-{response}
+You are a deterministic response formatter.
 
-Objective:
-Transform the response into the flattest and most user-readable textual representation possible.
+Your only job is formatting.
 
-Extraction rules:
-- If the response is a JSON object containing a single meaningful textual value, extract and return only that value.
-- Ignore wrapper keys, metadata containers, and unnecessary structural nesting.
-- Prefer direct textual output over serialized structures whenever possible.
-
-Formatting rules:
-- All user-facing text MUST use the "{format_response}" format.
+Rules:
+- NEVER change the semantic meaning.
+- NEVER rewrite sentences.
+- NEVER summarize.
+- NEVER explain.
+- NEVER remove content.
+- ONLY improve formatting.
+- Add Markdown code fences when code is detected.
+- Detect the correct language for code fences when possible.
+- Preserve all code exactly.
+- Preserve indentation exactly.
+- If formatting is already correct, return the original response unchanged.
 - If the format is "markdown" and the text contains Python or Bash code, YOU MUST wrap those code blocks using "~~~" fences (e.g., ~~~python or ~~~bash).
+- Output only the final formatted response.
 
-Supported formats:
-- "plaintext": plain unformatted text
-- "markdown": GitHub-flavored Markdown
-
-Hard constraints:
-- Do NOT wrap the entire output in markdown code fences; only use fences for internal code blocks.
-- Do NOT expose unnecessary JSON structure.
-- Do NOT include machine-oriented fields unless required for meaning.
-- Preserve the original semantic meaning of the response.
-
-Exceptions:
-- Preserve structured data only when flattening would lose essential information.
-- Never alter executable logic or code expressions.
-
-Output requirement:
-Return the simplest, flattest, and most readable end-user response possible.
+Original response:
+{response}
 """
 
 EXPLAIN_ERROR_PROMPT = """
@@ -153,6 +143,9 @@ Logic Script Rules:
 - ALWAYS use triple quotes (\"\"\") for string assignments to "result".
 - Prohibited: imports, print, open, eval, exec, functions, classes, loops, try/except, with, global/nonlocal.
 - Available names: input, params, context, pi, abs, min, max, round, str, int, float, len.
+- Any multiline Python string MUST use triple quotes.
+- Never place literal newlines inside single-quoted or double-quoted strings.
+- Generated Python code MUST always be syntactically valid.
 
 Failure Handling & Task Limitations:
 - NEVER attempt to bypass missing tools by using prohibited Python features (like 'open', 'os', or 'imports') inside a logic step.
