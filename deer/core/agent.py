@@ -53,6 +53,11 @@ class DeterministicAgent:
 
         self.history = []
 
+        logger.debug(
+            f"Initialized DeterministicAgent with identity '{identity}' and driver '{driver.model_name}'"
+        )
+        logger.debug(f"Available tools:\n{registry.describe()}")
+
     def run(self, agent_input: AgentInput) -> AgentOutput:
 
         feedback = {}
@@ -132,8 +137,7 @@ class DeterministicAgent:
             },
         )
         output = self.run(user_input)
-        output = self.improve_result(output)
-
+        output.result = self.improve_result(output.result)
         return output
 
     def prety_print(self, out: str):
@@ -146,6 +150,7 @@ class DeterministicAgent:
             response=response,
         )
         result_improved = self.driver.generate_text(improve_prompt)
+        logger.info(f"Improved response: {result_improved}")
         return result_improved
 
     def explain_error(self, error: str):
