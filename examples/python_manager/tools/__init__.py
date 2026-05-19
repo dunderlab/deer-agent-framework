@@ -1,5 +1,12 @@
 from deer.tools.registry import ToolRegistry
-from .file_manager import FileManager
+from deer.tools.builtin import FileManager
 
 registry = ToolRegistry()
-registry.register_methods(FileManager())
+
+fileManager = FileManager(
+    jail="/Users/yeison/Development/deer-agent-framework/sandbox/root"
+)
+
+registry.register(
+    fileManager,
+)
