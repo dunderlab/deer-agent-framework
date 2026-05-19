@@ -8,13 +8,20 @@ class ToolRegistry:
     def __init__(self) -> None:
         self._tools: Dict[str, Tool] = {}
 
-    def register(self, tool: Tool) -> None:
+    def register(self, *provider_tools: list):
+        for tool in provider_tools:
+            if isinstance(tool, Tool):
+                self._register_tool(tool)
+            else:
+                self._register_collection(tool)
+
+    def _register_tool(self, tool: Tool) -> None:
         if not tool.name or not tool.name.strip():
             raise ValueError("Tool name cannot be empty.")
 
         self._tools[tool.name] = tool
 
-    def register_methods(self, provider: Any) -> None:
+    def _register_collection(self, provider: Any) -> None:
         for attr_name in dir(provider):
             attr = getattr(provider, attr_name)
 
@@ -27,7 +34,6 @@ class ToolRegistry:
                 MethodTool(
                     name=metadata["name"],
                     description=metadata["description"],
-                    # value_type=metadata["value_type"],
                     params_type=metadata["params_type"],
                     return_type=metadata["return_type"],
                     method=attr,
