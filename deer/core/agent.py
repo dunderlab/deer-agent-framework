@@ -1,3 +1,5 @@
+import logging
+
 from deer.drivers.base_driver import LLMDriver
 from deer.planner.planner import Planner
 from deer.validator.validator import PlanValidator
@@ -11,13 +13,14 @@ from rich.markdown import Markdown
 
 from deer.planner.prompts import RESPONSE_IMPROVEMENT_PROMPT, EXPLAIN_ERROR_PROMPT
 
-from deer.tracing import logger
+logger = logging.getLogger("DEER")
 
 
 class DeterministicAgent:
     def __init__(
         self,
         identity: str = "DeterministicAgent",
+        max_tries_for_plan: int = 3,
         driver: LLMDriver | None = None,
         registry: ToolRegistry | None = None,
         format_response: str = "plaintext",
@@ -46,6 +49,7 @@ class DeterministicAgent:
         )
 
         self.driver = driver
+        self.max_tries_for_plan = max_tries_for_plan
 
         self.history = []
 
@@ -54,7 +58,7 @@ class DeterministicAgent:
         feedback = {}
         last_error_message = ""
 
-        for i in range(3):
+        for i in range(self.max_tries_for_plan):
             logger.debug(f"Planning iteration {i+1} of 3 tries")
             self.plan = self.planner.plan(agent_input, feedback)
             logger.debug(f"Plan steps:")

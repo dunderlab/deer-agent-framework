@@ -1,4 +1,4 @@
-import json
+import logging
 from typing import Any, Dict
 
 from deer.schema.io import AgentInput, AgentOutput, StepTrace
@@ -7,7 +7,7 @@ from deer.tracing.store import TraceStore
 from deer.tools.registry import ToolRegistry
 from .logic import evaluate_logic
 
-from deer.tracing import logger
+logger = logging.getLogger("DEER")
 
 
 class Executor:
