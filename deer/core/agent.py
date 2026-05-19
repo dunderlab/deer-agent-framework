@@ -1,7 +1,3 @@
-from traceback import extract_tb
-
-from pip._internal.utils import logging
-
 from deer.drivers.base_driver import LLMDriver
 from deer.planner.planner import Planner
 from deer.validator.validator import PlanValidator
@@ -14,6 +10,8 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 from deer.planner.prompts import RESPONSE_IMPROVEMENT_PROMPT, EXPLAIN_ERROR_PROMPT
+
+from deer.tracing import logger
 
 
 class DeterministicAgent:
@@ -53,37 +51,61 @@ class DeterministicAgent:
 
     def run(self, agent_input: AgentInput) -> AgentOutput:
 
-        try:
-            feedback = {}
-            for i in range(3):
+        feedback = {}
+        last_error_message = ""
 
-                self.plan = self.planner.plan(agent_input, feedback)
-                try:
-                    self.validator.validate(self.plan)
-                except Exception as validation_error:
-                    logging.warning(f"Validation error ({i}/3): {validation_error}")
-                    feedback = {"previous error": validation_error}
+        for i in range(3):
+            logger.debug(f"Planning iteration {i+1} of 3 tries")
+            self.plan = self.planner.plan(agent_input, feedback)
+            logger.debug(f"Plan steps:")
+            for step in self.plan.steps:
+                logger.debug(f"\tstep: {step.id}")
+                if step.tool:
+                    logger.debug(f"\t\ttool: {step.tool}: {step.params}")
+                elif step.logic:
+                    logger.debug(f"\t\tlogic: {step.logic}")
 
-            response = self.executor.execute(
-                self.plan,
-                agent_input,
+            try:
+                self.validator.validate(self.plan)
+            except Exception as validation_error:
+                logger.warning(f"Validation error ({i}/3): {validation_error}")
+                feedback = {"validation error": validation_error}
+                last_error_message = str(validation_error)
+                continue
+            logger.debug(f"Plan validated")
+
+            try:
+                response = self.executor.execute(self.plan, agent_input)
+            except Exception as execution_error:
+                response = None
+                logger.warning(f"Execution error: {execution_error}")
+                feedback = {"execution error": execution_error}
+                last_error_message = str(execution_error)
+                continue
+            logger.debug(f"Plan excecuted")
+
+            break
+
+        if response is None:
+            logger.warning(f"Agent failed to produce a response after 3 attempts")
+            if last_error_message:
+                last_error_message_explained = self.explain_error(last_error_message)
+            return AgentOutput(
+                result=last_error_message_explained,
+                trace=self.executor.trace_store.get_trace(),
             )
-        except Exception as e:
-            # raise ValueError(f"Error running agent: {e}")
-            return self.explain_error(e)
 
-        self.history.append(
-            {
-                "role": "user",
-                "content": agent_input.goal,
-            }
-        )
-
-        self.history.append(
-            {
-                "role": "agent",
-                "content": response.result,
-            }
+        self.history.extend(
+            [
+                {
+                    "role": "user",
+                    "content": agent_input.goal,
+                },
+                {
+                    "role": "agent",
+                    "content": response.result,
+                },
+            ]
         )
 
         return response
