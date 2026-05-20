@@ -62,10 +62,20 @@ class DeterministicAgent:
 
         feedback = {}
         last_error_message = ""
+        response = None
 
         for i in range(self.max_tries_for_plan):
             logger.debug(f"Planning iteration {i+1} of 3 tries")
-            self.plan = self.planner.plan(agent_input, feedback)
+
+            try:
+                self.plan = self.planner.plan(agent_input, feedback)
+            except Exception as planning_error:
+                logger.error(f"Plannig error: {planning_error}")
+                feedback = {"Planning error": planning_error}
+                last_error_message = str(planning_error)
+                continue
+            logger.debug(f"Plan generated")
+
             logger.debug(f"Plan steps:")
             for step in self.plan.steps:
                 logger.debug(f"\tstep: {step.id}")
@@ -77,7 +87,7 @@ class DeterministicAgent:
             try:
                 self.validator.validate(self.plan)
             except Exception as validation_error:
-                logger.warning(f"Validation error ({i}/3): {validation_error}")
+                logger.error(f"Validation error ({i}/3): {validation_error}")
                 feedback = {"validation error": validation_error}
                 last_error_message = str(validation_error)
                 continue
@@ -86,8 +96,7 @@ class DeterministicAgent:
             try:
                 response = self.executor.execute(self.plan, agent_input)
             except Exception as execution_error:
-                response = None
-                logger.warning(f"Execution error: {execution_error}")
+                logger.error(f"Execution error: {execution_error}")
                 feedback = {"execution error": execution_error}
                 last_error_message = str(execution_error)
                 continue
@@ -137,12 +146,34 @@ class DeterministicAgent:
             },
         )
         output = self.run(user_input)
-        output.result = self.improve_result(output.result)
+
+        if isinstance(output.result, dict):
+            output.result = self.humanize_result(output)
+        else:
+            output.result = self.improve_result(output)
         return output
 
     def prety_print(self, out: str):
         console = Console()
         console.print(Markdown(out))
+
+    def humanize_result(self, output: AgentOutput):
+        from deer.planner.prompts import HUMANIZER_PROMPT
+
+        # Format trace for the prompt
+        trace_str = ""
+        for step in output.trace:
+            trace_str += f"- {step.tool or 'logic'}: {step.output}\n"
+
+        humanize_prompt = HUMANIZER_PROMPT.format(
+            goal=self.planner.goal,
+            trace=trace_str,
+            result=output.result,
+        )
+
+        result_humanized = self.driver.generate_text(humanize_prompt)
+        logger.info(f"Humanized response: {result_humanized}")
+        return result_humanized
 
     def improve_result(self, response: str):
         improve_prompt = RESPONSE_IMPROVEMENT_PROMPT.format(
