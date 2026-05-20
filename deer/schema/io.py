@@ -1,5 +1,5 @@
 import itertools
-from typing import Any, Dict, Optional, List, TypedDict
+from typing import Any, Dict, Optional, List
 from pydantic import BaseModel, Field, create_model
 
 _counter = itertools.count()
@@ -18,9 +18,17 @@ class StepTrace(BaseModel):
     error: Optional[str] = None
 
 
+class Trace(BaseModel):
+    steps: List[StepTrace] = Field(default_factory=list)
+
+
 class AgentOutput(BaseModel):
     result: Any = None
     trace: List[StepTrace] = Field(default_factory=list)
+    # image: Optional[str] = None
+
+    def text(self):
+        return f"{str(self.result)}"
 
 
 def Struct(**fields: Any) -> type[BaseModel]:
@@ -28,7 +36,3 @@ def Struct(**fields: Any) -> type[BaseModel]:
         f"InlineModel_{next(_counter)}",
         **{name: (field_type, ...) for name, field_type in fields.items()},
     )
-
-
-# def Struct(**fields: Any) -> type[BaseModel]:
-#     return TypedDict(f"InlineModel_{next(_counter)}", fields)
