@@ -25,11 +25,9 @@ class DeterministicAgent:
         registry: ToolRegistry | None = None,
         format_response: str = "plaintext",
     ) -> None:
-
         assert format_response in {"markdown", "plaintext"}
 
         self.registry = registry or default_registry()
-
         self.trace_store = TraceStore()
 
         self.executor = Executor(
@@ -50,16 +48,13 @@ class DeterministicAgent:
 
         self.driver = driver
         self.max_tries_for_plan = max_tries_for_plan
-
         self.history = []
 
-        logger.debug(
-            f"Initialized DeterministicAgent with identity '{identity}' and driver '{driver.model_name}'"
-        )
+        logger.debug(f"Initialized DeterministicAgent with '{driver.model_name}' model")
+        logger.debug(f"Identity: {identity}")
         logger.debug(f"Available tools:\n{registry.describe()}")
 
     def run(self, agent_input: AgentInput) -> AgentOutput:
-
         feedback = {}
         last_error_message = ""
         response = None
@@ -157,10 +152,12 @@ class DeterministicAgent:
         console = Console()
         console.print(Markdown(out))
 
-    def humanize_result(self, output: AgentOutput):
+    def clear_history(self):
+        self.history = []
+
+    def humanize_result(self, output: AgentOutput) -> str:
         from deer.planner.prompts import HUMANIZER_PROMPT
 
-        # Format trace for the prompt
         trace_str = ""
         for step in output.trace:
             trace_str += f"- {step.tool or 'logic'}: {step.output}\n"
@@ -175,9 +172,9 @@ class DeterministicAgent:
         logger.info(f"Humanized response: {result_humanized}")
         return result_humanized
 
-    def improve_result(self, response: str):
+    def improve_result(self, response: str) -> str:
         improve_prompt = RESPONSE_IMPROVEMENT_PROMPT.format(
-            format_response=self.planner._format_response,
+            format_response=self.planner.format_response,
             response=response,
         )
         result_improved = self.driver.generate_text(improve_prompt)

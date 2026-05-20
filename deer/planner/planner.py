@@ -16,25 +16,29 @@ class Planner:
         driver: LLMDriver | None = None,
         registry: ToolRegistry | None = None,
         format_response: str = "plain",
+        improve_goal: bool = True,
     ):
-        self._llm_driver = driver
-        self._registry = registry
-        self._identity = identity
-        self._format_response = format_response
+        self.llm_driver = driver
+        self.registry = registry
+        self.identity = identity
+        self.format_response = format_response
+        self.improve_goal = improve_goal
+
         self.goal = ""
 
     def plan(self, agent_input: AgentInput, feedback={}) -> Plan:
-        self.improve_goal(agent_input=agent_input)
+        if self.improve_goal:
+            self.run_improve_goal(agent_input=agent_input)
         plan_prompt = self.build_prompt(agent_input, feedback)
-        plan = self._llm_driver.generate_json(plan_prompt, response_model=Plan)
+        plan = self.llm_driver.generate_json(plan_prompt, response_model=Plan)
         return plan
 
-    def improve_goal(self, agent_input: AgentInput):
+    def run_improve_goal(self, agent_input: AgentInput):
         goal_prompt = GOAL_IMPROVEMENT_PROMPT.format(
-            identity=self._identity,
+            identity=self.identity,
             goal=agent_input.goal,
         )
-        improved_goal = self._llm_driver.generate_text(goal_prompt)
+        improved_goal = self.llm_driver.generate_text(goal_prompt)
         agent_input.goal = improved_goal
         self.goal = improved_goal
 
@@ -43,10 +47,10 @@ class Planner:
         payload = json.dumps(agent_input.payload.update(feedback), ensure_ascii=False)
 
         planner_prompt = BASE_PLANNER_PROMPT.format(
-            identity=self._identity,
+            identity=self.identity,
             goal=agent_input.goal,
             payload=payload,
-            tools=self._registry.describe(),
-            format_response=self._format_response,
+            tools=self.registry.describe(),
+            format_response=self.format_response,
         )
         return planner_prompt
