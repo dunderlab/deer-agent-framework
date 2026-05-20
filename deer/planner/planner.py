@@ -21,11 +21,13 @@ class Planner:
         self._registry = registry
         self._identity = identity
         self._format_response = format_response
+        self.goal = ""
 
     def plan(self, agent_input: AgentInput, feedback={}) -> Plan:
         self.improve_goal(agent_input=agent_input)
         plan_prompt = self.build_prompt(agent_input, feedback)
-        return self._llm_driver.generate_json(plan_prompt, response_model=Plan)
+        plan = self._llm_driver.generate_json(plan_prompt, response_model=Plan)
+        return plan
 
     def improve_goal(self, agent_input: AgentInput):
         goal_prompt = GOAL_IMPROVEMENT_PROMPT.format(
@@ -34,6 +36,7 @@ class Planner:
         )
         improved_goal = self._llm_driver.generate_text(goal_prompt)
         agent_input.goal = improved_goal
+        self.goal = improved_goal
 
     def build_prompt(self, agent_input: AgentInput, feedback={}) -> str:
         # As usable data must be JSON consistent.
