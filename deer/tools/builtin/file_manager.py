@@ -104,9 +104,35 @@ class FileManager:
             "status": not safe_path.exists(),
         }
 
-    def create_directory(self, path:str) -> Struct(status=str):
+    @tool(
+        name="create_directory",
+        description="Creates a directory.",
+    )
+    def create_directory(self, path: str) -> Struct(status=str):
         safe_path = self.jailed_path(path)
         safe_path.mkdir(parents=True, exist_ok=True)
+        return {"status": "success"}
+
+    @tool(
+        name="get_file_info",
+        description="Retrieves metadata about a file or directory, including its existence, size, type, and modification time.",
+    )
+    def get_file_info(self, filename: str) -> Struct(
+        exists=bool,
+        size_bytes=int,
+        is_dir=bool,
+        is_file=bool,
+        last_modified=float,
+    ):
+        safe_path = self.jailed_path(filename)
+        if not safe_path.exists():
+            return {"exists": False}
+
+        stats = safe_path.stat()
         return {
-            "status": "success"
+            "exists": True,
+            "size_bytes": stats.st_size,
+            "is_dir": safe_path.is_dir(),
+            "is_file": safe_path.is_file(),
+            "last_modified": stats.st_mtime,
         }
