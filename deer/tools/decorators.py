@@ -57,6 +57,7 @@ class MethodTool(Tool):
         super().__init__()
 
     def run(self, value: Any, params: dict[str, Any] | None = None) -> Any:
+        params = params or {}
         return self._method(**params)
 
 
