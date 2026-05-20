@@ -34,6 +34,7 @@ _ALLOWED_NODE_TYPES = (
     ast.Compare,
     ast.Eq,
     ast.NotEq,
+    ast.NotIn,
     ast.Lt,
     ast.LtE,
     ast.Gt,
