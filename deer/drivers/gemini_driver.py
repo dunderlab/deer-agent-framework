@@ -25,7 +25,7 @@ class GeminiDriver(LLMDriver):
                 },
             )
             return response.text
-        except genai.errors.ServerError as e:
+        except (genai.errors.ServerError, genai.errors.ClientError) as e:
             logger.error(f"Error generating text with Gemini: {e}")
             return e
 
@@ -39,9 +39,10 @@ class GeminiDriver(LLMDriver):
                     "response_mime_type": "application/json",
                 },
             )
-        except genai.errors.ServerError as e:
+        except (genai.errors.ServerError, genai.errors.ClientError) as e:
             logger.error(f"Error generating text with Gemini: {e}")
-            return {"error": str(e)}
+            raise f"Error generating text with Gemini: {e}"
+            # return {"error": str(e)}
 
         response_text = response.text
         response_text = self.escape_logic(response_text)
