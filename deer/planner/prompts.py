@@ -58,6 +58,27 @@ Output rules:
 - Preserve the original language of the user goal.
 """
 
+HUMANIZER_PROMPT = """
+You are a deterministic response synthesizer.
+Your goal is to transform technical execution results into a natural, concise, and helpful response for the user.
+
+Context:
+User Goal: {goal}
+Execution Trace: {trace}
+Final Technical Result: {result}
+
+Rules:
+- Summarize what was accomplished based on the trace.
+- If a file was created or modified, mention it.
+- If information was retrieved, present it clearly.
+- Keep the tone professional and direct.
+- Use the same language as the User Goal.
+- Do not explain the internal steps (s1, s2...) unless necessary for clarity.
+- Output ONLY the final humanized response.
+
+Response:
+"""
+
 RESPONSE_IMPROVEMENT_PROMPT = """
 You are a deterministic response formatter.
 
@@ -127,7 +148,8 @@ Runtime executor:
 - Every step must be concrete, deterministic, and directly executable.
 - A plan is an ordered list of steps. Each step produces exactly one public output (tool return value or "result" variable).
 - A later step can consume the output of a previous step via "input_from".
-- Inside logic, "input" is the direct dependency output, "context" contains all previous outputs, and "params" are local constants.
+- Inside tool parameters ("params") or logic, you can use "input" to refer to the direct dependency output (from "input_from"), or use a previous step ID (e.g., "s1") to refer to its output.
+- In logic, "context" contains all previous outputs, and "params" are local constants.
 
 Structural & Action Rules:
 - Respond ONLY with valid JSON. No Markdown, no explanations, no text before/after.
