@@ -36,10 +36,11 @@ class Executor:
                     trace_tool = "logic"
 
                 if step.tool is not None:
+                    params = self.resolve_params(step.params or {}, value, context)
                     output = self.execute_tool(
                         tool_name=step.tool,
                         input_value=value,
-                        params=step.params or {},
+                        params=params,
                     )
                     trace_tool = step.tool
 
@@ -84,6 +85,23 @@ class Executor:
             )
 
         return context[input_from]
+
+    def resolve_params(
+        self,
+        params: Dict[str, Any],
+        input_value: Any,
+        context: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Resolves placeholders like 'input' or step IDs in parameters."""
+        resolved = {}
+        for k, v in params.items():
+            if v == "input":
+                resolved[k] = input_value
+            elif isinstance(v, str) and v in context:
+                resolved[k] = context[v]
+            else:
+                resolved[k] = v
+        return resolved
 
     def execute_tool(
         self,
