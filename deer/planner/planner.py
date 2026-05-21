@@ -1,11 +1,10 @@
 import json
 
+from deer.prompts import PLANNER_PROMPT, GOAL_IMPROVEMENT_PROMPT
 from deer.schema.io import AgentInput
 from deer.tools.registry import ToolRegistry
 from deer.drivers.base_driver import LLMDriver
 from deer.schema.plan import Plan
-
-from .prompts import BASE_PLANNER_PROMPT, GOAL_IMPROVEMENT_PROMPT
 
 
 class Planner:
@@ -46,7 +45,7 @@ class Planner:
         # As usable data must be JSON consistent.
         payload = json.dumps(agent_input.payload.update(feedback), ensure_ascii=False)
 
-        planner_prompt = BASE_PLANNER_PROMPT.format(
+        planner_prompt = PLANNER_PROMPT.format(
             identity=self.identity,
             goal=agent_input.goal,
             payload=payload,

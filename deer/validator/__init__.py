@@ -1,1 +1,1 @@
-from .validator import PlanValidator
+from .plan_validator import PlanValidator

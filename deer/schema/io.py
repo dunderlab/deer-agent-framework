@@ -25,6 +25,7 @@ class Trace(BaseModel):
 class AgentOutput(BaseModel):
     result: Any = None
     trace: List[StepTrace] = Field(default_factory=list)
+    validated: bool = (False,)
     # image: Optional[str] = None
 
     def text(self):

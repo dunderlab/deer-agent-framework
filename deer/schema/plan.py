@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, NamedTuple
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 
@@ -67,3 +67,9 @@ class Plan(BaseModel):
             if s.id == step_id:
                 return s
         raise KeyError(f"Step not found: {step_id}")
+
+
+class VerificationResult(NamedTuple):
+    is_success: bool
+    feedback: str
+    verification_plan: Optional[Plan] = None

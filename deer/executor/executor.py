@@ -2,7 +2,7 @@ import logging
 import re
 from typing import Any, Dict
 
-from deer.schema.io import AgentInput, AgentOutput, StepTrace
+from deer.schema.io import AgentOutput, StepTrace
 from deer.schema.plan import Plan
 from deer.tracing.store import TraceStore
 from deer.tools.registry import ToolRegistry
@@ -16,13 +16,13 @@ class Executor:
         self.registry = registry
         self.trace_store = trace_store
 
-    def execute(self, plan: Plan, agent_input: AgentInput) -> AgentOutput:
+    def execute(self, plan: Plan, payload: {}) -> AgentOutput:
         self.trace_store.reset()
         context: Dict[str, Any] = {}
         last_output: Any = None
 
         for step in plan.steps:
-            value = self.resolve_input(step.input_from, step.id, agent_input, context)
+            value = self.resolve_input(step.input_from, step.id, payload, context)
             logger.debug(f"Executing step {step.id} with input '{step.input_from}'")
 
             try:
@@ -73,11 +73,11 @@ class Executor:
         self,
         input_from: str | None,
         step_id: str,
-        agent_input: AgentInput,
+        payload: {},
         context: Dict[str, Any],
     ) -> Any:
         if input_from is None:
-            return agent_input.payload
+            return payload
 
         if input_from not in context:
             raise ValueError(
