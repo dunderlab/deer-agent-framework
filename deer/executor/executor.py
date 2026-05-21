@@ -84,7 +84,15 @@ class Executor:
                 f"Unresolved dependency: '{input_from}' required by step '{step_id}'."
             )
 
-        return context[input_from]
+        output = context[input_from]
+
+        # # Automatically unwrap single-key dictionaries to simplify logic and tool usage.
+        # # This ensures 'input' refers directly to the value (e.g., file content)
+        # # instead of the wrapper dictionary.
+        # if isinstance(output, dict) and len(output) == 1:
+        #     return next(iter(output.values()))
+
+        return output
 
     def resolve_params(
         self,
@@ -112,7 +120,8 @@ class Executor:
         tool = self.registry.get(tool_name)
         valid_input = tool.validate_input(input_value)
         output = tool.run(valid_input, params=params)
-        logger.info(f"Executed tool {tool_name} with output: {output}")
+        logger.info(f"Executed tool: {tool_name}")
+        logger.debug(f"Tool {tool_name} output: {output}")
         return tool.validate_output(output)
 
     def execute_logic(

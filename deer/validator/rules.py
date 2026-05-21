@@ -7,6 +7,9 @@ from deer.schema.plan import Plan
 from deer.tools.registry import ToolRegistry
 
 
+logger = logging.getLogger("DEER")
+
+
 class Rules:
     """Mandatory validation rules for NOMOS executable plans."""
 
@@ -19,7 +22,7 @@ class Rules:
         checkers = inspect.getmembers(self, predicate=inspect.ismethod)
         for name, method in checkers:
             if name.startswith("check_"):
-                logging.info(f"Validating rule: {name}")
+                logger.debug(f"Validating rule: {name}")
                 method(self.plan)
 
     def check_unique_step_ids(self, plan: Plan) -> None:

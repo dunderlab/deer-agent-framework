@@ -76,12 +76,11 @@ class DeterministicAgent:
         try:
             plan = self.planner.plan(agent_input, feedback)
         except Exception as planning_error:
-            logger.error(f"Plannig error: {planning_error}")
-            feedback = {"Planning error": planning_error}
+            logger.error(f"Planning error: {planning_error}")
+            feedback = {"Planning error": str(planning_error)}
             last_error_message = str(planning_error)
             return None, feedback, last_error_message, None
-        logger.debug(f"Plan generated")
-
+        logger.info(f"Plan generated")
         logger.debug(f"Plan steps:")
         for step in plan.steps:
             logger.debug(f"\tstep: {step.id}")
@@ -94,10 +93,10 @@ class DeterministicAgent:
             self.validator.validate(plan)
         except Exception as validation_error:
             logger.error(f"Validation error: {validation_error}")
-            feedback = {"validation error": validation_error}
+            feedback = {"validation error": str(validation_error)}
             last_error_message = str(validation_error)
             return None, feedback, last_error_message, plan
-        logger.debug(f"Plan validated")
+        logger.info(f"Plan validated")
 
         try:
             response = self.executor.execute(
@@ -106,10 +105,10 @@ class DeterministicAgent:
             )
         except Exception as execution_error:
             logger.error(f"Execution error: {execution_error}")
-            feedback = {"execution error": execution_error}
+            feedback = {"execution error": str(execution_error)}
             last_error_message = str(execution_error)
             return None, feedback, last_error_message, plan
-        logger.debug(f"Plan excecuted")
+        logger.info(f"Plan executed")
 
         return response, feedback, last_error_message, plan
 
@@ -120,7 +119,9 @@ class DeterministicAgent:
         for j in range(self.max_tries_for_plan):
 
             for i in range(self.max_tries_for_plan):
-                logger.debug(f"Planning iteration {i+1} of 3 tries")
+                logger.debug(
+                    f"Planning iteration {i+1} of {self.max_tries_for_plan} tries"
+                )
                 response, feedback, last_error_message, plan = self.execute_plan(
                     agent_input, feedback
                 )
@@ -129,7 +130,9 @@ class DeterministicAgent:
                 break
 
             if response is None:
-                logger.warning(f"Agent failed to produce a response after 3 attempts")
+                logger.warning(
+                    f"Agent failed to produce a response after {self.max_tries_for_plan} attempts"
+                )
                 if last_error_message:
                     last_error_message_explained = self.explain_error(
                         last_error_message
@@ -164,7 +167,9 @@ class DeterministicAgent:
                 break
 
             if response_validation is None:
-                logger.warning(f"Agent failed to validate a execution after 3 attempts")
+                logger.warning(
+                    f"Agent failed to validate an execution after 3 attempts"
+                )
             else:
                 response.validated, validation_feedback = self.validated(
                     response_validation
@@ -199,7 +204,7 @@ class DeterministicAgent:
 
             if msg:
                 output = self.send(msg)
-                self.prety_print(f"    {output.result}\n\n")
+                self.prety_print(f"    {output.text}\n\n")
 
     def send(self, msg):
         user_input = AgentInput(
@@ -235,7 +240,7 @@ class DeterministicAgent:
         )
 
         result_humanized = self.driver.generate_text(humanize_prompt)
-        logger.info(f"Humanized response: {result_humanized}")
+        logger.debug(f"Humanized response: {result_humanized}")
         return result_humanized
 
     def improve_result(self, response: str) -> str:
@@ -244,7 +249,7 @@ class DeterministicAgent:
             response=response,
         )
         result_improved = self.driver.generate_text(improve_prompt)
-        logger.info(f"Improved response: {result_improved}")
+        logger.debug(f"Improved response: {result_improved}")
         return result_improved
 
     def explain_error(self, error: str):
@@ -275,3 +280,9 @@ class DeterministicAgent:
             feedback = data.get("feedback")
 
         return is_valid, feedback
+
+    def generate_chat_log(self, chain_messages):
+        for i, message in enumerate(chain_messages, start=1):
+            logger.debug(f"[REQUEST {i}]: '{message}'")
+            response = self.send(message)
+            logger.debug(f"[RESPONSE {i}]: '{response.text}'")

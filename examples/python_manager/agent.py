@@ -20,6 +20,7 @@ agent = DeterministicAgent(
     driver=driver,
     registry=registry,
     format_response="markdown",
+    max_tries_for_plan=5,
 )
 # agent.repl()
 
@@ -28,10 +29,12 @@ if __name__ == "__main__":
     chain_messages = [
         "Quiero que generes un archivo llamado 'example.py' con ejemplo de un script en python que imprima un 'Hola mundo'.",
         "Quiero que edites el archivo 'example.py' que agreges un función llamada 'main'.",
-        # "Write 'Secret Code 789' to a file named 'secret.txt'"
+        "Write 'Secret Code 789' to a file named 'secret.txt'",
     ]
 
-    for message in chain_messages:
-        print(f">>> {message}\n")
-        response = agent.send(message)
-        print(f"    {response.text()}\n\n")
+    agent.generate_chat_log(chain_messages)
+    #
+    # for message in chain_messages:
+    #     print(f">>> {message}\n")
+    #     response = agent.send(message)
+    #     print(f"    {response.text()}\n\n")

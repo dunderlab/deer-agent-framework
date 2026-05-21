@@ -46,7 +46,10 @@ class OllamaDriver(LLMDriver):
         response_text = response["response"]
         response_text = self.escape_logic(response_text)
 
-        data = json.loads(response_text)
+        try:
+            data = json.loads(response_text)
+        except json.JSONDecodeError as e:
+            data = self.extract_json(response_text)
 
         if response_model:
             data = response_model.model_validate(data)

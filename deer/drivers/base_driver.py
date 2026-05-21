@@ -1,4 +1,7 @@
 from typing import Protocol, Type, TypeVar
+import re
+import json
+
 from pydantic import BaseModel
 
 # T represents any class inheriting from BaseModel
@@ -24,3 +27,12 @@ class LLMDriver(Protocol):
     def escape_logic(self, text: str) -> str:
         text = text.replace('"""', '\\"\\"\\"')
         return text
+
+    def extract_json(self, text: str) -> dict:
+        text = text.strip()
+
+        text = re.sub(r"^```(?:json)?\s*", "", text)
+        text = re.sub(r"^json\s*", "", text)
+        text = re.sub(r"\s*```$", "", text)
+
+        return json.loads(text)

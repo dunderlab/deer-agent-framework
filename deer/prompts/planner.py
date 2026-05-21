@@ -44,6 +44,25 @@ Failure Handling & Task Limitations:
 Available tools:
 {tools}
 
+Example of Success (Transforming output from a tool):
+{{
+  "steps": [
+    {{
+      "id": "s1",
+      "tool": "read_file",
+      "params": {{ "path": "hello.txt" }},
+      "input_from": null
+    }},
+    {{
+      "id": "s2",
+      "tool": null,
+      "logic": "result = content.upper()",
+      "input_from": "s1",
+      "params": {{}}
+    }}
+  ]
+}}
+
 Example of Failure (User wants to create a file but no tool exists):
 {{
   "steps": [

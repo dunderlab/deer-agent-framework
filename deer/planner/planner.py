@@ -43,7 +43,8 @@ class Planner:
 
     def build_prompt(self, agent_input: AgentInput, feedback={}) -> str:
         # As usable data must be JSON consistent.
-        payload = json.dumps(agent_input.payload.update(feedback), ensure_ascii=False)
+        agent_input.payload.update(feedback)
+        payload = json.dumps(agent_input.payload, ensure_ascii=False)
 
         planner_prompt = PLANNER_PROMPT.format(
             identity=self.identity,

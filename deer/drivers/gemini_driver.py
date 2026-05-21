@@ -16,6 +16,9 @@ class GeminiDriver(LLMDriver):
         self.model_name = model_name
 
     def generate_text(self, prompt: str) -> str:
+        logger.debug(
+            f"Generating text with model {self.model_name} and prompt: {prompt}"
+        )
         try:
             response = self.client.models.generate_content(
                 model=self.model_name,
@@ -30,6 +33,9 @@ class GeminiDriver(LLMDriver):
             return e
 
     def generate_json(self, prompt: str, response_model: Type[T] = None) -> T:
+        logger.debug(
+            f"Generating JSON with model {self.model_name} and prompt: {prompt}"
+        )
 
         try:
             response = self.client.models.generate_content(
@@ -41,8 +47,7 @@ class GeminiDriver(LLMDriver):
             )
         except (genai.errors.ServerError, genai.errors.ClientError) as e:
             logger.error(f"Error generating text with Gemini: {e}")
-            raise f"Error generating text with Gemini: {e}"
-            # return {"error": str(e)}
+            raise RuntimeError(f"Error generating text with Gemini: {e}")
 
         response_text = response.text
         response_text = self.escape_logic(response_text)
