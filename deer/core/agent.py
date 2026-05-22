@@ -2,6 +2,8 @@ import logging
 import json
 import re
 
+from black.lines import Callable
+
 from deer.prompts import (
     RESPONSE_IMPROVEMENT_PROMPT,
     ERROR_EXPLAIN_PROMPT,
@@ -31,9 +33,12 @@ class DeterministicAgent:
         driver: LLMDriver | None = None,
         registry: ToolRegistry | None = None,
         format_response: str = "plaintext",
+        rollback: Callable = None,
     ) -> None:
         assert format_response in {"markdown", "plaintext"}
 
+        self.identity = identity
+        self.driver = driver
         self.registry = registry or default_registry()
         self.trace_store = TraceStore()
 
@@ -53,18 +58,20 @@ class DeterministicAgent:
             format_response=format_response,
         )
 
-        self.driver = driver
-
         assert (
             max_tries_for_plan > 0
         ), f"max_tries_for_plan must be positive, got {max_tries_for_plan}"
         self.max_tries_for_plan = max_tries_for_plan
 
         self.history = []
+        self.rollback_function = rollback
 
-        logger.debug(f"Initialized DeterministicAgent with '{driver.model_name}' model")
-        logger.debug(f"Identity: {identity}")
-        logger.debug(f"Available tools:\n{registry.describe()}")
+        logger.info(f"DEER - Deterministic Executable Engine for Runtime-agents")
+        logger.info(
+            f"Initialized DeterministicAgent with '{self.driver.model_name}' model"
+        )
+        logger.info(f"Identity: {self.identity}")
+        logger.info(f"Available tools:\n{self.registry.describe()}")
 
     def execute_plan(
         self,
@@ -76,7 +83,7 @@ class DeterministicAgent:
         try:
             plan = self.planner.plan(agent_input, feedback)
         except Exception as planning_error:
-            logger.error(f"Planning error: {planning_error}")
+            logger.warning(f"Planning error: {planning_error}")
             feedback = {"Planning error": str(planning_error)}
             last_error_message = str(planning_error)
             return None, feedback, last_error_message, None
@@ -92,7 +99,7 @@ class DeterministicAgent:
         try:
             self.validator.validate(plan)
         except Exception as validation_error:
-            logger.error(f"Validation error: {validation_error}")
+            logger.warning(f"Validation error: {validation_error}")
             feedback = {"validation error": str(validation_error)}
             last_error_message = str(validation_error)
             return None, feedback, last_error_message, plan
@@ -104,7 +111,7 @@ class DeterministicAgent:
                 agent_input.payload,
             )
         except Exception as execution_error:
-            logger.error(f"Execution error: {execution_error}")
+            logger.warning(f"Execution error: {execution_error}")
             feedback = {"execution error": str(execution_error)}
             last_error_message = str(execution_error)
             return None, feedback, last_error_message, plan
@@ -154,7 +161,9 @@ class DeterministicAgent:
                 ],
             }
             for k in range(self.max_tries_for_plan):
-                logger.debug(f"Planning verification {k + 1} of 3 tries")
+                logger.debug(
+                    f"Planning verification {k + 1} of {self.max_tries_for_plan} tries"
+                )
 
                 agent_verifier_input = AgentInput(
                     goal=goal_verifier_prompt, payload=payload_verifier
@@ -168,7 +177,7 @@ class DeterministicAgent:
 
             if response_validation is None:
                 logger.warning(
-                    f"Agent failed to validate an execution after 3 attempts"
+                    f"Agent failed to validate an execution after {self.max_tries_for_plan} attempts"
                 )
             else:
                 response.validated, validation_feedback = self.validated(
@@ -179,6 +188,8 @@ class DeterministicAgent:
                 else:
                     feedback = {"Validation feedback": validation_feedback}
                     continue
+
+            self.rollback()
 
         self.history.extend(
             [
@@ -228,6 +239,13 @@ class DeterministicAgent:
     def clear_history(self):
         self.history = []
 
+    def rollback(self):
+        logger.debug(f"Rolling back agent")
+        if self.rollback_function:
+            self.rollback_function()
+        else:
+            logger.debug(f"No rollback function defined")
+
     def humanize_result(self, output: AgentOutput) -> str:
         trace_str = ""
         for step in output.trace:
@@ -246,7 +264,7 @@ class DeterministicAgent:
     def improve_result(self, response: str) -> str:
         improve_prompt = RESPONSE_IMPROVEMENT_PROMPT.format(
             format_response=self.planner.format_response,
-            response=response,
+            response=response.text,
         )
         result_improved = self.driver.generate_text(improve_prompt)
         logger.debug(f"Improved response: {result_improved}")
@@ -281,8 +299,21 @@ class DeterministicAgent:
 
         return is_valid, feedback
 
-    def generate_chat_log(self, chain_messages):
+    def generate_chat_log(
+        self, chain_messages: list[str], print_chat: bool = False, save_log: str = None
+    ):
+
+        if save_log:
+            formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
+            file_handler = logging.FileHandler(save_log)
+            file_handler.setFormatter(formatter)
+            logger.addHandler(file_handler)
+
         for i, message in enumerate(chain_messages, start=1):
             logger.debug(f"[REQUEST {i}]: '{message}'")
+            if print_chat:
+                print(f">>> {message}")
             response = self.send(message)
             logger.debug(f"[RESPONSE {i}]: '{response.text}'")
+            if print_chat:
+                print(f"    {response.text}")
