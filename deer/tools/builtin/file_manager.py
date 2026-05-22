@@ -56,6 +56,8 @@ class FileManager:
     def new_file(self, path: str, content: str) -> Struct(status=str):
         safe_path = self.jailed_path(path)
 
+        safe_path.parent.mkdir(parents=True, exist_ok=True)
+
         with open(safe_path, "w") as f:
             f.write(content)
 
@@ -135,4 +137,47 @@ class FileManager:
             "is_dir": safe_path.is_dir(),
             "is_file": safe_path.is_file(),
             "last_modified": stats.st_mtime,
+        }
+
+    @tool(
+        name="directory_tree",
+        description="Returns the directory structure as a nested dictionary.",
+    )
+    def directory_tree(self, path: str, max_depth: int = 3) -> Struct(tree=dict):
+        safe_path = self.jailed_path(path)
+
+        if not safe_path.exists():
+            raise FileNotFoundError(f"Path does not exist: {path}")
+
+        if not safe_path.is_dir():
+            raise ValueError(f"Path is not a directory: {path}")
+
+        def build_node(current_path: Path, depth: int = 0) -> dict:
+            relative_path = current_path.relative_to(self.jail)
+
+            node = {
+                "name": current_path.name,
+                "path": str(relative_path),
+                "type": "directory" if current_path.is_dir() else "file",
+            }
+
+            if current_path.is_file():
+                node["size_bytes"] = current_path.stat().st_size
+                return node
+
+            if depth >= max_depth:
+                node["children"] = []
+                node["truncated"] = True
+                return node
+
+            children = sorted(
+                current_path.iterdir(),
+                key=lambda item: (not item.is_dir(), item.name.lower()),
+            )
+
+            node["children"] = [build_node(child, depth + 1) for child in children]
+            return node
+
+        return {
+            "tree": build_node(safe_path),
         }
