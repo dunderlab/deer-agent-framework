@@ -6,7 +6,6 @@ import logging
 from deer.schema.plan import Plan
 from deer.tools.registry import ToolRegistry
 
-
 logger = logging.getLogger("DEER")
 
 
@@ -55,6 +54,33 @@ class Rules:
         for s in plan.steps:
             if s.tool and not self.registry.has(s.tool):
                 raise ValueError(f"Tool not found in ToolRegistry: {s.tool}")
+
+    def check_tools_registered_params(self, plan: Plan) -> None:
+        """Ensures tool steps provide exactly the parameters declared by the tool."""
+        for s in plan.steps:
+            if not s.tool:
+                continue
+
+            tool = self.registry.get(s.tool)
+            if not hasattr(tool, "params_type"):
+                continue
+
+            expected_params = set(tool.params_type or {})
+            provided_params = set(s.params or {})
+
+            missing = expected_params - provided_params
+            if missing:
+                raise ValueError(
+                    f"Step '{s.id}' is missing required params for tool "
+                    f"'{s.tool}': {', '.join(sorted(missing))}"
+                )
+
+            unknown = provided_params - expected_params
+            if unknown:
+                raise ValueError(
+                    f"Step '{s.id}' provides unknown params for tool "
+                    f"'{s.tool}': {', '.join(sorted(unknown))}"
+                )
 
     def check_execution(self, plan: Plan) -> None:
         for s in plan.steps:
