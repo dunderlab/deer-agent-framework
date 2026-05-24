@@ -2,6 +2,7 @@ from typing import Any, Dict, Iterable
 
 from .base import Tool
 from .decorators import MethodTool, get_tool_metadata, is_tool_method
+from deer.schema.io import Struct
 
 
 class ToolRegistry:
@@ -78,12 +79,11 @@ class ToolRegistry:
 
 
 class EchoTool(Tool):
-    """Tool that returns params['echo'] when provided, otherwise the input value."""
-
     name = "echo"
     description = "Returns params['echo'] when provided; otherwise returns the input value unchanged."
+    read_only = True
 
-    def run(self, value: Any, params: dict[str, Any] | None = None) -> Any:
+    def run(self, value: Any, params: dict[str, Any] | None = None) -> Struct(echo=Any):
         params = params or {}
         return params.get("echo", value)
 
