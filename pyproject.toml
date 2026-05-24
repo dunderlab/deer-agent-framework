@@ -10,7 +10,6 @@ authors = [{ name = "Yeison" }]
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-  "python-dotenv>=1.2.2",
   "pydantic>=2.0",
   "rich"
 ]
@@ -24,7 +23,8 @@ ollama = [
 ]
 debug = [
   "matplotlib>=3.10.9",
-  "arize-phoenix-otel>=0.16.1"
+  "arize-phoenix-otel>=0.16.1",
+  "python-dotenv>=1.2.2",
 ]
 
 [tool.setuptools.packages.find]
