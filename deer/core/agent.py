@@ -2,7 +2,6 @@ import logging
 import json
 import re
 import pickle
-from pickle import FALSE
 from typing import Callable
 
 from deer.prompts import (
