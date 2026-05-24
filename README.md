@@ -1,37 +1,50 @@
-# DEER - Deterministic Executable Engine for Runtime-agents
+# DEER - Deterministic Executable Engine for Runtime Agents
 
-**DEER** is not an agent framework. It is a **Deterministic Orchestration and Supervision Platform** designed to subordinate Large Language Models (LLMs) to a rigid, traditional software structure.
+**DEER** is not just another agent framework. It is a **Deterministic Orchestration and Supervision Platform** designed to subordinate Large Language Models (LLMs) to a rigid, traditional software structure.
 
-The system acts as the operational brain, judge, and data administrator, degrading the LLM to the role of a **specialized text-processing operator**.
-
----
-
-## System Identity Summary
-
-DEER’s primary purpose is to govern the linguistic capabilities of LLMs through a deterministic backend. It treats AI as a computational tool, not a decision-making entity.
-
-### What the System DOES (Scope & Functions)
-- **Workflow Governance:** The backend dictates the start, development, and end of every process.
-- **Traditional Infrastructure Management:** Deterministically controls authentication, relational database persistence, and session state.
-- **Trigger-Based IA Activation:** Evaluates data flow and activates a specific agent only when natural language processing is strictly necessary.
-- **Context Isolation & Specialization:** Instantiates modular agents with restrictive System Prompts that delimit roles, goals, and security rules.
-- **Real-Time Data Assembly:** Meticulously builds a **3-layer payload** before every query:
-    1. **Identity (Static):** The agent's core definition.
-    2. **Memory (Dynamic):** Filtered conversation history.
-    3. **External Data (RAG/APIs):** Live data extracted on-the-fly.
-- **Mandatory Quality Control:** Every LLM response is subjected to validation, cleaning, and formatting before persisting or reaching the user.
-
-### What the System DOES NOT (Limits & Restrictions)
-- **NO "Chat Wrapper":** It does not expose a raw LLM API nor decorate a generic chat interface.
-- **NO AI Governance:** The LLM does not make business logic decisions, manage application routes, or alter database states autonomously.
-- **NO Generic Models:** Rejects massive "all-in-one" prompts; problems are fragmented into sub-tasks for specialized operators.
-- **NO Trust in Raw Output:** Never delivers unvalidated LLM output to the user or internal systems.
-- **NO Context Saturation:** Does not dump disorganized history; the orchestrator selects only the essential raw material for each request.
+While most frameworks prioritize flexibility and rapid experimentation, DEER prioritizes **determinism, auditability, reproducibility, and production-grade execution control**.
 
 ---
 
-## The Request Lifecycle (Linear Assembly Line)
+## 1. The Problem & Philosophy
 
+### Problem Statement
+Current LLM agent frameworks suffer from structural weaknesses:
+- **Heuristic execution:** Tool calls are often selected based on "vibes" rather than contracts.
+- **Weak validation:** Plans are executed incrementally without a full formal check.
+- **Opacity:** Execution traces are often incomplete or non-reproducible.
+- **Lack of Control:** LLMs often control the architecture instead of the architecture controlling the LLM.
+
+### Core Design Philosophy
+1. **Structural Determinism:** Execution flow is governed by formal runtime rules, not emergent LLM behavior.
+2. **Typed Tool Contracts:** Every tool must declare validated `input_schema` and `output_schema`.
+3. **Plan-First Execution:** A complete JSON plan must satisfy formal validation before a single tool is executed.
+4. **Separation of Responsibilities:** Architecturally isolated components for Planning, Validation, Execution, and Tracing.
+5. **Full Traceability:** Every execution is recorded for deterministic replay and auditability.
+
+---
+
+## 2. System Identity (Scope)
+
+DEER treats the LLM as a **specialized text-processing operator**, not a decision-making entity.
+
+### What the System DOES
+- **Workflow Governance:** Dictates the start, development, and end of every process.
+- **Typed Data Flow:** Enforces strict data contracts between the LLM and your backend.
+- **Context Isolation:** Instantiates modular agents with restrictive System Prompts.
+- **Meticulous Payload Assembly:** Builds a **3-layer payload** (Identity, Memory, External Data) before every query.
+- **Mandatory Quality Control:** Every response is validated, cleaned, and formatted before persistence.
+
+### What the System DOES NOT
+- **NO "Chat Wrapper":** It is not a generic chat interface.
+- **NO Autonomous Business Logic:** The LLM does not alter database states or manage routes directly.
+- **NO Trust in Raw Output:** Never delivers unvalidated LLM output to internal systems.
+
+---
+
+## 3. How it Works
+
+### The Request Lifecycle (Linear Assembly Line)
 Every interaction follows a controlled, linear production line:
 
 1. **CONTROL LAYER** ──► (Evaluates state, extracts RAG, assembles 3-layer payload)
@@ -39,53 +52,51 @@ Every interaction follows a controlled, linear production line:
 3. **VALIDATION** ──────► (Backend cleans, verifies data contracts, and formats)
 4. **SECURE RESULT** ────► (Data is persisted or displayed)
 
+### Core Components
+- **Planner:** Uses an LLM to generate a structured pipeline JSON based on strict tool definitions.
+- **PlanValidator:** Performs static analysis (No cycles, type compatibility, depth constraints) **before** execution.
+- **Executor:** Executes tools step-by-step according to the validated plan.
+- **TraceStore:** Persists the entire state transition for auditing and deterministic replay.
+
 ---
 
-## Technical Differentiation
+## 4. Technical Differentiation
 
-| Dimension | Common Bot (Wrapper) | DEER Orchestration |
+| Dimension | Common Agent Framework | DEER Orchestration |
 | :--- | :--- | :--- |
-| **Flow Control** | Probabilistic (LLM prompt governed) | **Deterministic** (Backend code governed) |
-| **Data Handling** | Dumps all available text | **Structured** (Optimized 3-layer payload) |
+| **Flow Control** | Probabilistic (Prompt governed) | **Deterministic** (Backend governed) |
+| **Data Handling** | Dumps unstructured text | **Structured** (Optimized 3-layer payload) |
+| **Execution** | Incremental / Heuristic | **Plan-First** (Pre-validated) |
 | **Output Security** | Displays raw model output | **Validated** (Mandatory post-processing) |
-| **Structure** | Single open communication channel | **Modular** ecosystem of specialized agents |
 
 ---
 
-## Core Components
+## 5. Use Cases
 
-- **Planner/Orchestrator**: Generates a structured JSON plan based on rigid rules.
-- **PlanValidator**: Performs static analysis of the plan *before* any tool is executed.
-- **Executor**: Runs tools step-by-step according to the validated plan.
-- **TraceStore**: Full auditable recording of states, plans, and results.
+**DEER is suitable for:**
+- Enterprise reporting & Automated regulatory workflows.
+- Controlled data processing pipelines.
+- Audit-sensitive environments requiring traceable reasoning.
 
-## Installation
+**DEER is NOT optimized for:**
+- Creative conversational agents.
+- Rapid prototyping with flexible/vague prompts.
 
+---
+
+## 6. Getting Started
+
+### Installation
 ```bash
-pip install deer-agents
+pip install deer-agent-framework
 ```
 
-## Example: Defining a Specialized Tool
-
+### Example: Defining a Specialized Tool
 ```python
-from pydantic import BaseModel
-from deer_agents.tools import Tool
 
-class SalesInput(BaseModel):
-    period: str
-
-class SalesOutput(BaseModel):
-    total: float
-
-class FetchSales(Tool):
-    input_schema = SalesInput
-    output_schema = SalesOutput
-
-    def execute(self, input: SalesInput) -> SalesOutput:
-        # Business logic remains in the backend
-        return SalesOutput(total=1234.56)
 ```
 
-## License
+---
 
-MIT License
+## 7. License
+BSD 2-Clause License
