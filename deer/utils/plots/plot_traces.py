@@ -1,25 +1,8 @@
-"""Utilities for generating Sankey-style flow visualizations.
-
-This module provides utilities to:
-
-- Scale values between ranges.
-- Draw Bézier-based Sankey flows.
-- Compute consistent row heights.
-- Render Sankey diagrams for process traces.
-- Load and preprocess trace data.
-
-The implementation follows:
-- PEP 8
-- PEP 257
-- PEP 484
-- NumPy docstring style
-"""
-
-from __future__ import annotations
-
 import os
 import pickle
+
 from collections import Counter
+from collections.abc import Iterable
 from typing import Any
 
 import matplotlib.colors as mcolors
@@ -72,6 +55,22 @@ def scale_range(
     return (
         (value - input_min) * (output_max - output_min) / (input_max - input_min)
     ) + output_min
+
+
+def hide_axis_spines(axis: plt.Axes) -> None:
+    """Hide the top and right spines of a Matplotlib axis.
+
+    Parameters
+    ----------
+    axis : matplotlib.axes.Axes
+        Axis where the spines will be hidden.
+
+    Returns
+    -------
+    None
+    """
+    axis.spines["top"].set_visible(False)
+    axis.spines["right"].set_visible(False)
 
 
 def draw_bezier_flow(
@@ -768,3 +767,129 @@ def get_plot_data(
         planning_sequences,
         validation_sequences,
     )
+
+
+def count_trace_frequencies(
+    trace_sequences: Iterable[Iterable[Any]],
+) -> tuple[list[str], list[float]]:
+    """Count repeated trace sequences and compute relative frequencies.
+
+    Parameters
+    ----------
+    trace_sequences : Iterable[Iterable[Any]]
+        Collection of trace sequences to analyze.
+
+    Returns
+    -------
+    tuple[list[str], list[float]]
+        A tuple containing:
+        - A list of trace labels.
+        - A list of relative frequencies in percentage.
+    """
+    trace_frequency_counter = Counter(
+        tuple(trace_sequence) for trace_sequence in trace_sequences
+    )
+
+    sorted_trace_frequencies = trace_frequency_counter.most_common()
+
+    trace_labels = [
+        f"Path {index + 1}" for index in range(len(sorted_trace_frequencies))
+    ]
+
+    absolute_frequencies = [
+        frequency_count for _, frequency_count in sorted_trace_frequencies
+    ]
+
+    total_frequency_count = sum(absolute_frequencies)
+
+    relative_frequencies = [
+        (100 * frequency_count / total_frequency_count)
+        for frequency_count in absolute_frequencies
+    ]
+
+    return (
+        trace_labels,
+        relative_frequencies,
+    )
+
+
+def draw_trace_frequency_bars(
+    figure: Any,
+    trace_datasets: tuple[
+        Iterable[Iterable[Any]],
+        Iterable[Iterable[Any]],
+    ],
+) -> None:
+    """Draw bar charts for planning and validation trace frequencies.
+
+    Parameters
+    ----------
+    figure : Any
+        Figure-like object containing the subplot method.
+    trace_datasets : tuple[
+        Iterable[Iterable[Any]],
+        Iterable[Iterable[Any]],
+    ]
+        Tuple containing:
+        - Planning trace data.
+        - Validation trace data.
+
+    Returns
+    -------
+    None
+    """
+    if len(trace_datasets) != 2:
+        msg = "trace_datasets must contain exactly " "two datasets."
+        raise ValueError(msg)
+
+    planning_trace_sequences, validation_trace_sequences = trace_datasets
+
+    # PSS: Renamed subplot variables and functions
+    # to preserve Sankey/trace visualization context.
+
+    # Plot planning trace frequencies.
+    planning_axis = figure.add_subplot(121)
+    hide_axis_spines(planning_axis)
+
+    plt.grid(
+        True,
+        zorder=-1,
+    )
+
+    (
+        planning_trace_labels,
+        planning_trace_percentages,
+    ) = count_trace_frequencies(planning_trace_sequences)
+
+    plt.bar(
+        planning_trace_labels,
+        planning_trace_percentages,
+        zorder=99,
+        color="C0",
+    )
+
+    plt.title("Planning trace frequencies")
+    plt.ylabel("Percentage (%)")
+
+    # Plot validation trace frequencies.
+    validation_axis = figure.add_subplot(122)
+    hide_axis_spines(validation_axis)
+
+    plt.grid(
+        True,
+        zorder=-1,
+    )
+
+    (
+        validation_trace_labels,
+        validation_trace_percentages,
+    ) = count_trace_frequencies(validation_trace_sequences)
+
+    plt.bar(
+        validation_trace_labels,
+        validation_trace_percentages,
+        zorder=99,
+        color="C1",
+    )
+
+    plt.title("Validation trace frequencies")
