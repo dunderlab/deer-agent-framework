@@ -661,7 +661,7 @@ def filter_structures(
     trace_data : list[list[str]]
         Trace sequences.
     threshold : float, optional
-        Frequency threshold.
+        Preserve the most frequent trajectories until covering at least `threshold` of all traces.
 
     Returns
     -------
@@ -671,14 +671,24 @@ def filter_structures(
     if not trace_data:
         return []
 
-    total_structures = len(trace_data)
+    structure_counts = Counter(tuple(trace_sequence) for trace_sequence in trace_data)
 
-    structure_counts = Counter(tuple(sublist) for sublist in trace_data)
+    total_traces = len(trace_data)
+    sorted_structures = structure_counts.most_common()
+    selected_structures: set[tuple[str, ...]] = set()
+    cumulative_probability = 0.0
+
+    for structure, count in sorted_structures:
+        probability = count / total_traces
+        selected_structures.add(structure)
+        cumulative_probability += probability
+        if cumulative_probability >= threshold:
+            break
 
     return [
-        sublist
-        for sublist in trace_data
-        if (structure_counts[tuple(sublist)] / total_structures) >= (1 - threshold)
+        trace_sequence
+        for trace_sequence in trace_data
+        if tuple(trace_sequence) in selected_structures
     ]
 
 
