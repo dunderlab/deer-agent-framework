@@ -13,6 +13,9 @@ class TraceStore:
     def append(self, trace: StepTrace) -> None:
         self._buffer.append(trace)
 
+    def extend(self, traces: list[StepTrace]):
+        self._buffer.extend(traces)
+
     def get_trace(self) -> List[StepTrace]:
         """Devuelve una copia de la traza acumulada."""
         return list(self._buffer)

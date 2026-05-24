@@ -52,6 +52,7 @@ class FileManager:
     @tool(
         name="new_file",
         description="Creates a new file with the given content.",
+        read_only=False,
     )
     def new_file(self, path: str, content: str) -> Struct(status=str):
         safe_path = self.jailed_path(path)
@@ -78,21 +79,22 @@ class FileManager:
             "content": content,
         }
 
-    @tool(
-        name="list_directory",
-        description="Lists the files in a directory.",
-    )
-    def list_directory(self, path: str) -> Struct(files=list[str]):
-        safe_path = self.jailed_path(path)
-        files = [item.name for item in safe_path.iterdir()]
-
-        return {
-            "files": files,
-        }
+    # @tool(
+    #     name="list_directory",
+    #     description="Lists the files in a directory.",
+    # )
+    # def list_directory(self, path: str) -> Struct(files=list[str]):
+    #     safe_path = self.jailed_path(path)
+    #     files = [item.name for item in safe_path.iterdir()]
+    #
+    #     return {
+    #         "files": files,
+    #     }
 
     @tool(
         name="delete_file",
         description="Deletes a file.",
+        read_only=False,
     )
     def delete_file(self, path: str) -> Struct(status=str):
         safe_path = self.jailed_path(path)
@@ -109,6 +111,7 @@ class FileManager:
     @tool(
         name="create_directory",
         description="Creates a directory.",
+        read_only=False,
     )
     def create_directory(self, path: str) -> Struct(status=str):
         safe_path = self.jailed_path(path)

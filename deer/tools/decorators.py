@@ -15,6 +15,7 @@ def tool(
     *,
     name: str,
     description: str,
+    read_only: bool = True,
 ):
     """Mark an instance method as a deterministic tool."""
 
@@ -23,6 +24,7 @@ def tool(
             func=func,
             name=name,
             description=description,
+            read_only=read_only,
         )
         setattr(
             func,
@@ -47,12 +49,14 @@ class MethodTool(Tool):
         params_type: Any,
         return_type: Any,
         method: Callable[..., Any],
+        read_only: bool = True,
     ) -> None:
         self.name = name
         self.description = description
         # self.value_type = value_type
         self.params_type = params_type
         self.return_type = return_type
+        self.read_only = read_only
         self._method = method
         super().__init__()
 
@@ -74,6 +78,7 @@ def _build_tool_metadata(
     func: Callable[..., Any],
     name: str,
     description: str,
+    read_only: bool,
 ) -> dict[str, Any]:
     if not name or not name.strip():
         raise ValueError("Tool name cannot be empty.")
@@ -118,6 +123,7 @@ def _build_tool_metadata(
     return {
         "name": name,
         "description": full_description,
+        "read_only": read_only,
         # "value_type": value_type,
         "params_type": params_type,
         "return_type": return_type,

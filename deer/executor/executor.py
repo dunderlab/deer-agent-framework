@@ -12,9 +12,9 @@ logger = logging.getLogger("DEER")
 
 
 class Executor:
-    def __init__(self, registry: ToolRegistry, trace_store: TraceStore) -> None:
+    def __init__(self, registry: ToolRegistry) -> None:
         self.registry = registry
-        self.trace_store = trace_store
+        self.trace_store = TraceStore()
 
     def execute(self, plan: Plan, payload: {}) -> AgentOutput:
         self.trace_store.reset()

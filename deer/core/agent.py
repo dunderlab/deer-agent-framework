@@ -1,8 +1,9 @@
 import logging
 import json
 import re
-
-from black.lines import Callable
+import pickle
+from pickle import FALSE
+from typing import Callable
 
 from deer.prompts import (
     RESPONSE_IMPROVEMENT_PROMPT,
@@ -10,6 +11,7 @@ from deer.prompts import (
     HUMANIZER_PROMPT,
     GOAL_VERIFIER_PROMPT,
     VERIFIER_JUDGE_PROMPT,
+    PLANNER_PROMPT,
 )
 from deer.drivers.base_driver import LLMDriver
 from deer.planner.planner import Planner
@@ -40,11 +42,9 @@ class DeterministicAgent:
         self.identity = identity
         self.driver = driver
         self.registry = registry or default_registry()
-        self.trace_store = TraceStore()
 
         self.executor = Executor(
             registry=self.registry,
-            trace_store=self.trace_store,
         )
 
         self.validator = PlanValidator(
@@ -64,24 +64,28 @@ class DeterministicAgent:
         self.max_tries_for_plan = max_tries_for_plan
 
         self.history = []
+        self.trace = []
         self.rollback_function = rollback
+        # self.plan = None
+        # self.validation_plan = None
 
         logger.info(f"DEER - Deterministic Executable Engine for Runtime-agents")
         logger.info(
             f"Initialized DeterministicAgent with '{self.driver.model_name}' model"
         )
         logger.info(f"Identity: {self.identity}")
-        logger.info(f"Available tools:\n{self.registry.describe()}")
+        logger.info(f"Available tools:\n{self.registry.describe(read_only=False)}")
 
     def execute_plan(
         self,
         agent_input: AgentInput,
         feedback: {},
+        read_only: bool = False,
     ):
         last_error_message = ""
 
         try:
-            plan = self.planner.plan(agent_input, feedback)
+            plan = self.planner.plan(agent_input, feedback, read_only=read_only)
         except Exception as planning_error:
             logger.warning(f"Planning error: {planning_error}")
             feedback = {"Planning error": str(planning_error)}
@@ -168,8 +172,8 @@ class DeterministicAgent:
                 agent_verifier_input = AgentInput(
                     goal=goal_verifier_prompt, payload=payload_verifier
                 )
-                response_validation, feedback_, _, _ = self.execute_plan(
-                    agent_verifier_input, feedback_
+                response_validation, feedback_, _, validation_plan = self.execute_plan(
+                    agent_verifier_input, feedback_, read_only=True
                 )
                 if response_validation is None:
                     continue
@@ -204,6 +208,13 @@ class DeterministicAgent:
             ]
         )
 
+        self.trace.append(
+            {
+                "trace": response.trace,
+                "validation_trace": response_validation.trace,
+            }
+        )
+
         self.planner.goal = agent_input.goal
         return response
 
@@ -215,7 +226,7 @@ class DeterministicAgent:
 
             if msg:
                 output = self.send(msg)
-                self.prety_print(f"    {output.text}\n\n")
+                self.pretty_print(f"    {output.text}\n\n")
 
     def send(self, msg):
         user_input = AgentInput(
@@ -224,20 +235,21 @@ class DeterministicAgent:
                 "history": self.history,
             },
         )
-        output = self.run(user_input)
+        response = self.run(user_input)
 
-        if isinstance(output.result, dict):
-            output.result = self.humanize_result(output)
+        if isinstance(response.result, dict):
+            response.result = self.humanize_result(response)
         else:
-            output.result = self.improve_result(output)
-        return output
+            response.result = self.improve_result(response)
+        return response
 
-    def prety_print(self, out: str):
+    def pretty_print(self, out: str):
         console = Console()
         console.print(Markdown(out))
 
     def clear_history(self):
         self.history = []
+        self.trace = []
 
     def rollback(self):
         logger.debug(f"Rolling back agent")
@@ -317,3 +329,16 @@ class DeterministicAgent:
             logger.debug(f"[RESPONSE {i}]: '{response.text}'")
             if print_chat:
                 print(f"    {response.text}")
+
+    def save_trace(self, filename: str):
+        obj = {
+            "tools": list(self.registry.list_tools()),
+            "trace": self.trace,
+            "history": self.history,
+        }
+
+        if not filename.endswith(".trace"):
+            filename = f"{filename}.trace"
+
+        with open(filename, "wb") as f:
+            pickle.dump(obj, f)

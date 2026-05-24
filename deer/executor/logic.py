@@ -34,17 +34,20 @@ _ALLOWED_NODE_TYPES = (
     ast.Compare,
     ast.Eq,
     ast.NotEq,
-    ast.NotIn,
     ast.Lt,
     ast.LtE,
     ast.Gt,
     ast.GtE,
+    ast.NotIn,
     ast.BoolOp,
     ast.And,
     ast.Or,
     ast.IfExp,
     ast.JoinedStr,
     ast.FormattedValue,
+    ast.List,
+    ast.Dict,
+    ast.Tuple,
 )
 
 _SAFE_GLOBALS = {

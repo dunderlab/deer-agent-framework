@@ -34,6 +34,7 @@ class ToolRegistry:
                 MethodTool(
                     name=metadata["name"],
                     description=metadata["description"],
+                    read_only=metadata["read_only"],
                     params_type=metadata["params_type"],
                     return_type=metadata["return_type"],
                     method=attr,
@@ -55,16 +56,20 @@ class ToolRegistry:
 
         return name in self._tools
 
-    def names(self) -> Iterable[str]:
+    def list_tools(self) -> Iterable[str]:
         return self._tools.keys()
 
-    def describe(self) -> str:
+    def describe(self, read_only=False) -> str:
         if not self._tools:
             return "- No tools are available."
 
         lines = []
 
         for tool in self._tools.values():
+
+            if read_only and not tool.read_only:
+                continue
+
             description = tool.description or "No description provided."
             description = description.replace("\n", "\n  ")
             lines.append(f"- {tool.name}: {description}")
