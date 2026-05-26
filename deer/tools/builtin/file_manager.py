@@ -1,7 +1,5 @@
-import os.path
+from deer.tools import ToolProvider, tool, Return
 
-from deer.tools.decorators import tool
-from deer.schema.io import Struct
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -11,7 +9,7 @@ class FileManagerError(ValueError):
 
 
 @dataclass
-class FileManager:
+class FileManager(ToolProvider):
     jail: Path | str
 
     def __post_init__(self):
@@ -49,12 +47,9 @@ class FileManager:
 
         return resolved
 
-    @tool(
-        name="new_file",
-        description="Creates a new file with the given content.",
-        read_only=False,
-    )
-    def new_file(self, path: str, content: str) -> Struct(status=str):
+    @tool(modifies_state=True)
+    def new_file(self, path: str, content: str) -> Return(status=str):
+        """Creates a new file with the given content."""
         safe_path = self.jailed_path(path)
 
         safe_path.parent.mkdir(parents=True, exist_ok=True)
@@ -66,11 +61,9 @@ class FileManager:
             "status": safe_path.exists(),
         }
 
-    @tool(
-        name="read_file",
-        description="Reads the content of a file.",
-    )
-    def read_file(self, path: str) -> Struct(content=str):
+    @tool()
+    def read_file(self, path: str) -> Return(content=str):
+        """Reads the content of a file."""
         safe_path = self.jailed_path(path)
 
         with open(safe_path, "r") as f:
@@ -79,24 +72,9 @@ class FileManager:
             "content": content,
         }
 
-    # @tool(
-    #     name="list_directory",
-    #     description="Lists the files in a directory.",
-    # )
-    # def list_directory(self, path: str) -> Struct(files=list[str]):
-    #     safe_path = self.jailed_path(path)
-    #     files = [item.name for item in safe_path.iterdir()]
-    #
-    #     return {
-    #         "files": files,
-    #     }
-
-    @tool(
-        name="delete_file",
-        description="Deletes a file.",
-        read_only=False,
-    )
-    def delete_file(self, path: str) -> Struct(status=str):
+    @tool(modifies_state=True)
+    def delete_file(self, path: str) -> Return(status=str):
+        """Deletes a file."""
         safe_path = self.jailed_path(path)
 
         if safe_path.is_file():
@@ -108,27 +86,22 @@ class FileManager:
             "status": not safe_path.exists(),
         }
 
-    @tool(
-        name="create_directory",
-        description="Creates a directory.",
-        read_only=False,
-    )
-    def create_directory(self, path: str) -> Struct(status=str):
+    @tool(modifies_state=True)
+    def create_directory(self, path: str) -> Return(status=str):
+        """Creates a directory."""
         safe_path = self.jailed_path(path)
         safe_path.mkdir(parents=True, exist_ok=True)
         return {"status": "success"}
 
-    @tool(
-        name="get_file_info",
-        description="Retrieves metadata about a file or directory, including its existence, size, type, and modification time.",
-    )
-    def get_file_info(self, filename: str) -> Struct(
+    @tool()
+    def get_file_info(self, filename: str) -> Return(
         exists=bool,
         size_bytes=int,
         is_dir=bool,
         is_file=bool,
         last_modified=float,
     ):
+        """Retrieves metadata about a file or directory, including its existence, size, type, and modification time."""
         safe_path = self.jailed_path(filename)
         if not safe_path.exists():
             return {"exists": False}
@@ -142,11 +115,9 @@ class FileManager:
             "last_modified": stats.st_mtime,
         }
 
-    @tool(
-        name="directory_tree",
-        description="Returns the directory structure as a nested dictionary.",
-    )
-    def directory_tree(self, path: str, max_depth: int = 3) -> Struct(tree=dict):
+    @tool()
+    def directory_tree(self, path: str, max_depth: int = 3) -> Return(tree=dict):
+        """Returns the directory structure as a nested dictionary."""
         safe_path = self.jailed_path(path)
 
         if not safe_path.exists():
