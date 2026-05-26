@@ -13,7 +13,11 @@ logger = logging.getLogger("DEER-LLM")
 
 
 class OllamaDriver(LLMDriver):
-    def __init__(self, model_name: str, host: str = "http://localhost:11434"):
+    def __init__(
+        self,
+        model_name: str,
+        host: str = "http://localhost:11434",
+    ):
         self.client = Client(host=host)
         self.model_name = model_name
 
@@ -42,9 +46,13 @@ class OllamaDriver(LLMDriver):
             model=self.model_name,
             prompt=prompt,
             format="json",
+            options={
+                "temperature": self.temperature_json,
+                "top_p": self.top_p,
+            },
         )
         response_text = response["response"]
-        response_text = self.escape_logic(response_text)
+        # response_text = self.escape_logic(response_text)
 
         try:
             data = json.loads(response_text)

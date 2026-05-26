@@ -11,6 +11,9 @@ T = TypeVar("T", bound=BaseModel)
 class LLMDriver(Protocol):
     """Contract for drivers supporting Architectural Brilliance."""
 
+    temperature_json = 0.0
+    top_p = 1.0
+
     def generate_text(self, prompt: str) -> str:
         """
         Generates text from the given prompt using the LLM driver.
@@ -24,9 +27,9 @@ class LLMDriver(Protocol):
         """
         pass
 
-    def escape_logic(self, text: str) -> str:
-        text = text.replace('"""', '\\"\\"\\"')
-        return text
+    # def escape_logic(self, text: str) -> str:
+    #     text = text.replace('"""', '\\"\\"\\"')
+    #     return text
 
     def extract_json(self, text: str) -> dict:
         text = text.strip()

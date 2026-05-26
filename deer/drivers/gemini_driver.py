@@ -50,7 +50,7 @@ class GeminiDriver(LLMDriver):
             raise RuntimeError(f"Error generating text with Gemini: {e}")
 
         response_text = response.text
-        response_text = self.escape_logic(response_text)
+        # response_text = self.escape_logic(response_text)
         data = json.loads(response_text)
 
         if response_model:
