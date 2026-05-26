@@ -44,9 +44,9 @@ agent = DeterministicAgent(
 
 
 if __name__ == "__main__":
-    chain_messages = [*SEQUENTIAL_FILE_EDITION_PROMPT]
+    chain_messages = [*PYTHON_PROJECT_PROMPT]
 
-    for i in range(100):
+    for i in range(1):
         agent.clear_history()
         agent.rollback()
 
@@ -55,6 +55,6 @@ if __name__ == "__main__":
         agent.generate_chat_log(
             chain_messages,
             print_chat=True,
-            save_log=f"traces/sequential/{name}.log",
+            save_log=f"traces/python_project3/{name}.log",
         )
-        agent.save_trace(f"traces/sequential/{name}.trace")
+        agent.save_trace(f"traces/python_project3/{name}.trace")

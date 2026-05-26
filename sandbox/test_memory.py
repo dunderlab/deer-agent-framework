@@ -1,5 +1,5 @@
 from deer.core.agent import DeterministicAgent
-from deer.schema.io import AgentInput, Struct
+from deer.schema.io import AgentInput, Return
 from deer.tools.registry import default_registry
 from deer.tools.decorators import tool
 
@@ -19,8 +19,8 @@ class MathTools:
         description="Calculates the area of a circle.",
     )
     def circle_area(
-        params: Struct(radius=int | float),
-    ) -> Struct(area=int | float):
+        params: Return(radius=int | float),
+    ) -> Return(area=int | float):
         radius = params["radius"]
         area = 3.141592653589793 * radius**2
         return {
