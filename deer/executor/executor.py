@@ -131,7 +131,7 @@ class Executor:
         params: Dict[str, Any],
         context: Dict[str, Any],
     ) -> Any:
-        logic = self.fix_multiline_strings(logic)
+        # logic = self.fix_multiline_strings(logic)
         logger.debug(f"Executing logic: {logic}")
         return evaluate_logic(
             logic,
@@ -140,14 +140,15 @@ class Executor:
             context=context,
         )
 
-    def fix_multiline_strings(self, code: str) -> str:
-        pattern = r'=\s*"([^"\n]*\n(?:.*\n)*?.*?)"'
-
-        def replacer(match):
-            content = match.group(1)
-            return '= """' + content + '"""'
-
-        return re.sub(pattern, replacer, code, flags=re.MULTILINE)
+    #
+    # def fix_multiline_strings(self, code: str) -> str:
+    #     pattern = r'=\s*"([^"\n]*\n(?:.*\n)*?.*?)"'
+    #
+    #     def replacer(match):
+    #         content = match.group(1)
+    #         return '= """' + content + '"""'
+    #
+    #     return re.sub(pattern, replacer, code, flags=re.MULTILINE)
 
     # def normalize_logic(self, logic: str) -> str:
     #     logic = logic.strip()

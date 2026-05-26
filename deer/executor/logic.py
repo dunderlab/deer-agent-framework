@@ -1,84 +1,10 @@
 import ast
-import math
 from typing import Any, Dict, Mapping
+from .logic_secure import ALLOWED_NODE_TYPES, SAFE_GLOBALS
 
 
 class UnsafeLogicError(ValueError):
     """Raised when the code contains disallowed or dangerous syntax."""
-
-
-# Allowed nodes to permit mathematical logic, strings, and basic assignments
-_ALLOWED_NODE_TYPES = (
-    ast.Module,
-    ast.Assign,
-    ast.Expr,
-    ast.Store,
-    ast.Load,
-    ast.Name,
-    ast.Constant,
-    ast.BinOp,
-    ast.UnaryOp,
-    ast.Add,
-    ast.Sub,
-    ast.Mult,
-    ast.Div,
-    ast.FloorDiv,
-    ast.Mod,
-    ast.Pow,
-    ast.USub,
-    ast.UAdd,
-    ast.Call,
-    ast.keyword,
-    ast.Subscript,
-    ast.Attribute,
-    ast.Compare,
-    ast.Eq,
-    ast.NotEq,
-    ast.Lt,
-    ast.LtE,
-    ast.Gt,
-    ast.GtE,
-    ast.NotIn,
-    ast.BoolOp,
-    ast.And,
-    ast.Or,
-    ast.IfExp,
-    ast.JoinedStr,
-    ast.FormattedValue,
-    ast.List,
-    ast.Dict,
-    ast.Tuple,
-)
-
-_SAFE_GLOBALS = {
-    "__builtins__": {},
-    "pi": math.pi,
-    "e": math.e,
-    "abs": abs,
-    "min": min,
-    "max": max,
-    "round": round,
-    "pow": pow,
-    "sum": sum,
-    "sqrt": math.sqrt,
-    "log": math.log,
-    "exp": math.exp,
-    "ceil": math.ceil,
-    "floor": math.floor,
-    "sin": math.sin,
-    "cos": math.cos,
-    "tan": math.tan,
-    "str": str,
-    "int": int,
-    "float": float,
-    "len": len,
-    "bool": bool,
-    "list": list,
-    "dict": dict,
-    "enumerate": enumerate,
-    "zip": zip,
-    "range": range,
-}
 
 
 def _is_safe_variable_name(name: str) -> bool:
@@ -122,7 +48,7 @@ def evaluate_logic(
     # 3. Execute
     try:
         compiled = compile(tree, filename="<step.logic>", mode="exec")
-        exec(compiled, _SAFE_GLOBALS, local_scope)
+        exec(compiled, SAFE_GLOBALS, local_scope)
     except Exception as e:
         raise RuntimeError(f"Runtime error in logic execution: {e}")
 
@@ -134,7 +60,7 @@ def evaluate_logic(
 
 def _validate_ast(tree: ast.AST) -> None:
     for node in ast.walk(tree):
-        if not isinstance(node, _ALLOWED_NODE_TYPES):
+        if not isinstance(node, ALLOWED_NODE_TYPES):
             raise UnsafeLogicError(f"Disallowed syntax: {type(node).__name__}")
 
         # Do not allow access to private attributes (._secret)
@@ -143,7 +69,7 @@ def _validate_ast(tree: ast.AST) -> None:
 
         # Do not allow assignments to protected variables
         if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store):
-            if node.id.startswith("_") or node.id in _SAFE_GLOBALS:
+            if node.id.startswith("_") or node.id in SAFE_GLOBALS:
                 raise UnsafeLogicError(
                     f"Cannot assign a value to protected variable: {node.id}"
                 )
