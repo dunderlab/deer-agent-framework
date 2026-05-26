@@ -2,7 +2,7 @@ from typing import Any, Dict, Iterable
 
 from .base import Tool
 from .decorators import MethodTool, get_tool_metadata, is_tool_method
-from deer.schema.io import Struct
+from deer.schema.io import Return
 
 
 class ToolRegistry:
@@ -35,7 +35,7 @@ class ToolRegistry:
                 MethodTool(
                     name=metadata["name"],
                     description=metadata["description"],
-                    read_only=metadata["read_only"],
+                    modifies_state=metadata["modifies_state"],
                     params_type=metadata["params_type"],
                     return_type=metadata["return_type"],
                     method=attr,
@@ -60,7 +60,7 @@ class ToolRegistry:
     def list_tools(self) -> Iterable[str]:
         return self._tools.keys()
 
-    def describe(self, read_only=False) -> str:
+    def describe(self, include_state_modifying=True) -> str:
         if not self._tools:
             return "- No tools are available."
 
@@ -68,7 +68,7 @@ class ToolRegistry:
 
         for tool in self._tools.values():
 
-            if read_only and not tool.read_only:
+            if not include_state_modifying and tool.modifies_state:
                 continue
 
             description = tool.description or "No description provided."
@@ -81,11 +81,11 @@ class ToolRegistry:
 class EchoTool(Tool):
     name = "echo"
     description = "Returns params['echo'] when provided; otherwise returns the input value unchanged."
-    read_only = True
+    modifies_state = False
 
-    def run(self, value: Any, params: dict[str, Any] | None = None) -> Struct(echo=Any):
+    def run(self, params: dict[str, Any] | None = None) -> Return(echo={}):
         params = params or {}
-        return params.get("echo", value)
+        return params
 
 
 def default_registry() -> ToolRegistry:

@@ -39,7 +39,6 @@ class Executor:
                     params = self.resolve_params(step.params or {}, value, context)
                     output = self.execute_tool(
                         tool_name=step.tool,
-                        input_value=value,
                         params=params,
                     )
                     trace_tool = step.tool
@@ -114,12 +113,11 @@ class Executor:
     def execute_tool(
         self,
         tool_name: str,
-        input_value: Any,
         params: Dict[str, Any],
     ) -> Any:
         tool = self.registry.get(tool_name)
-        valid_input = tool.validate_input(input_value)
-        output = tool.run(valid_input, params=params)
+        input_params = tool.validate_input(params)
+        output = tool.run(params=input_params)
         logger.info(f"Executed tool: {tool_name}")
         logger.debug(f"Tool {tool_name} output: {output}")
         return tool.validate_output(output)

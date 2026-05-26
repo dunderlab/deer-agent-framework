@@ -26,11 +26,18 @@ class Planner:
         self.goal = ""
 
     def plan(
-        self, agent_input: AgentInput, feedback={}, read_only: bool = False
+        self,
+        agent_input: AgentInput,
+        feedback={},
+        include_state_modifying: bool = True,
     ) -> Plan:
         if self.improve_goal:
             self.run_improve_goal(agent_input=agent_input)
-        plan_prompt = self.build_prompt(agent_input, feedback, read_only)
+        plan_prompt = self.build_prompt(
+            agent_input,
+            feedback,
+            include_state_modifying=include_state_modifying,
+        )
         plan = self.llm_driver.generate_json(plan_prompt, response_model=Plan)
         return plan
 
@@ -47,7 +54,7 @@ class Planner:
         self,
         agent_input: AgentInput,
         feedback={},
-        read_only=False,
+        include_state_modifying=True,
     ) -> str:
         # As usable data must be JSON consistent.
         agent_input.payload.update(feedback)
@@ -57,7 +64,7 @@ class Planner:
             identity=self.identity,
             goal=agent_input.goal,
             payload=payload,
-            tools=self.registry.describe(read_only),
+            tools=self.registry.describe(include_state_modifying),
             format_response=self.format_response,
         )
         return planner_prompt

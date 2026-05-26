@@ -33,7 +33,7 @@ class AgentOutput(BaseModel):
         return f"{str(self.result)}"
 
 
-def Struct(**fields: Any) -> type[BaseModel]:
+def Return(**fields: Any) -> type[BaseModel]:
     return create_model(
         f"InlineModel_{next(_counter)}",
         **{name: (field_type, ...) for name, field_type in fields.items()},
