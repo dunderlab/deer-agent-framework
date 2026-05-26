@@ -186,23 +186,28 @@ class DeterministicAgent:
                 response_validation, feedback_, _, validation_plan = self.execute_plan(
                     agent_verifier_input, feedback_, read_only=True
                 )
-                if response_validation is None:
+
+                if response_validation:
+                    response.validated, validation_feedback = self.validated(
+                        response_validation
+                    )
+
+                    if response.validated:
+                        break
+                    else:
+                        feedback_ = {"Validation feedback": validation_feedback}
+                        continue
+                else:
                     continue
-                break
 
             if response_validation is None:
                 logger.warning(
                     f"Agent failed to verificate after {self.max_tries_for_plan} attempts"
                 )
-            else:
-                response.validated, validation_feedback = self.validated(
-                    response_validation
-                )
-                if response.validated:
-                    break
-                else:
-                    feedback = {"Validation feedback": validation_feedback}
-                    continue
+                continue
+
+            if response.validated:
+                break
 
             self.rollback()
 
@@ -321,7 +326,7 @@ class DeterministicAgent:
             logger.warning(f"Validation failed: {data.get('feedback')}")
             feedback = data.get("feedback")
         else:
-            logger.info(f"Validated")
+            logger.info(f"Attempt validated successfully")
 
         return is_valid, feedback
 
