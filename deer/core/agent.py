@@ -3,6 +3,7 @@ import json
 import re
 import pickle
 from typing import Callable
+from datetime import datetime
 
 from deer.prompts import (
     RESPONSE_IMPROVEMENT_PROMPT,
@@ -102,11 +103,11 @@ class DeterministicAgent:
         try:
             self.validator.validate(plan)
         except Exception as validation_error:
-            logger.warning(f"Validation error: {validation_error}")
-            feedback = {"validation error": str(validation_error)}
+            logger.warning(f"Verification error: {validation_error}")
+            feedback = {"verification error": str(validation_error)}
             last_error_message = str(validation_error)
             return None, feedback, last_error_message, plan
-        logger.info(f"Plan validated")
+        logger.info(f"Plan verified")
 
         try:
             response = self.executor.execute(
@@ -125,13 +126,21 @@ class DeterministicAgent:
     def run(self, agent_input: AgentInput) -> AgentOutput:
 
         feedback = {}
+        run_trace = {}
 
-        for j in range(self.max_tries_for_plan):
+        for attempt_idx in range(self.max_tries_for_plan):
+            logger.debug(f"Attempt {attempt_idx + 1} of {self.max_tries_for_plan}")
 
-            for i in range(self.max_tries_for_plan):
+            run_trace[f"Attempt-{attempt_idx + 1}"] = {}
+
+            for solution_idx in range(self.max_tries_for_plan):
                 logger.debug(
-                    f"Planning iteration {i+1} of {self.max_tries_for_plan} tries"
+                    f"Solution planning {solution_idx + 1} of {self.max_tries_for_plan}"
                 )
+                run_trace[f"Attempt-{attempt_idx + 1}"][
+                    f"Solution-{solution_idx + 1}"
+                ] = datetime.now()
+
                 response, feedback, last_error_message, plan = self.execute_plan(
                     agent_input, feedback
                 )
@@ -163,10 +172,13 @@ class DeterministicAgent:
                     for s in response.trace
                 ],
             }
-            for k in range(self.max_tries_for_plan):
+            for verification_idx in range(self.max_tries_for_plan):
                 logger.debug(
-                    f"Planning verification {k + 1} of {self.max_tries_for_plan} tries"
+                    f"Verification planning {verification_idx + 1} of {self.max_tries_for_plan}"
                 )
+                run_trace[f"Attempt-{attempt_idx + 1}"][
+                    f"Verification-{verification_idx + 1}"
+                ] = datetime.now()
 
                 agent_verifier_input = AgentInput(
                     goal=goal_verifier_prompt, payload=payload_verifier
@@ -180,7 +192,7 @@ class DeterministicAgent:
 
             if response_validation is None:
                 logger.warning(
-                    f"Agent failed to validate an execution after {self.max_tries_for_plan} attempts"
+                    f"Agent failed to verificate after {self.max_tries_for_plan} attempts"
                 )
             else:
                 response.validated, validation_feedback = self.validated(
@@ -209,8 +221,9 @@ class DeterministicAgent:
 
         self.trace.append(
             {
-                "trace": response.trace,
-                "validation_trace": response_validation.trace,
+                "execution_summary": run_trace,
+                "solution_trace": response.trace,
+                "verification_trace": response_validation.trace,
             }
         )
 
@@ -307,27 +320,37 @@ class DeterministicAgent:
         if not is_valid:
             logger.warning(f"Validation failed: {data.get('feedback')}")
             feedback = data.get("feedback")
+        else:
+            logger.info(f"Validated")
 
         return is_valid, feedback
 
     def generate_chat_log(
-        self, chain_messages: list[str], print_chat: bool = False, save_log: str = None
+        self,
+        chain_messages: list[str],
+        print_chat: bool = False,
+        save_log: str = None,
     ):
-
+        file_handler = None
         if save_log:
             formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
             file_handler = logging.FileHandler(save_log)
             file_handler.setFormatter(formatter)
             logger.addHandler(file_handler)
 
-        for i, message in enumerate(chain_messages, start=1):
-            logger.debug(f"[REQUEST {i}]: '{message}'")
-            if print_chat:
-                print(f">>> {message}")
-            response = self.send(message)
-            logger.debug(f"[RESPONSE {i}]: '{response.text}'")
-            if print_chat:
-                print(f"    {response.text}")
+        try:
+            for i, message in enumerate(chain_messages, start=1):
+                logger.debug(f"[REQUEST {i}]: '{message}'")
+                if print_chat:
+                    print(f">>> {message}")
+                response = self.send(message)
+                logger.debug(f"[RESPONSE {i}]: '{response.text}'")
+                if print_chat:
+                    print(f"    {response.text}")
+        finally:
+            if file_handler:
+                logger.removeHandler(file_handler)
+                file_handler.close()
 
     def save_trace(self, filename: str):
         obj = {
