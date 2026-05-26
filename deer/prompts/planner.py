@@ -23,23 +23,28 @@ Structural & Action Rules:
 - "input_from" must be null or a previous step ID. The first step MUST have "input_from": null.
 
 Logic Script Rules:
-- Use "logic" ONLY for deterministic calculations, transformations, or final formatting.
+- Use "logic" ONLY for short deterministic calculations or transformations.
+- Do NOT use "logic" to build long final responses, large Markdown documents, source-code listings, or reports containing many files.
+- If the task requires presenting large text, file contents, Markdown, or code blocks, keep those values as tool outputs or structured data and let the framework render them after execution.
 - "logic" MUST use Python syntax (True, False, None), NOT JSON (true, false, null).
 - It must assign the final step output to a variable named "result".
-- ALWAYS use triple quotes (\"\"\") for string assignments to "result".
 - Prohibited: imports, print, open, eval, exec, functions, classes, loops, try/except, with, global/nonlocal.
 - Available names: input, params, context, pi, abs, min, max, round, str, int, float, len.
-- Any multiline Python string MUST use triple quotes.
+- Prefer simple expressions and short string literals.
+- Avoid f-strings when interpolating dictionaries, tool outputs, JSON-like data, file contents, or any value that may contain braces, quotes, backticks, or newlines.
+- Do not embed Markdown code fences, triple backticks, triple quotes, or complete source files inside "logic".
+- Any multiline Python string MUST use triple quotes, but multiline strings should be avoided except for short user-facing fallback messages.
+- A string literal assigned in "logic" should be concise; large content must remain outside "logic".
 - Never place literal newlines inside single-quoted or double-quoted strings.
 - Generated Python code MUST always be syntactically valid.
 
 Failure Handling & Task Limitations:
 - NEVER attempt to bypass missing tools by using prohibited Python features (like 'open', 'os', or 'imports') inside a logic step.
 - If no available tool can solve the task, you MUST still return a valid Plan JSON with a single logic step.
-- In this case, "result" must contain:
+- In this case, "result" must contain a concise plain-text message with:
     1. An explicit disclaimer stating that your execution is strictly limited to the provided tools and you cannot perform unauthorized actions.
     2. A technical explanation of why the specific task cannot be completed.
-    3. The specific code or instructions so the user can perform the task manually, wrapped in ~~~ fences if applicable.
+- Do NOT include code fences, long manual scripts, full file contents, or Markdown-heavy instructions inside the fallback "logic" string.
 
 Available tools:
 {tools}
@@ -63,18 +68,19 @@ Example of Success (Transforming output from a tool):
   ]
 }}
 
-Example of Failure (User wants to create a file but no tool exists):
+Example of Failure (User wants to perform an action, but the specific domain tool is missing entirely from the 'Available tools' list):
 {{
   "steps": [
     {{
       "id": "s1",
       "tool": null,
-      "logic": "result = \"\"\"I cannot perform this task directly because my execution is strictly limited to the provided tools, and I currently do not have a tool for file creation. \\n\\nHowever, you can execute this code manually to achieve it:\\n\\n~~~python\\nwith open('text.txt', 'w') as f:\\n    f.write('content')\\n~~~\"\"\"",
+      "logic": "result = 'I cannot perform this task directly because my execution is limited to the provided tools, and no tool matching the required capability is currently available in the system configuration.'",
       "input_from": null,
       "params": {{}}
     }}
   ]
 }}
+
 
 User goal:
 {goal}
