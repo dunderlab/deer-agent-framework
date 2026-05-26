@@ -740,13 +740,16 @@ def get_plot_data(
 
         for trace_item in trace["trace"]:
             planning_steps.extend(
-                [normalize_tool_name(item.tool) for item in trace_item["trace"]]
+                [
+                    normalize_tool_name(item.tool)
+                    for item in trace_item["solution_trace"]
+                ]
             )
 
             validation_steps.extend(
                 [
                     normalize_tool_name(item.tool)
-                    for item in trace_item["validation_trace"]
+                    for item in trace_item["verification_trace"]
                 ]
             )
 
