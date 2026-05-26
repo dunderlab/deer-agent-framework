@@ -18,7 +18,6 @@ from deer.planner.planner import Planner
 from deer.validator.plan_validator import PlanValidator
 from deer.executor.executor import Executor
 from deer.tools.registry import ToolRegistry, default_registry
-from deer.tracing.store import TraceStore
 from deer.schema.io import AgentInput, AgentOutput
 
 from rich.console import Console
@@ -74,18 +73,24 @@ class DeterministicAgent:
             f"Initialized DeterministicAgent with '{self.driver.model_name}' model"
         )
         logger.info(f"Identity: {self.identity}")
-        logger.info(f"Available tools:\n{self.registry.describe(read_only=False)}")
+        logger.info(
+            f"Available tools:\n{self.registry.describe(include_state_modifying=True)}"
+        )
 
     def execute_plan(
         self,
         agent_input: AgentInput,
         feedback: {},
-        read_only: bool = False,
+        include_state_modifying: bool = True,
     ):
         last_error_message = ""
 
         try:
-            plan = self.planner.plan(agent_input, feedback, read_only=read_only)
+            plan = self.planner.plan(
+                agent_input,
+                feedback,
+                include_state_modifying=include_state_modifying,
+            )
         except Exception as planning_error:
             logger.warning(f"Planning error: {planning_error}")
             feedback = {"Planning error": str(planning_error)}
@@ -184,7 +189,7 @@ class DeterministicAgent:
                     goal=goal_verifier_prompt, payload=payload_verifier
                 )
                 response_validation, feedback_, _, validation_plan = self.execute_plan(
-                    agent_verifier_input, feedback_, read_only=True
+                    agent_verifier_input, feedback_, include_state_modifying=False
                 )
 
                 if response_validation:
