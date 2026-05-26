@@ -17,38 +17,8 @@ class FileManager(ToolProvider):
         # strict=True ensures the base jail directory actually exists.
         self.jail = Path(self.jail).resolve(strict=True)
 
-    def jailed_path(self, path: str | Path) -> Path:
-        """
-        Validates and returns a safe path within the jail.
-
-        1. If 'path' is relative, it's joined to the jail.
-        2. If 'path' is absolute, it's checked for containment.
-        3. All '..' and symlinks are resolved before validation.
-        """
-        path = Path(path)
-
-        # Handle point 2: If relative, interpret it as inside the jail.
-        # If absolute, it remains as is to be validated against the jail.
-        if not path.is_absolute():
-            path = self.jail / path
-
-        # Handle point 1: Normalize "..", symlinks, etc.
-        # strict=False allows the path to not exist yet (e.g., for creating files).
-        resolved = path.resolve(strict=False)
-
-        # Real containment verification
-        try:
-            # relative_to raises ValueError if 'resolved' is not a child of 'self.jail'
-            resolved.relative_to(self.jail)
-        except ValueError:
-            raise FileManagerError(
-                f"Security breach: Path escapes jail: {resolved}"
-            ) from None
-
-        return resolved
-
     @tool(modifies_state=True)
-    def new_file(self, path: str, content: str) -> Return(status=str):
+    def new_file(self, path: str, content: str) -> Return(exists=bool):
         """Creates a new file with the given content."""
         safe_path = self.jailed_path(path)
 
@@ -58,7 +28,7 @@ class FileManager(ToolProvider):
             f.write(content)
 
         return {
-            "status": safe_path.exists(),
+            "exists": safe_path.exists(),
         }
 
     @tool()
@@ -94,7 +64,7 @@ class FileManager(ToolProvider):
         return {"status": "success"}
 
     @tool()
-    def get_file_info(self, filename: str) -> Return(
+    def get_file_info(self, path: str) -> Return(
         exists=bool,
         size_bytes=int,
         is_dir=bool,
@@ -102,7 +72,7 @@ class FileManager(ToolProvider):
         last_modified=float,
     ):
         """Retrieves metadata about a file or directory, including its existence, size, type, and modification time."""
-        safe_path = self.jailed_path(filename)
+        safe_path = self.jailed_path(path)
         if not safe_path.exists():
             return {"exists": False}
 
@@ -116,7 +86,7 @@ class FileManager(ToolProvider):
         }
 
     @tool()
-    def directory_tree(self, path: str, max_depth: int = 3) -> Return(tree=dict):
+    def directory_tree(self, path: str, max_depth: int) -> Return(tree=dict):
         """Returns the directory structure as a nested dictionary."""
         safe_path = self.jailed_path(path)
 

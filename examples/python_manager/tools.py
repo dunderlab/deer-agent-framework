@@ -1,10 +1,12 @@
 from deer.tools.registry import ToolRegistry
-from deer.tools.builtin import FileManager
+from deer.tools.builtin import FileManager, GitManager, SearchManager
+
+jail_path = "/Users/yeison/Development/deer-agent-framework/sandbox/root"
 
 registry = ToolRegistry()
 
 fileManager = FileManager(
-    jail="/Users/yeison/Development/deer-agent-framework/sandbox/root",
+    jail=jail_path,
     # tools=[
     #     "new_file",
     #     "read_file",
@@ -15,6 +17,41 @@ fileManager = FileManager(
     # ],
 )
 
+gitManager = GitManager(
+    jail=jail_path,
+    # tools=[
+    #     "git_status",
+    #     "git_current_branch",
+    #     "git_log",
+    #     "git_diff",
+    #     "git_staged_diff",
+    #     "git_show",
+    #     "git_add",
+    #     "git_commit",
+    #     "git_restore",
+    # ],
+)
+
+searchManager = SearchManager(
+    jail=jail_path,
+    # tools=[
+    #     "search_text",
+    #     "search_regex",
+    #     "search_text_ignore_case",
+    #     "search_regex_ignore_case",
+    #     "find_files",
+    #     "search_file_names",
+    #     "list_files",
+    #     "search_by_extension",
+    #     "search_text_in_files",
+    #     "files_with_matches",
+    #     "files_without_matches",
+    #     "count_matches",
+    # ],
+)
+
 registry.register(
     fileManager,
+    gitManager,
+    searchManager,
 )
