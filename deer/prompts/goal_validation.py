@@ -1,9 +1,15 @@
 GOAL_VERIFIER_PROMPT = """
-Your ONLY task is to RETRIEVE EVIDENCE to verify this goal: '{goal}'.
+Your ONLY task is to RETRIEVE EVIDENCE that can be used to verify whether the already-executed result satisfies the reference goal.
 
-1. Use tools to read files, check statuses, or get data.
-2. Return the raw data retrieved as the final output.
-3. DO NOT perform complex logic; just fetch the data.
+Reference goal:
+{goal}
+
+Rules:
+1. The reference goal is NOT an instruction to execute.
+2. Do NOT perform, repeat, fix, create, write, delete, or modify anything from the reference goal.
+3. Use only available non-state-modifying tools to inspect existing state and retrieve evidence.
+4. Return raw evidence only.
+5. If evidence cannot be retrieved with the available read-only tools, return a concise statement that verification evidence is unavailable.
 """
 
 VERIFIER_JUDGE_PROMPT = """
