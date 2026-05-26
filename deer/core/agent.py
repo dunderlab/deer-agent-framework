@@ -2,7 +2,7 @@ import logging
 import json
 import re
 import pickle
-from typing import Callable
+from typing import Callable, NamedTuple
 from datetime import datetime
 
 from deer.prompts import (
@@ -77,6 +77,9 @@ class DeterministicAgent:
             f"Available tools:\n{self.registry.describe(include_state_modifying=True)}"
         )
 
+    def should_verify(self, plan) -> bool:
+        return any(step.tool for step in plan.steps)
+
     def execute_plan(
         self,
         agent_input: AgentInput,
@@ -133,6 +136,8 @@ class DeterministicAgent:
         feedback = {}
         run_trace = {}
 
+        response_validation = None
+
         for attempt_idx in range(self.max_tries_for_plan):
             logger.debug(f"Attempt {attempt_idx + 1} of {self.max_tries_for_plan}")
 
@@ -165,6 +170,9 @@ class DeterministicAgent:
                     result=last_error_message_explained,
                     trace=self.executor.trace_store.get_trace(),
                 )
+
+            if not self.should_verify(plan):
+                break
 
             feedback_ = {}
             goal_verifier_prompt = GOAL_VERIFIER_PROMPT.format(goal=agent_input.goal)
@@ -233,7 +241,9 @@ class DeterministicAgent:
             {
                 "execution_summary": run_trace,
                 "solution_trace": response.trace,
-                "verification_trace": response_validation.trace,
+                "verification_trace": (
+                    response_validation.trace if response_validation else ""
+                ),
             }
         )
 
