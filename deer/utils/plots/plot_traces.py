@@ -1,6 +1,5 @@
 import os
 import pickle
-
 from collections import Counter
 from collections.abc import Iterable
 from typing import Any
@@ -9,6 +8,8 @@ import matplotlib.colors as mcolors
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
+
+import pandas as pd
 
 NODE_WIDTH: int = 11
 MIN_CONTAINER_HEIGHT: int = 3
@@ -906,3 +907,128 @@ def draw_trace_frequency_bars(
     )
 
     plt.title("Validation trace frequencies")
+
+
+def get_execution_metrics(trace_file_paths: list[str]) -> dict[str, list[int]]:
+    """Extract execution metrics from trace files.
+
+    Parameters
+    ----------
+    trace_file_paths : list[str]
+        List of file paths containing serialized trace data.
+
+    Returns
+    -------
+    dict[str, list[int]]
+        Dictionary containing:
+        - attempts: Number of attempts per task.
+        - solutions: Number of solution steps per task.
+        - verifications: Number of verification steps per task.
+    """
+    execution_metrics = {
+        "attempts": [],
+        "solutions": [],
+        "verifications": [],
+    }
+
+    processed_tracks = 0
+
+    for trace_file_path in trace_file_paths:
+        with open(trace_file_path, "rb") as file:
+            trace_data = pickle.load(file)
+
+        if not trace_data["trace"]:
+            print(f"Empty trace found: {trace_file_path}")
+            continue
+
+        processed_tracks += 1
+
+        execution_summary = trace_data["trace"][0]["execution_summary"]
+
+        solution_count = 0
+        verification_count = 0
+
+        for attempt_id in execution_summary:
+            attempt_data = execution_summary[attempt_id]
+
+            solution_count += len(
+                [
+                    step_name
+                    for step_name in attempt_data.keys()
+                    if step_name.startswith("Solution")
+                ]
+            )
+
+            verification_count += len(
+                [
+                    step_name
+                    for step_name in attempt_data.keys()
+                    if step_name.startswith("Verification")
+                ]
+            )
+
+        execution_metrics["attempts"].append(len(execution_summary))
+        execution_metrics["solutions"].append(solution_count)
+        execution_metrics["verifications"].append(verification_count)
+
+    return execution_metrics
+
+
+def plot_execution_profile(figure, execution_metrics: dict[str, list[int]]) -> None:
+    """Plot execution complexity and retry metrics.
+
+    Parameters
+    ----------
+    execution_metrics : dict[str, list[int]]
+        Dictionary containing attempts, solutions, and verifications.
+
+    Returns
+    -------
+    None
+    """
+    metrics_dataframe = pd.DataFrame(execution_metrics)
+
+    primary_axis = figure.add_subplot(111)
+
+    # PSS: Renamed variables for clarity and improved readability.
+    metrics_dataframe[["solutions", "verifications"]].plot(
+        kind="bar",
+        stacked=True,
+        ax=primary_axis,
+        color=["#3498db", "#9b59b6"],
+        zorder=10,
+    )
+
+    max_steps = (
+        metrics_dataframe["solutions"] + metrics_dataframe["verifications"]
+    ).max()
+
+    primary_axis.set_ylabel("Number of Steps")
+    primary_axis.set_yticks(range(1, max_steps + 1))
+    primary_axis.grid(True, axis="y", zorder=0)
+
+    secondary_axis = primary_axis.twinx()
+
+    secondary_axis.plot(
+        metrics_dataframe.index,
+        metrics_dataframe["attempts"],
+        color="#e74c3c",
+        marker="o",
+        linewidth=2,
+        label="Global Attempts",
+        zorder=10,
+    )
+
+    secondary_axis.set_ylabel("Global Attempts")
+
+    max_attempts = metrics_dataframe["attempts"].max() + 1
+
+    secondary_axis.set_yticks(range(1, max_attempts))
+    secondary_axis.set_ylim(0, max_attempts)
+
+    primary_axis.set_xticklabels(
+        [f"Task {task_index + 1}" for task_index in range(metrics_dataframe.shape[0])]
+    )
+
+    plt.title("Execution Profile: Complexity vs Retries")
+    # plt.tight_layout()
