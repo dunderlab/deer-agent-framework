@@ -3,11 +3,82 @@ from typing import Any, Type
 from dataclasses import dataclass, field
 
 from pydantic import BaseModel
+from pathlib import Path
+import subprocess
+import shlex
+
+
+class ToolProviderError(ValueError):
+    pass
+
+
+class CommandRunnerError(ValueError):
+    pass
 
 
 @dataclass
 class ToolProvider:
     tools: list[str] | None = field(default=None, kw_only=True)
+
+    def jailed_path(self, path: str | Path) -> Path:
+        """
+        Validates and returns a safe path within the jail.
+
+        1. If 'path' is relative, it's joined to the jail.
+        2. If 'path' is absolute, it's checked for containment.
+        3. All '..' and symlinks are resolved before validation.
+        """
+        path = Path(path)
+
+        # Handle point 2: If relative, interpret it as inside the jail.
+        # If absolute, it remains as is to be validated against the jail.
+        if not path.is_absolute():
+            path = self.jail / path
+
+        # Handle point 1: Normalize "..", symlinks, etc.
+        # strict=False allows the path to not exist yet (e.g., for creating files).
+        resolved = path.resolve(strict=False)
+
+        # Real containment verification
+        try:
+            # relative_to raises ValueError if 'resolved' is not a child of 'self.jail'
+            resolved.relative_to(self.jail)
+        except ValueError:
+            raise ToolProviderError(
+                f"Security breach: Path escapes jail: {resolved}"
+            ) from None
+
+        return resolved
+
+    def run_command(
+        self,
+        command: str,
+        *,
+        cwd: str | Path,
+        timeout_seconds: int = 30,
+    ) -> dict:
+        """Execute a command string without invoking a shell."""
+        args = shlex.split(command)
+
+        if not args:
+            raise CommandRunnerError("Command cannot be empty.")
+
+        safe_cwd = self.jail if cwd is None else self.jailed_path(cwd)
+
+        completed = subprocess.run(
+            args,
+            cwd=safe_cwd,
+            capture_output=True,
+            text=True,
+            timeout=timeout_seconds,
+            check=False,
+        )
+
+        return {
+            "stdout": completed.stdout,
+            "stderr": completed.stderr,
+            "returncode": completed.returncode,
+        }
 
 
 class Tool(ABC):
