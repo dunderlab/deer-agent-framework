@@ -1,7 +1,6 @@
 import logging
 import shutil
 import os
-
 import sys
 
 sys.path.append("../../")
@@ -20,7 +19,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 logger = logging.getLogger("DEER")
-logger.setLevel(logging.CRITICAL)
+# logger.setLevel(logging.CRITICAL)
 
 
 def rollback():
@@ -30,13 +29,16 @@ def rollback():
 
 # driver = GeminiDriver(model_name="gemini-3.1-flash-lite")
 # driver = GeminiDriver(model_name="gemini-1.5-flash-lite")
-# driver = OllamaDriver(model_name="qwen2.5-coder:7b")
-# driver = OllamaDriver(model_name="qwen3.5:9b")
 driver = OllamaDriver(model_name="gemma4:31b-cloud")
 agent = DeterministicAgent(
-    identity="You are a senior Python packaging and environment management specialist with deep expertise in"
-    "pyproject.toml, dependency management, reproducible environments, build systems, virtual environments, "
-    "and modern Python tooling ecosystems including pip, setuptools, pytest",
+    description="Python Architecture Specialist expert in module lifecycle, dependency management, and package distribution.",
+    identity=(
+        "You are a Principal Python Architect and Core Ecosystem Specialist. You possess authoritative expertise "
+        "in advanced module resolution, dependency management architectures, package distribution, and internal "
+        "or public repository management. Your knowledge spans the entire lifecycle of Python code: from how "
+        "modules are imported and structured at runtime, to how dependencies are resolved, isolated, packaged, "
+        "and deployed across diverse environments."
+    ),
     driver=driver,
     registry=registry,
     format_response="markdown",
@@ -46,19 +48,4 @@ agent = DeterministicAgent(
 
 agent.repl()
 # agent.send("Hola")
-#
-# if __name__ == "__main__":
-#     chain_messages = [*PYTHON_PROJECT_PROMPT]
-#
-#     for i in range(50):
-#         agent.clear_history()
-#         agent.rollback()
-#
-#         name = f"{driver.model_name}-{datetime.now().timestamp()}"
-#
-#         agent.generate_chat_log(
-#             chain_messages,
-#             print_chat=True,
-#             save_log=f"traces/python_project4/{name}.log",
-#         )
-#         agent.save_trace(f"traces/python_project4/{name}.trace")
+# agent.iterate_debug([*PYTHON_PROJECT_PROMPT], repetitions=50, path="traces/python_project4")
