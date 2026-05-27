@@ -35,6 +35,7 @@ class ToolRegistry:
                 MethodTool(
                     name=metadata["name"],
                     description=metadata["description"],
+                    full_description=metadata["full_description"],
                     modifies_state=metadata["modifies_state"],
                     params_type=metadata["params_type"],
                     return_type=metadata["return_type"],
@@ -60,7 +61,7 @@ class ToolRegistry:
     def list_tools(self) -> Iterable[str]:
         return self._tools.keys()
 
-    def describe(self, include_state_modifying=True) -> str:
+    def describe(self, include_state_modifying=True, markdown=False) -> str:
         if not self._tools:
             return "- No tools are available."
 
@@ -71,9 +72,12 @@ class ToolRegistry:
             if not include_state_modifying and tool.modifies_state:
                 continue
 
-            description = tool.description or "No description provided."
-            description = description.replace("\n", "\n  ")
-            lines.append(f"- {tool.name}: {description}")
+            if markdown:
+                lines.append(f" - `{tool.name}`: *{tool.description.split('\n')[0]}*")
+            else:
+                lines.append(
+                    f"- {tool.name}: {tool.full_description.replace("\n", "\n  ")}"
+                )
 
         return "\n".join(lines)
 

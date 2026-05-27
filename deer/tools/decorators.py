@@ -42,6 +42,7 @@ class MethodTool(Tool):
 
     name: str
     description: str
+    full_description: str
     params_type: Any
     return_type: Any
     method: Callable[..., Any]
@@ -102,7 +103,8 @@ def _build_tool_metadata(
 
     return {
         "name": name,
-        "description": full_description,
+        "description": description.strip(),
+        "full_description": full_description,
         "modifies_state": modifies_state,
         "params_type": params_type,
         "return_type": return_type,
