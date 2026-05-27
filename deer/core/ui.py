@@ -1,40 +1,11 @@
-# WELCOME_MESSAGE = """
-# # DEER
-#
-# Deterministic Executable Engine for Runtime Agents
-#
-# DEER is a deterministic orchestration framework for LLM-based agents focused on:
-# - formal execution control
-# - validated tool contracts
-# - traceable execution
-# - reproducible workflows
-#
-# Unlike conventional agent frameworks, DEER separates planning, validation, execution, and tracing into isolated runtime
-# layers governed by explicit backend rules instead of emergent model behavior.
-#
-# ### Workflow
-# DEER executes requests through a rigorous four-stage process:
-# 1.  **Plan**: A structured strategy is generated to meet your goal.
-# 2.  **Validate**: The plan is analyzed for logical consistency and safety.
-# 3.  **Execute**: Actions are performed using verified system tools.
-# 4.  **Verify**: Outcomes are cross-referenced with the initial requirements.
-#
-# ### Commands
-# - `exit`: Terminate the current session.
-# - `clear`: Clear the console.
-# - `help`: List all available tools and capabilities.
-# """
-
 WELCOME_MESSAGE = """
-# DEER
+# DEER - Deterministic Executable Engine for Runtime Agents
 
-Deterministic Executable Engine for Runtime Agents
-
-DEER is a deterministic orchestration framework for LLM agents focused on:
-- formal execution control
-- validated tool contracts
-- traceable execution
-- reproducible workflows
+An LLM agent orchestration framework built for:  
+- Strict runtime control
+- Enforced tool contracts
+- Full execution traceability
+- Guaranteed reproducibility
 
 ## Runtime Pipeline
 

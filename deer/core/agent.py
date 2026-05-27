@@ -37,6 +37,7 @@ prompt_history = InMemoryHistory()
 class DeterministicAgent:
     def __init__(
         self,
+        description: str = "",
         identity: str = "DeterministicAgent",
         max_tries_for_plan: int = 3,
         driver: LLMDriver | None = None,
@@ -47,6 +48,7 @@ class DeterministicAgent:
         assert format_response in {"markdown", "plaintext"}
 
         self.identity = identity
+        self.description = description
         self.driver = driver
         self.registry = registry or default_registry()
         self.console = Console()
@@ -380,10 +382,15 @@ class DeterministicAgent:
         with open(filename, "wb") as f:
             pickle.dump(obj, f)
 
-    def repl(self):
+    def show_welcome(self):
         self.console.clear()
         self.pretty_print(WELCOME_MESSAGE)
+        self.pretty_print(f">**Agent Profile**  \n*{self.description}*")
         print("\n")
+
+    def repl(self):
+        self.show_welcome()
+
         while True:
             msg = prompt(
                 HTML("<ansicyan><b>&gt;&gt;&gt; </b></ansicyan>"),
@@ -398,6 +405,8 @@ class DeterministicAgent:
 
                 case "clear;":
                     self.console.clear()
+                    self.pretty_print(f">**Agent Profile**  \n*{self.description}*")
+                    print("\n")
 
                 case "tools;":
                     self.pretty_print(
@@ -417,4 +426,18 @@ class DeterministicAgent:
                         spinner_style="dim",
                     ):
                         output = self.send(msg)
-                        self.pretty_print(f"    {output.text}\n\n")
+                        self.pretty_print(f"    {output.text}")
+                        print("\n")
+
+    def iterate_debug(self, chain_messages: list[str], repetitions: int, path: str):
+        logger.setLevel(logging.DEBUG)
+        for i in range(repetitions):
+            self.clear_history()
+            self.rollback()
+            name = f"{self.driver.model_name}-{datetime.now().timestamp()}"
+            self.generate_chat_log(
+                chain_messages,
+                print_chat=True,
+                save_log=f"{path}/{name}.log",
+            )
+            self.save_trace(f"{path}/{name}.trace")
