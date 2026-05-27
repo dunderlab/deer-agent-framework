@@ -3,6 +3,10 @@ from datetime import datetime
 import shutil
 import os
 
+import sys
+
+sys.path.append("../../")
+
 from deer.core.agent import DeterministicAgent
 from deer.drivers import GeminiDriver, OllamaDriver
 from prompts import (
@@ -17,12 +21,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 logger = logging.getLogger("DEER")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.CRITICAL)
 
 
 def rollback():
-    shutil.rmtree("sandbox/root")
-    os.mkdir("sandbox/root")
+    shutil.rmtree("/Users/yeison/Development/deer-agent-framework/sandbox/root")
+    os.mkdir("/Users/yeison/Development/deer-agent-framework/sandbox/root")
 
 
 # driver = GeminiDriver(model_name="gemini-3.1-flash-lite")
@@ -40,21 +44,22 @@ agent = DeterministicAgent(
     max_tries_for_plan=5,
     rollback=rollback,
 )
-# agent.repl()
 
-
-if __name__ == "__main__":
-    chain_messages = [*PYTHON_PROJECT_PROMPT]
-
-    for i in range(1):
-        agent.clear_history()
-        agent.rollback()
-
-        name = f"{driver.model_name}-{datetime.now().timestamp()}"
-
-        agent.generate_chat_log(
-            chain_messages,
-            print_chat=True,
-            save_log=f"traces/python_project3/{name}.log",
-        )
-        agent.save_trace(f"traces/python_project3/{name}.trace")
+agent.repl()
+# agent.send("Hola")
+#
+# if __name__ == "__main__":
+#     chain_messages = [*PYTHON_PROJECT_PROMPT]
+#
+#     for i in range(50):
+#         agent.clear_history()
+#         agent.rollback()
+#
+#         name = f"{driver.model_name}-{datetime.now().timestamp()}"
+#
+#         agent.generate_chat_log(
+#             chain_messages,
+#             print_chat=True,
+#             save_log=f"traces/python_project4/{name}.log",
+#         )
+#         agent.save_trace(f"traces/python_project4/{name}.trace")
