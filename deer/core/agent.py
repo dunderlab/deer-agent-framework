@@ -2,8 +2,15 @@ import logging
 import json
 import re
 import pickle
-from typing import Callable, NamedTuple
+import sys
+from typing import Callable
 from datetime import datetime
+
+# import readline
+
+from prompt_toolkit import prompt
+from prompt_toolkit.formatted_text import HTML
+from prompt_toolkit.history import InMemoryHistory
 
 from deer.prompts import (
     RESPONSE_IMPROVEMENT_PROMPT,
@@ -11,12 +18,12 @@ from deer.prompts import (
     HUMANIZER_PROMPT,
     GOAL_VERIFIER_PROMPT,
     VERIFIER_JUDGE_PROMPT,
-    PLANNER_PROMPT,
 )
 from deer.drivers.base_driver import LLMDriver
 from deer.planner.planner import Planner
 from deer.validator.plan_validator import PlanValidator
 from deer.executor.executor import Executor
+from deer.core.ui import WELCOME_MESSAGE
 from deer.tools.registry import ToolRegistry, default_registry
 from deer.schema.io import AgentInput, AgentOutput
 
@@ -24,6 +31,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 logger = logging.getLogger("DEER")
+prompt_history = InMemoryHistory()
 
 
 class DeterministicAgent:
@@ -41,6 +49,7 @@ class DeterministicAgent:
         self.identity = identity
         self.driver = driver
         self.registry = registry or default_registry()
+        self.console = Console()
 
         self.executor = Executor(
             registry=self.registry,
@@ -65,8 +74,6 @@ class DeterministicAgent:
         self.history = []
         self.trace = []
         self.rollback_function = rollback
-        # self.plan = None
-        # self.validation_plan = None
 
         logger.info(f"DEER - Deterministic Executable Engine for Runtime-agents")
         logger.info(
@@ -132,7 +139,6 @@ class DeterministicAgent:
         return response, feedback, last_error_message, plan
 
     def run(self, agent_input: AgentInput) -> AgentOutput:
-
         feedback = {}
         run_trace = {}
 
@@ -250,16 +256,6 @@ class DeterministicAgent:
         self.planner.goal = agent_input.goal
         return response
 
-    def repl(self):
-        while True:
-            msg = input(">>> ")
-            if msg == "exit":
-                break
-
-            if msg:
-                output = self.send(msg)
-                self.pretty_print(f"    {output.text}\n\n")
-
     def send(self, msg):
         user_input = AgentInput(
             goal=msg,
@@ -276,8 +272,7 @@ class DeterministicAgent:
         return response
 
     def pretty_print(self, out: str):
-        console = Console()
-        console.print(Markdown(out))
+        self.console.print(Markdown(out))
 
     def clear_history(self):
         self.history = []
@@ -384,3 +379,42 @@ class DeterministicAgent:
 
         with open(filename, "wb") as f:
             pickle.dump(obj, f)
+
+    def repl(self):
+        self.console.clear()
+        self.pretty_print(WELCOME_MESSAGE)
+        print("\n")
+        while True:
+            msg = prompt(
+                HTML("<ansicyan><b>&gt;&gt;&gt; </b></ansicyan>"),
+                history=prompt_history,
+            )
+
+            self.console.status("[cyan]Planning...", spinner="dots")
+
+            match msg.strip():
+                case "exit;":
+                    sys.exit(0)
+
+                case "clear;":
+                    self.console.clear()
+
+                case "tools;":
+                    self.pretty_print(
+                        self.registry.describe(
+                            include_state_modifying=True, markdown=True
+                        )
+                    )
+                    print("\n")
+
+                case _:
+                    if not msg or msg.endswith(";"):
+                        continue
+
+                    with self.console.status(
+                        "[dim]processing request[/]",
+                        spinner="point",
+                        spinner_style="dim",
+                    ):
+                        output = self.send(msg)
+                        self.pretty_print(f"    {output.text}\n\n")
