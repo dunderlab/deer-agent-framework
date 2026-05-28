@@ -10,12 +10,6 @@ class FileManagerError(ValueError):
 
 @dataclass
 class FileManager(ToolProvider):
-    jail: Path | str
-
-    def __post_init__(self):
-        # Resolve the jail to an absolute, real path immediately.
-        # strict=True ensures the base jail directory actually exists.
-        self.jail = Path(self.jail).resolve(strict=True)
 
     @tool(modifies_state=True)
     def new_file(self, path: str, content: str) -> Return(exists=bool):

@@ -6,8 +6,6 @@ import sys
 from typing import Callable
 from datetime import datetime
 
-# import readline
-
 from prompt_toolkit import prompt
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.history import InMemoryHistory
@@ -44,6 +42,7 @@ class DeterministicAgent:
         registry: ToolRegistry | None = None,
         format_response: str = "plaintext",
         rollback: Callable = None,
+        jail_path: str = None,
     ) -> None:
         assert format_response in {"markdown", "plaintext"}
 
@@ -77,6 +76,9 @@ class DeterministicAgent:
         self.trace = []
         self.rollback_function = rollback
 
+        if jail_path:
+            self.set_jail(jail_path)
+
         logger.info(f"DEER - Deterministic Executable Engine for Runtime-agents")
         logger.info(
             f"Initialized DeterministicAgent with '{self.driver.model_name}' model"
@@ -85,6 +87,10 @@ class DeterministicAgent:
         logger.info(
             f"Available tools:\n{self.registry.describe(include_state_modifying=True)}"
         )
+        logger.info(f"Authorized filesystem scope is restricted to: {jail_path}")
+
+    def set_jail(self, jail_path):
+        self.registry.set_jail(jail_path)
 
     def should_verify(self, plan) -> bool:
         return any(step.tool for step in plan.steps)
@@ -262,7 +268,7 @@ class DeterministicAgent:
         user_input = AgentInput(
             goal=msg,
             payload={
-                "history": self.history,
+                "chat_history": self.history,
             },
         )
         response = self.run(user_input)
@@ -385,10 +391,16 @@ class DeterministicAgent:
     def show_welcome(self):
         self.console.clear()
         self.pretty_print(WELCOME_MESSAGE)
-        self.pretty_print(f">**Agent Profile**  \n*{self.description}*")
+        self.pretty_print(
+            f">**Agent Profile**  \n"
+            f"*{self.description}*  \n"
+            f"root: {self.registry.jail_path}  \n"
+            f"{self.driver}: {self.driver.model_name}  \n"
+        )
         print("\n")
 
     def repl(self):
+        logger.setLevel(logging.CRITICAL)
         self.show_welcome()
 
         while True:
@@ -404,6 +416,7 @@ class DeterministicAgent:
                     sys.exit(0)
 
                 case "clear;":
+                    self.clear_history()
                     self.console.clear()
                     self.pretty_print(f">**Agent Profile**  \n*{self.description}*")
                     print("\n")

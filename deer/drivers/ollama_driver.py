@@ -21,6 +21,9 @@ class OllamaDriver(LLMDriver):
         self.client = Client(host=host)
         self.model_name = model_name
 
+    def __repr__(self):
+        return "Gemini"
+
     def generate_text(self, prompt: str) -> str:
         logger.debug(
             f"Generating text with model {self.model_name} and prompt: {prompt}"

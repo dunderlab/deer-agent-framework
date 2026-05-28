@@ -18,7 +18,24 @@ class CommandRunnerError(ValueError):
 
 @dataclass
 class ToolProvider:
+    # jail: Path | str | None = field(default=None, kw_only=True)
     tools: list[str] | None = field(default=None, kw_only=True)
+
+    def __post_init__(self):
+        # pass
+        self.jail_ = None
+
+    @property
+    def jail(self):
+        assert self._jail is not None, (
+            "Filesystem jail is not configured. "
+            "The runtime cannot access the sandbox root path."
+        )
+        return self.jail_
+
+    @jail.setter
+    def jail(self, jail):
+        self.jail_ = Path(jail).resolve(strict=True)
 
     def jailed_path(self, path: str | Path) -> Path:
         """

@@ -14,12 +14,6 @@ CommandOut = Return(stdout=str, stderr=str, returncode=int)
 
 @dataclass
 class SearchManager(ToolProvider):
-    jail: Path | str
-
-    def __post_init__(self):
-        # Resolve the jail to an absolute, real path immediately.
-        # strict=True ensures the base jail directory actually exists.
-        self.jail = Path(self.jail).resolve(strict=True)
 
     def rg(self, path: str, *args: str | int) -> CommandOut:
         quoted_args = " ".join(shlex.quote(str(arg)) for arg in args)

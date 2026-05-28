@@ -6,7 +6,6 @@ jail_path = "/Users/yeison/Development/deer-agent-framework/sandbox/root"
 registry = ToolRegistry()
 
 fileManager = FileManager(
-    jail=jail_path,
     # tools=[
     #     "new_file",
     #     "read_file",
@@ -18,7 +17,6 @@ fileManager = FileManager(
 )
 
 gitManager = GitManager(
-    jail=jail_path,
     # tools=[
     #     "git_status",
     #     "git_current_branch",
@@ -33,7 +31,6 @@ gitManager = GitManager(
 )
 
 searchManager = SearchManager(
-    jail=jail_path,
     # tools=[
     #     "search_text",
     #     "search_regex",

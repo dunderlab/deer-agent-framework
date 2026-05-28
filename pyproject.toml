@@ -31,3 +31,6 @@ debug = [
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["deer*"]
+
+ [project.scripts]
+ deer = "deer.main:main"

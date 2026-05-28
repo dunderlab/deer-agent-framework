@@ -8,6 +8,7 @@ from deer.schema.io import Return
 class ToolRegistry:
     def __init__(self) -> None:
         self._tools: Dict[str, Tool] = {}
+        self._providers: list = []
 
     def register(self, *provider_tools: list):
         for tool in provider_tools:
@@ -23,7 +24,12 @@ class ToolRegistry:
         self._tools[tool.name] = tool
 
     def _register_collection(self, provider: Any) -> None:
+        self._providers.append(provider)
         for attr_name in dir(provider):
+
+            if attr_name == "jail":
+                continue
+
             attr = getattr(provider, attr_name)
 
             if not is_tool_method(attr):
@@ -60,6 +66,14 @@ class ToolRegistry:
 
     def list_tools(self) -> Iterable[str]:
         return self._tools.keys()
+
+    def providers(self):
+        return self._providers
+
+    def set_jail(self, jail_path):
+        self.jail_path = jail_path
+        for provider in self._providers:
+            provider.jail = jail_path
 
     def describe(self, include_state_modifying=True, markdown=False) -> str:
         if not self._tools:
