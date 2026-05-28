@@ -429,6 +429,13 @@ class DeterministicAgent:
                     )
                     print("\n")
 
+                case "rollback;":
+                    self.rollback()
+                    self.pretty_print(
+                        "**Rollback executed.** System reverted to the last stable state."
+                    )
+                    print("\n")
+
                 case _:
                     if not msg or msg.endswith(";"):
                         continue

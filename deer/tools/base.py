@@ -27,7 +27,7 @@ class ToolProvider:
 
     @property
     def jail(self):
-        assert self._jail is not None, (
+        assert self.jail_ is not None, (
             "Filesystem jail is not configured. "
             "The runtime cannot access the sandbox root path."
         )

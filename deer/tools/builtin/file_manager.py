@@ -2,6 +2,7 @@ from deer.tools import ToolProvider, tool, Return
 
 from dataclasses import dataclass
 from pathlib import Path
+import shutil
 
 
 class FileManagerError(ValueError):
@@ -37,7 +38,7 @@ class FileManager(ToolProvider):
         }
 
     @tool(modifies_state=True)
-    def delete_file(self, path: str) -> Return(status=str):
+    def delete_file(self, path: str) -> Return(exists=bool):
         """Deletes a file."""
         safe_path = self.jailed_path(path)
 
@@ -47,7 +48,7 @@ class FileManager(ToolProvider):
             raise ValueError(f"'{path}' is not a file or does not exist.")
 
         return {
-            "status": not safe_path.exists(),
+            "exists": not safe_path.exists(),
         }
 
     @tool(modifies_state=True)
@@ -56,6 +57,20 @@ class FileManager(ToolProvider):
         safe_path = self.jailed_path(path)
         safe_path.mkdir(parents=True, exist_ok=True)
         return {"status": "success"}
+
+    @tool(modifies_state=True)
+    def delete_directory(self, path: str) -> Return(exists=bool):
+        """Removes a directory and all its contents recursively."""
+        safe_path = self.jailed_path(path)
+
+        if safe_path.is_dir():
+            shutil.rmtree(safe_path)
+        else:
+            raise ValueError(f"'{path}' is not a directory or does not exist.")
+
+        return {
+            "exists": not safe_path.exists(),
+        }
 
     @tool()
     def get_file_info(self, path: str) -> Return(

@@ -24,7 +24,8 @@ An LLM agent orchestration framework built for:
 
 ## Commands
 
-- `tools;`  → Show tools and capabilities
-- `clear;`  → Clear the console and reset the session
-- `exit;`   → Terminate the session
+- `tools;`     → Show tools and capabilities
+- `clear;`     → Clear the console and reset the session
+- `exit;`      → Terminate the session
+- `rollback;`  → Revert the system to the last stable state
 """

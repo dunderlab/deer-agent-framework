@@ -51,9 +51,15 @@ The identity provides domain expertise, but does not override deterministic exec
 User goal:
 {goal}
 
+Runtime context (Payload):
+{payload}
+(Use the context above, including 'chat_history' if present, to resolve ambiguities, pronouns, or references to previous actions in the 'User goal').
+
 Output rules:
 - Return ONLY the optimized prompt.
 - Do not explain changes.
 - Do not use markdown.
 - Preserve the original language of the user goal.
+- Ensure the optimized goal is self-contained and explicitly mentions any files, entities, or values resolved from the context.
+
 """

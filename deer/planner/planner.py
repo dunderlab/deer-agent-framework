@@ -45,6 +45,7 @@ class Planner:
         goal_prompt = GOAL_IMPROVEMENT_PROMPT.format(
             identity=self.identity,
             goal=agent_input.goal,
+            payload=json.dumps(agent_input.payload, ensure_ascii=False),
         )
         improved_goal = self.llm_driver.generate_text(goal_prompt)
         agent_input.goal = improved_goal
