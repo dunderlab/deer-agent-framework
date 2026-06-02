@@ -103,7 +103,7 @@ class EchoTool(Tool):
     description = "Returns params['echo'] when provided; otherwise returns the input value unchanged."
     modifies_state = False
 
-    def run(self, params: dict[str, Any] | None = None) -> Return(echo={}):
+    def run(self, params: dict[str, Any] | None = None) -> Return(echo=dict):
         params = params or {}
         return params
 
