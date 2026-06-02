@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "deer-agent-framework"
-version = "0.1.0"
+version = "0.0"
 description = "DEER - Deterministic Executable Engine for Runtime-agents"
 authors = [{ name = "Yeison" }]
 readme = "README.md"
@@ -19,7 +19,7 @@ dependencies = [
 debug = [
     "matplotlib>=3.10.9",
     "pandas>=3.0.3",
-    "arize-phoenix-otel>=0.16.1",
+    "pytest>=9.0.3",
 ]
 
 [tool.setuptools.packages.find]

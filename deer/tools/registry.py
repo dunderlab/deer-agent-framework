@@ -87,10 +87,12 @@ class ToolRegistry:
                 continue
 
             if markdown:
-                lines.append(f" - `{tool.name}`: *{tool.description.split('\n')[0]}*")
+                cont = tool.description.split('\n')[0]
+                lines.append(f" - `{tool.name}`: *{cont}*")
             else:
+                cont = tool.full_description.replace("\n", "\n  ")
                 lines.append(
-                    f"- {tool.name}: {tool.full_description.replace("\n", "\n  ")}"
+                    f"- {tool.name}: {cont}"
                 )
 
         return "\n".join(lines)
