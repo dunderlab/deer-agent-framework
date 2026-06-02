@@ -10,20 +10,21 @@ authors = [{ name = "Yeison" }]
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-  "pydantic>=2.0",
-  "rich",
-  "prompt_toolkit",
+    "pydantic>=2.0",
+    "rich",
+    "prompt_toolkit",
 ]
 
 [project.optional-dependencies]
 debug = [
-  "matplotlib>=3.10.9",
-  "arize-phoenix-otel>=0.16.1",
+    "matplotlib>=3.10.9",
+    "pandas>=3.0.3",
+    "arize-phoenix-otel>=0.16.1",
 ]
 
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["deer*"]
 
- [project.scripts]
- deer = "deer.main:main"
+[project.scripts]
+deer = "deer.main:main"

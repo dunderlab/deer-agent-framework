@@ -6,7 +6,7 @@ from prompts import (
     SEQUENTIAL_FILE_EDITION_PROMPT,
 )
 
-jail_path = "/Users/yeison/Development/deer-agent-framework/sandbox/root"
+jail_path = "/Users/yeison/Development/DEER/sandbox/root"
 agent.set_jail(jail_path)
 
 

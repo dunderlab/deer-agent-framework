@@ -111,6 +111,24 @@ A **Deterministic Agent** in DEER doesn't just "chat". It processes requests thr
 
 ---
 
+## Empirical Evidence: Engineering vs. Vibes
+
+DEER isn't just a "good idea"—it's a measured engineering framework. Below is the data from **100 consecutive executions** of a complex Python architecture task using the `gemma4:31b` model.
+
+### 1. Planning Determinism
+While traditional agents hallucinate different paths every time, DEER's planning and validation loop ensures high predictability. 
+
+![Deterministic Path Frequencies](assets/planification_validation_paths_frequencies.png)
+*Figure 1: Path frequency distribution. 90% of executions follow the same validated optimal path, ensuring production-grade reliability.*
+
+### 2. Full Trace Introspección
+Every decision, tool call, and validation step is recorded. This allows for deep auditing and performance profiling.
+
+![Trace Step Analysis](assets/planification_validation_paths.png)
+*Figure 2: Multi-trace step analysis showing the density and consistency of the agent's internal logic across multiple runs.*
+
+---
+
 ## Installation
 
 ```bash
