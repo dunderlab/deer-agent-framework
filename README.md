@@ -1,102 +1,128 @@
-# DEER - Deterministic Executable Engine for Runtime Agents
+# DEER: Deterministic Executable Engine for Runtime Agents
 
-**DEER** is not just another agent framework. It is a **Deterministic Orchestration and Supervision Platform** designed to subordinate Large Language Models (LLMs) to a rigid, traditional software structure.
+### **Stop building "Vibe-based" Agents. Start Engineering Deterministic Engines.**
 
-While most frameworks prioritize flexibility and rapid experimentation, DEER prioritizes **determinism, auditability, reproducibility, and production-grade execution control**.
+**DEER** is the first agent framework designed for production environments where "it usually works" isn't good enough. While other frameworks rely on massive system prompts and probabilistic loops, DEER subordinates LLMs to rigid, code-defined software structures.
 
----
-
-## 1. The Problem & Philosophy
-
-### Problem Statement
-Current LLM agent frameworks suffer from structural weaknesses:
-- **Heuristic execution:** Tool calls are often selected based on "vibes" rather than contracts.
-- **Weak validation:** Plans are executed incrementally without a full formal check.
-- **Opacity:** Execution traces are often incomplete or non-reproducible.
-- **Lack of Control:** LLMs often control the architecture instead of the architecture controlling the LLM.
-
-### Core Design Philosophy
-1. **Structural Determinism:** Execution flow is governed by formal runtime rules, not emergent LLM behavior.
-2. **Typed Tool Contracts:** Every tool must declare validated `input_schema` and `output_schema`.
-3. **Plan-First Execution:** A complete JSON plan must satisfy formal validation before a single tool is executed.
-4. **Separation of Responsibilities:** Architecturally isolated components for Planning, Validation, Execution, and Tracing.
-5. **Full Traceability:** Every execution is recorded for deterministic replay and auditability.
+[![License](https://img.shields.io/badge/license-BSD--2--Clause-blue.svg)](LICENSE)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 
 ---
 
-## 2. System Identity (Scope)
+## Why DEER?
 
-DEER treats the LLM as a **specialized text-processing operator**, not a decision-making entity.
+Most agent frameworks suffer from **"Prompt Drift"**: you change one word in a system prompt and the whole logic breaks. DEER replaces "vibes" with **Code Contracts**.
 
-### What the System DOES
-- **Workflow Governance:** Dictates the start, development, and end of every process.
-- **Typed Data Flow:** Enforces strict data contracts between the LLM and your backend.
-- **Context Isolation:** Instantiates modular agents with restrictive System Prompts.
-- **Meticulous Payload Assembly:** Builds a **3-layer payload** (Identity, Memory, External Data) before every query.
-- **Mandatory Quality Control:** Every response is validated, cleaned, and formatted before persistence.
-
-### What the System DOES NOT
-- **NO "Chat Wrapper":** It is not a generic chat interface.
-- **NO Autonomous Business Logic:** The LLM does not alter database states or manage routes directly.
-- **NO Trust in Raw Output:** Never delivers unvalidated LLM output to internal systems.
+*   **Logic over Prompts:** Define your agent's behavior in Python, not in a 2000-word text file.
+*   **Typed Tooling:** Every tool has a Pydantic-validated input and output. No more "hallucinated" arguments.
+*   **Jailed by Design:** Built-in filesystem sandboxing (Jail) ensures your agent can't escape its directory.
+*   **Verification Loops:** The system doesn't just "execute"; it validates the result against the original goal using deterministic traces.
 
 ---
 
-## 3. How it Works
+## The DEER Workflow: Code-First Implementation
 
-### The Request Lifecycle (Linear Assembly Line)
-Every interaction follows a controlled, linear production line:
+### 1. Define your Agent's Identity
+Forget about telling the AI to "act like a specialist." Define a high-level `DeterministicAgent` with clear boundaries and a specific tool registry.
 
-1. **CONTROL LAYER** ──► (Evaluates state, extracts RAG, assembles 3-layer payload)
-2. **RESTRICTED AGENT** ──► (LLM processes text strictly within its guardrails)
-3. **VALIDATION** ──────► (Backend cleans, verifies data contracts, and formats)
-4. **SECURE RESULT** ────► (Data is persisted or displayed)
+```python
+from pathlib import Path
+from deer.core.agent import DeterministicAgent
+from deer.drivers import get_driver_from_parser
+from .tools import registry
 
-### Core Components
-- **Planner:** Uses an LLM to generate a structured pipeline JSON based on strict tool definitions.
-- **PlanValidator:** Performs static analysis (No cycles, type compatibility, depth constraints) **before** execution.
-- **Executor:** Executes tools step-by-step according to the validated plan.
-- **TraceStore:** Persists the entire state transition for auditing and deterministic replay.
+agent = DeterministicAgent(
+    description="Python Architecture Specialist",
+    identity=(
+        "You are a Principal Python Architect. You possess authoritative expertise "
+        "in advanced module resolution and dependency management."
+    ),
+    driver=get_driver_from_parser(),
+    registry=registry,
+    jail_path=Path.cwd() / "sandbox", # Strict security boundary
+    format_response="markdown",
+    max_tries_for_plan=5
+)
+
+if __name__ == "__main__":
+    agent.repl() # Instant interactive shell
+```
+
+### 2. Assemble your Tool Registry
+Combine built-in managers (File, Git, Search) into a single, cohesive unit of execution.
+
+```python
+from deer.tools.registry import ToolRegistry
+from deer.tools.builtin import FileManager, GitManager, SearchManager
+
+registry = ToolRegistry()
+
+# Add specialized capabilities with zero-config
+registry.register(
+    FileManager(),
+    GitManager(),
+    SearchManager(),
+)
+```
+
+### 3. Create Custom Tools with Pydantic Validation
+Extending DEER is as simple as writing a class. The `@tool` decorator automatically generates the JSON schema for the LLM, ensuring perfect compatibility.
+
+```python
+from deer.tools import ToolProvider, tool, Return
+
+class MyCustomProvider(ToolProvider):
+    @tool(modifies_state=True)
+    def deploy_module(self, name: str, version: str) -> Return(status=str, job_id=int):
+        """Deploys a specific python module to the internal repo."""
+        # Your deterministic logic here
+        return {"status": "success", "job_id": 12345}
+```
 
 ---
 
-## 4. Technical Differentiation
+## Built-in Agents
 
-| Dimension | Common Agent Framework | DEER Orchestration |
+The framework includes pre-configured agents in the `deer/builtins/` directory. These serve as both ready-to-use tools and reference implementations for building your own specialized architects and managers.
+
+---
+
+## Technical Differentiation
+
+| Feature | Traditional Frameworks (LangChain, etc.) | **DEER Orchestration** |
 | :--- | :--- | :--- |
-| **Flow Control** | Probabilistic (Prompt governed) | **Deterministic** (Backend governed) |
-| **Data Handling** | Dumps unstructured text | **Structured** (Optimized 3-layer payload) |
-| **Execution** | Incremental / Heuristic | **Plan-First** (Pre-validated) |
-| **Output Security** | Displays raw model output | **Validated** (Mandatory post-processing) |
+| **Execution Flow** | Probabilistic (LLM decides next step) | **Deterministic** (Backend-validated Plan) |
+| **Tool Arguments** | Often Hallucinated | **Strictly Typed** (Pydantic Models) |
+| **Security** | None / Manual | **Built-in Jail (Sandbox)** |
+| **Debugging** | Black box / Tricky logs | **Step-by-Step Trace Replay** |
+| **Output** | Raw Text | **Validated & Humanized Data** |
 
 ---
 
-## 5. Use Cases
+## The "Assembly Line" Lifecycle
 
-**DEER is suitable for:**
-- Enterprise reporting & Automated regulatory workflows.
-- Controlled data processing pipelines.
-- Audit-sensitive environments requiring traceable reasoning.
+DEER doesn't just "chat". It processes requests through a linear production line:
 
-**DEER is NOT optimized for:**
-- Creative conversational agents.
-- Rapid prototyping with flexible/vague prompts.
+1.  **Refinement:** The system improves the user's goal for technical clarity.
+2.  **Planning:** An LLM generates a complete JSON pipeline *before* executing anything.
+3.  **Static Analysis:** The `PlanValidator` checks the plan for cycles or type mismatches.
+4.  **Jailed Execution:** Tools run inside a secure sandbox.
+5.  **Verification:** A secondary "judge" loop confirms the result matches the goal.
 
 ---
 
-## 6. Getting Started
+## Installation
 
-### Installation
 ```bash
 pip install deer-agent-framework
 ```
 
-### Example: Defining a Specialized Tool
-```python
-
-```
+*Requires Python 3.12+ and a valid LLM API Key (Gemini, Ollama, etc.).*
 
 ---
 
-## 7. License
-BSD 2-Clause License
+## License
+Licensed under the **BSD 2-Clause License**. See [LICENSE](LICENSE) for details.
+
+---
+**Built for developers who trust code, not prompts.**
