@@ -118,13 +118,13 @@ DEER isn't just a "good idea"—it's a measured engineering framework. Below is 
 ### 1. Planning Determinism
 While traditional agents hallucinate different paths every time, DEER's planning and validation loop ensures high predictability. 
 
-![Deterministic Path Frequencies](assets/planification_validation_paths_frequencies.png)
+![Deterministic Path Frequencies](assets/planification_validation_paths_frequencies.svg)
 *Figure 1: Path frequency distribution. 90% of executions follow the same validated optimal path, ensuring production-grade reliability.*
 
 ### 2. Full Trace Introspección
 Every decision, tool call, and validation step is recorded. This allows for deep auditing and performance profiling.
 
-![Trace Step Analysis](assets/planification_validation_paths.png)
+![Trace Step Analysis](assets/planification_validation_paths.svg)
 *Figure 2: Multi-trace step analysis showing the density and consistency of the agent's internal logic across multiple runs.*
 
 ---
