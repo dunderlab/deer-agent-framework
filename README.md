@@ -13,12 +13,7 @@
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/deer-agent-framework)
 ![GitHub last commit](https://img.shields.io/github/last-commit/dunderlab/deer-agent-framework)
 ![CodeFactor Grade](https://img.shields.io/codefactor/grade/github/dunderlab/deer-agent-framework)
-
-
 [//]: # ([![Documentation Status]&#40;https://readthedocs.org/projects/chaski-confluent/badge/?version=latest&#41;]&#40;https://chaski-confluent.readthedocs.io/en/latest/?badge=latest&#41;)
-
-
-
 
 ---
 
