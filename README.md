@@ -4,8 +4,21 @@
 
 **DEER** is the first framework designed for building **Deterministic Agents** in production environments where "it usually works" isn't good enough. While other frameworks rely on massive system prompts and probabilistic loops, DEER subordinates LLMs to rigid, code-defined software structures.
 
-[![License](https://img.shields.io/badge/license-BSD--2--Clause-blue.svg)](LICENSE)
-[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
+![License](https://img.shields.io/badge/license-BSD--2--Clause-blue.svg)
+![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)
+![GitHub top language](https://img.shields.io/github/languages/top/dunderlab/deer-agent-framework)
+![PyPI - License](https://img.shields.io/pypi/l/deer-agent-framework)
+![PyPI](https://img.shields.io/pypi/v/deer-agent-framework)
+![PyPI - Status](https://img.shields.io/pypi/status/deer-agent-framework)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/deer-agent-framework)
+![GitHub last commit](https://img.shields.io/github/last-commit/dunderlab/deer-agent-framework)
+![CodeFactor Grade](https://img.shields.io/codefactor/grade/github/dunderlab/deer-agent-framework)
+
+
+[//]: # ([![Documentation Status]&#40;https://readthedocs.org/projects/chaski-confluent/badge/?version=latest&#41;]&#40;https://chaski-confluent.readthedocs.io/en/latest/?badge=latest&#41;)
+
+
+
 
 ---
 

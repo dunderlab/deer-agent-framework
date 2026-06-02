@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "deer-agent-framework"
-version = "0.0"
+version = "0.1a1"
 description = "DEER - Deterministic Executable Engine for Runtime-agents"
 authors = [{ name = "Yeison" }]
 readme = "README.md"
