@@ -16,16 +16,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-gemini = [
-  "google-genai>=2.3.0"
-]
-ollama = [
-  "ollama>=0.6.2"
-]
 debug = [
   "matplotlib>=3.10.9",
   "arize-phoenix-otel>=0.16.1",
-  "python-dotenv>=1.2.2",
 ]
 
 [tool.setuptools.packages.find]
