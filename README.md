@@ -114,7 +114,7 @@ DEER doesn't just "chat". It processes requests through a linear production line
 ## Installation
 
 ```bash
-pip install deer-agent-framework
+pip install git+https://github.com/dunderlab/deer-agent-framework.git
 ```
 
 *Requires Python 3.12+ and a valid LLM API Key (Gemini, Ollama, etc.).*
