@@ -4,7 +4,9 @@ from typing import Literal, get_args
 
 from deer.tools import ToolProvider, tool, Return, CommandOut
 
-Command = Literal["python", "python3", "gcc", "g++", "javac", "npm", "node"]
+Command = Literal[
+    "python", "python3", "gcc", "g++", "javac", "npm", "node", "jest", "vitest"
+]
 
 
 @dataclass
@@ -12,7 +14,7 @@ class RuntimeManager(ToolProvider):
 
     @property
     def allowed_commands(self):
-        return list(get_args(Command))
+        return list(get_args(Command)) + ["pgrep", "ps", "kill"]
 
     @tool()
     def execute_test_suite(self, command: Command, path: str = ".") -> CommandOut:
@@ -67,7 +69,7 @@ class RuntimeManager(ToolProvider):
                 "message": f"Execution error: {str(e)}",
             }
 
-    @tool()
+    @tool(modifies_state=True)
     def compile_source_code(self, command: Command, path: str = ".") -> CommandOut:
         """Invokes strict language compilers (e.g., 'gcc', 'javac') on a targeted file."""
         args = shlex.split(command)
@@ -157,3 +159,22 @@ class RuntimeManager(ToolProvider):
             }
         except Exception as e:
             return {"running": False, "message": f"Status check error: {str(e)}"}
+
+    @tool(modifies_state=True)
+    def terminate_process(
+        self, process_name: str, signal_type: Literal["TERM", "KILL"]
+    ) -> Return(success=bool, message=str):
+        """Sends a termination signal to a specific active process to prevent hangs."""
+        try:
+            self.check_command("kill")
+            result = self.run_command(
+                f"kill -{signal_type} $(pgrep {process_name})",
+                cwd=".",
+                timeout_seconds=5,
+            )
+            return {
+                "success": result["returncode"] == 0,
+                "message": f"Process '{process_name}' terminated successfully.",
+            }
+        except Exception as e:
+            return {"success": False, "message": f"Termination error: {str(e)}"}

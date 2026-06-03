@@ -40,7 +40,7 @@ class NetworkManager(ToolProvider):
         except Exception as e:
             return {"status": 0, "body": "", "message": f"Connection Error: {str(e)}"}
 
-    @tool()
+    @tool(modifies_state=True)
     def download_asset(
         self, url: str, destination_path: str
     ) -> Return(success=bool, path=str, message=str):

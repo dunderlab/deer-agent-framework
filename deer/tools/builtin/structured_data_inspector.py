@@ -82,3 +82,31 @@ class StructuredDataInspector(ToolProvider):
             return {"tables": result}
         finally:
             conn.close()
+
+    @tool(modifies_state=True)
+    def execute_sqlite_statement(
+        self, path: str, statement: str
+    ) -> Return(rows_affected=int, success=bool, message=str):
+        """Executes a mutation statement (INSERT/UPDATE/DELETE) on a local SQLite database."""
+        safe_path = self.jailed_path(path)
+
+        conn = sqlite3.connect(safe_path)
+        try:
+            cursor = conn.cursor()
+            cursor.execute(statement)
+            rows_affected = cursor.rowcount
+            conn.commit()
+            return {
+                "rows_affected": rows_affected,
+                "success": True,
+                "message": "Statement executed successfully",
+            }
+        except sqlite3.Error as e:
+            return {
+                "rows_affected": 0,
+                "success": False,
+                "message": str(e),
+            }
+        finally:
+            conn.close()
+

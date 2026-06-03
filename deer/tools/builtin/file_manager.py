@@ -134,3 +134,41 @@ class FileManager(ToolProvider):
         return {
             "tree": build_node(safe_path),
         }
+
+    @tool(modifies_state=True)
+    def patch_file(
+        self, path: str, old_text: str, new_text: str
+    ) -> Return(success=bool, num_replacements=int, message=str):
+        """Replaces a specific block of text with a new block inside a targeted file.
+        Only succeeds if exactly one occurrence of old_text is found to prevent accidental multiple replacements.
+        """
+        safe_path = self.jailed_path(path)
+        with open(safe_path, "r") as f:
+            content = f.read()
+
+        num_replacements = content.count(old_text)
+
+        if num_replacements == 0:
+            return {
+                "success": False,
+                "num_replacements": 0,
+                "message": "Error: old_text not found in file.",
+            }
+
+        if num_replacements > 1:
+            return {
+                "success": False,
+                "num_replacements": num_replacements,
+                "message": f"Ambiguity Error: {num_replacements} occurrences of old_text found. Please provide a more specific text block.",
+            }
+
+        patched_content = content.replace(old_text, new_text)
+
+        with open(safe_path, "w") as f:
+            f.write(patched_content)
+
+        return {
+            "success": True,
+            "num_replacements": 1,
+            "message": "File patched successfully.",
+        }
