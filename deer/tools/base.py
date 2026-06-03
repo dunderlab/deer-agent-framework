@@ -92,18 +92,34 @@ class ToolProvider:
     ) -> dict:
         """Execute a command string without invoking a shell."""
 
-        if self.allowed_commands and command not in self.allowed_commands:
+        try:
+            args = shlex.split(command)
+        except ValueError as e:
             return {
                 "stdout": "",
-                "stderr": f"Command '{command}' is not allowed.",
+                "stderr": str(e),
                 "returncode": -1,
-                "message": f"Security restriction: '{command}' is not in the allowed list.",
+                "message": f"Shell expansion error: {e}",
             }
-
-        args = shlex.split(command)
 
         if not args:
             raise CommandRunnerError("Command cannot be empty.")
+
+        if self.allowed_commands:
+            is_allowed = False
+            for allowed_cmd in self.allowed_commands:
+                allowed_args = shlex.split(allowed_cmd)
+                if len(args) >= len(allowed_args) and args[: len(allowed_args)] == allowed_args:
+                    is_allowed = True
+                    break
+
+            if not is_allowed:
+                return {
+                    "stdout": "",
+                    "stderr": f"Command '{command}' is not allowed.",
+                    "returncode": -1,
+                    "message": f"Security restriction: '{command}' is not in the allowed list or doesn't match an allowed prefix.",
+                }
 
         safe_cwd = self.jail if cwd is None else self.jailed_path(cwd)
 
