@@ -22,6 +22,7 @@ fileManager = FileManager(
     #     "create_directory",
     #     "get_file_info",
     #     "directory_tree",
+    #     "patch_file",
     # ],
 )
 
@@ -78,6 +79,7 @@ runtimeManager = RuntimeManager(
     #     "execute_test_suite",
     #     "compile_source_code",
     #     "check_process_status",
+    #     "terminate_process",
     # ]
 )
 
@@ -86,6 +88,7 @@ structuredDataInspector = StructuredDataInspector(
     #     "inspect_json_keys",
     #     "preview_csv_columns",
     #     "query_sqlite_metadata",
+    #     "execute_sqlite_statement",
     # ]
 )
 
