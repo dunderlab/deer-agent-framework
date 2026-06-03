@@ -24,7 +24,6 @@ from deer.executor.executor import Executor
 from deer.core.ui import WELCOME_MESSAGE
 from deer.tools.registry import ToolRegistry, default_registry
 from deer.schema.io import AgentInput, AgentOutput
-Ï
 from rich.console import Console
 from rich.markdown import Markdown
 

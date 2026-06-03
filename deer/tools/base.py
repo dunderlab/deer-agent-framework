@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from pathlib import Path
 import subprocess
 import shlex
-
+import shutil
 
 class ToolProviderError(ValueError):
     pass
@@ -18,12 +18,28 @@ class CommandRunnerError(ValueError):
 
 @dataclass
 class ToolProvider:
-    # jail: Path | str | None = field(default=None, kw_only=True)
     tools: list[str] | None = field(default=None, kw_only=True)
 
     def __post_init__(self):
         # pass
         self.jail_ = None
+
+        for command in self.commands or []:
+            self.check_command(command)
+
+    @property
+    def commands(self):
+        """Return the list of commands to be verified at agent startup."""
+        return []
+
+    @property
+    def allowed_commands(self):
+        """Return the list of allowed execution commands.
+
+        If a command is not present in this list, its execution will fail
+        at runtime.
+        """
+        return []
 
     @property
     def jail(self):
@@ -75,6 +91,15 @@ class ToolProvider:
         timeout_seconds: int = 30,
     ) -> dict:
         """Execute a command string without invoking a shell."""
+
+        if self.allowed_commands and command not in self.allowed_commands:
+            return {
+                "stdout": "",
+                "stderr": f"Command '{command}' is not allowed.",
+                "returncode": -1,
+                "message": f"Security restriction: '{command}' is not in the allowed list.",
+            }
+
         args = shlex.split(command)
 
         if not args:
@@ -95,7 +120,21 @@ class ToolProvider:
             "stdout": completed.stdout,
             "stderr": completed.stderr,
             "returncode": completed.returncode,
+            "message": "",
         }
+
+    def check_command(self, command: str | Path) -> None:
+        """
+        Validates if a command exists in the operating system.
+        Raises CommandRunnerError if the executable is not found in the PATH.
+        """
+        # Convert to string for compatibility with Windows and Python < 3.12
+        cmd_str = str(command)
+        if shutil.which(cmd_str) is None:
+            raise CommandRunnerError(
+                f"The command '{cmd_str}' is not available on the system. "
+                f"Please ensure it is installed and configured in your PATH."
+            )
 
 
 class Tool(ABC):

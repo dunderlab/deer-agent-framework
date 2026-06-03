@@ -1,5 +1,14 @@
 from deer.tools.registry import ToolRegistry
-from deer.tools.builtin import FileManager, GitManager, SearchManager
+from deer.tools.builtin import (
+    FileManager,
+    GitManager,
+    SearchManager,
+    MemoryManager,
+    NetworkManager,
+    RuntimeManager,
+    StructuredDataInspector,
+    SystemInspector,
+)
 
 jail_path = "/Users/yeison/Development/deer-agent-framework/sandbox/root"
 
@@ -47,8 +56,54 @@ searchManager = SearchManager(
     # ],
 )
 
+memoryManager = MemoryManager(
+    # tools=[
+    #     "store_key_insight",
+    #     "retrieve_key_insight",
+    #     "list_memory_keys",
+    #     "clear_context_memory",
+    # ]
+)
+
+networkManager = NetworkManager(
+    # tools=[
+    #     "fetch_endpoint",
+    #     "download_asset",
+    #     "check_url_availability",
+    # ]
+)
+
+runtimeManager = RuntimeManager(
+    # tools=[
+    #     "execute_test_suite",
+    #     "compile_source_code",
+    #     "check_process_status",
+    # ]
+)
+
+structuredDataInspector = StructuredDataInspector(
+    # tools=[
+    #     "inspect_json_keys",
+    #     "preview_csv_columns",
+    #     "query_sqlite_metadata",
+    # ]
+)
+
+systemInspector = SystemInspector(
+    # tools=[
+    #     "get_environment_variable",
+    #     "list_active_processes",
+    #     "check_network_sockets",
+    # ]
+)
+
 registry.register(
     fileManager,
     gitManager,
     searchManager,
+    memoryManager,
+    networkManager,
+    runtimeManager,
+    structuredDataInspector,
+    systemInspector,
 )

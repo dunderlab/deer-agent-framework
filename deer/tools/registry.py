@@ -29,8 +29,10 @@ class ToolRegistry:
 
             if attr_name == "jail":
                 continue
-
-            attr = getattr(provider, attr_name)
+            try:
+                attr = getattr(provider, attr_name)
+            except:
+                continue
 
             if not is_tool_method(attr):
                 continue
@@ -87,13 +89,11 @@ class ToolRegistry:
                 continue
 
             if markdown:
-                cont = tool.description.split('\n')[0]
+                cont = tool.description.split("\n")[0]
                 lines.append(f" - `{tool.name}`: *{cont}*")
             else:
                 cont = tool.full_description.replace("\n", "\n  ")
-                lines.append(
-                    f"- {tool.name}: {cont}"
-                )
+                lines.append(f"- {tool.name}: {cont}")
 
         return "\n".join(lines)
 

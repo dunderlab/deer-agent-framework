@@ -1,15 +1,11 @@
-from deer.tools import ToolProvider, tool, Return
+from deer.tools import ToolProvider, tool, Return, CommandOut
 
 from dataclasses import dataclass
-from pathlib import Path
 import shlex
 
 
 class SearchManagerError(ValueError):
     pass
-
-
-CommandOut = Return(stdout=str, stderr=str, returncode=int)
 
 
 @dataclass
@@ -18,6 +14,10 @@ class SearchManager(ToolProvider):
     def rg(self, path: str, *args: str | int) -> CommandOut:
         quoted_args = " ".join(shlex.quote(str(arg)) for arg in args)
         return self.run_command(f"rg {quoted_args}", cwd=path)
+
+    @property
+    def commands(self):
+        return ["rg"]
 
     @tool()
     def search_text(self, path: str, query: str) -> CommandOut:

@@ -1,15 +1,11 @@
-from deer.tools import ToolProvider, tool, Return
+from deer.tools import ToolProvider, tool, Return, CommandOut
 
 from dataclasses import dataclass
-from pathlib import Path
 import shlex
 
 
 class GitManagerError(ValueError):
     pass
-
-
-CommandOut = Return(stdout=str, stderr=str, returncode=int)
 
 
 @dataclass
@@ -18,6 +14,10 @@ class GitManager(ToolProvider):
     def git(self, path: str, *args: str | int) -> CommandOut:
         quoted_args = " ".join(shlex.quote(str(arg)) for arg in args)
         return self.run_command(f"git {quoted_args}", cwd=path)
+
+    @property
+    def commands(self):
+        return ["git"]
 
     @tool()
     def git_status(self, path: str) -> CommandOut:
