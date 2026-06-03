@@ -5,6 +5,8 @@ import os
 from .base_driver import LLMDriver
 from .gemini_driver import GeminiDriver
 from .ollama_driver import OllamaDriver
+from .openai_driver import OpenAIDriver
+from .azure_driver import AzureOpenAIDriver
 
 from deer.utils.console import error
 
@@ -12,6 +14,7 @@ backends = {
     "gemini",
     "openai",
     "ollama",
+    "azure",
 }
 
 drivers_parser = argparse.ArgumentParser(description="DEER Agent Framework CLI")
@@ -62,5 +65,7 @@ def get_driver_from_parser():
             return OllamaDriver(model_name=args.model)
 
         case "openai":
-            pass
-            # return OpenAIDriver(model_name=args.model)
+            return OpenAIDriver(model_name=args.model)
+
+        case "azure":
+            return AzureOpenAIDriver(model_name=args.model)
