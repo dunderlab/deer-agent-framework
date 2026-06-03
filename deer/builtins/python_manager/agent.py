@@ -21,7 +21,7 @@ agent = DeterministicAgent(
     registry=registry,
     jail_path=Path.cwd(),
     format_response="markdown",
-    max_tries_for_plan=5,
+    max_retries=5,
     rollback=None,
 )
 

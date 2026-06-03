@@ -49,13 +49,13 @@ agent = DeterministicAgent(
     ),
     driver=get_driver_from_parser(),
     registry=registry,
-    jail_path=Path.cwd() / "sandbox", # Strict security boundary
+    jail_path=Path.cwd() / "sandbox",  # Strict security boundary
     format_response="markdown",
-    max_tries_for_plan=5
+    max_retries=5
 )
 
 if __name__ == "__main__":
-    agent.repl() # Instant interactive shell
+    agent.repl()  # Instant interactive shell
 ```
 
 ### 2. Assemble your Tool Registry

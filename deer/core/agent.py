@@ -24,7 +24,7 @@ from deer.executor.executor import Executor
 from deer.core.ui import WELCOME_MESSAGE
 from deer.tools.registry import ToolRegistry, default_registry
 from deer.schema.io import AgentInput, AgentOutput
-
+Ï
 from rich.console import Console
 from rich.markdown import Markdown
 
@@ -37,7 +37,7 @@ class DeterministicAgent:
         self,
         description: str = "",
         identity: str = "DeterministicAgent",
-        max_tries_for_plan: int = 3,
+        max_retries: int = 3,
         driver: LLMDriver | None = None,
         registry: ToolRegistry | None = None,
         format_response: str = "plaintext",
@@ -68,9 +68,9 @@ class DeterministicAgent:
         )
 
         assert (
-            max_tries_for_plan > 0
-        ), f"max_tries_for_plan must be positive, got {max_tries_for_plan}"
-        self.max_tries_for_plan = max_tries_for_plan
+                max_retries > 0
+        ), f"max_tries_for_plan must be positive, got {max_retries}"
+        self.max_retries = max_retries
 
         self.history = []
         self.trace = []
@@ -152,14 +152,14 @@ class DeterministicAgent:
 
         response_validation = None
 
-        for attempt_idx in range(self.max_tries_for_plan):
-            logger.debug(f"Attempt {attempt_idx + 1} of {self.max_tries_for_plan}")
+        for attempt_idx in range(self.max_retries):
+            logger.debug(f"Attempt {attempt_idx + 1} of {self.max_retries}")
 
             run_trace[f"Attempt-{attempt_idx + 1}"] = {}
 
-            for solution_idx in range(self.max_tries_for_plan):
+            for solution_idx in range(self.max_retries):
                 logger.debug(
-                    f"Solution planning {solution_idx + 1} of {self.max_tries_for_plan}"
+                    f"Solution planning {solution_idx + 1} of {self.max_retries}"
                 )
                 run_trace[f"Attempt-{attempt_idx + 1}"][
                     f"Solution-{solution_idx + 1}"
@@ -174,7 +174,7 @@ class DeterministicAgent:
 
             if response is None:
                 logger.warning(
-                    f"Agent failed to produce a response after {self.max_tries_for_plan} attempts"
+                    f"Agent failed to produce a response after {self.max_retries} attempts"
                 )
                 if last_error_message:
                     last_error_message_explained = self.explain_error(
@@ -199,9 +199,9 @@ class DeterministicAgent:
                     for s in response.trace
                 ],
             }
-            for verification_idx in range(self.max_tries_for_plan):
+            for verification_idx in range(self.max_retries):
                 logger.debug(
-                    f"Verification planning {verification_idx + 1} of {self.max_tries_for_plan}"
+                    f"Verification planning {verification_idx + 1} of {self.max_retries}"
                 )
                 run_trace[f"Attempt-{attempt_idx + 1}"][
                     f"Verification-{verification_idx + 1}"
@@ -229,7 +229,7 @@ class DeterministicAgent:
 
             if response_validation is None:
                 logger.warning(
-                    f"Agent failed to verificate after {self.max_tries_for_plan} attempts"
+                    f"Agent failed to verificate after {self.max_retries} attempts"
                 )
                 continue
 
