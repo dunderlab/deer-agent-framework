@@ -2,7 +2,8 @@ import shlex
 from dataclasses import dataclass
 from typing import Literal, get_args
 
-from deer.tools import ToolProvider, tool, Return, CommandOut
+from deer.tools import ToolProvider, tool
+from deer.schema.io import Return, CommandOut
 
 Command = Literal[
     "python", "python3", "gcc", "g++", "javac", "npm", "node", "jest", "vitest"

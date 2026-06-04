@@ -1,4 +1,5 @@
-from deer.tools import ToolProvider, tool, Return, CommandOut
+from deer.tools import ToolProvider, tool
+from deer.schema.io import CommandOut
 
 from dataclasses import dataclass
 import shlex

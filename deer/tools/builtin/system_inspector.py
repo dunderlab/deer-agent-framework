@@ -2,7 +2,8 @@ import os
 from typing import Optional
 from dataclasses import dataclass
 
-from deer.tools import ToolProvider, tool, Return
+from deer.tools import ToolProvider, tool
+from deer.schema.io import Return
 
 BLACKLIST_ENV_VARS = [
     "GEMINI_API_KEY",

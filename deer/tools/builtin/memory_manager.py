@@ -3,7 +3,8 @@ import json
 from typing import Any
 from dataclasses import dataclass
 
-from deer.tools import ToolProvider, tool, Return
+from deer.tools import ToolProvider, tool
+from deer.schema.io import Return
 
 
 @dataclass

@@ -1,4 +1,5 @@
-from deer.tools import ToolProvider, tool, Return
+from deer.tools import ToolProvider, tool
+from deer.schema.io import Return
 
 from dataclasses import dataclass
 from pathlib import Path

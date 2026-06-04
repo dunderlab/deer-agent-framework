@@ -4,7 +4,8 @@ import sqlite3
 from typing import Any, Dict, List
 from dataclasses import dataclass
 
-from deer.tools import ToolProvider, tool, Return
+from deer.tools import ToolProvider, tool
+from deer.schema.io import Return
 
 
 @dataclass
@@ -109,4 +110,3 @@ class StructuredDataInspector(ToolProvider):
             }
         finally:
             conn.close()
-
