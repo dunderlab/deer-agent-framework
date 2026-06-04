@@ -20,17 +20,17 @@ class Preset:
         MemoryManager,
     }
 
-    SYSTEM_ADMIN = {
-        SystemInspector,
-        RuntimeManager,
-        FileManager,
-        MemoryManager,
-    }
-
     DATA_ANALYST = {
         StructuredDataInspector,
         FileManager,
         SearchManager,
+        MemoryManager,
+    }
+
+    SYSTEM_ADMIN = {
+        SystemInspector,
+        RuntimeManager,
+        FileManager,
         MemoryManager,
     }
 
