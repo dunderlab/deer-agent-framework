@@ -10,10 +10,6 @@ from deer.tools.builtin import (
     SystemInspector,
 )
 
-jail_path = "/Users/yeison/Development/deer-agent-framework/sandbox/root"
-
-tool_registry = ToolRegistry()
-
 fileManager = FileManager(
     # tools=[
     #     "new_file",
@@ -100,6 +96,7 @@ systemInspector = SystemInspector(
     # ]
 )
 
+tool_registry = ToolRegistry()
 tool_registry.register(
     fileManager,
     gitManager,
