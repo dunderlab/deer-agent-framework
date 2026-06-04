@@ -9,7 +9,7 @@ from prompts import (
 jail_path = "/Users/yeison/Development/DEER/sandbox/root"
 agent.set_jail(jail_path)
 
-print(agent.registry.describe())
+print(agent.tool_registry.describe())
 
 
 # agent.repl()

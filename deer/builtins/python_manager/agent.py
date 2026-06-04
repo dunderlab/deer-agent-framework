@@ -4,9 +4,9 @@ from deer.core.agent import DeterministicAgent
 from deer.drivers import get_driver_from_parser
 
 if __package__:
-    from .tools import registry
+    from .tools import tool_registry
 else:
-    from tools import registry
+    from tools import tool_registry
 
 agent = DeterministicAgent(
     description="Python Architecture Specialist expert in module lifecycle, dependency management, and package distribution.",
@@ -18,7 +18,7 @@ agent = DeterministicAgent(
         "and deployed across diverse environments."
     ),
     driver=get_driver_from_parser(),
-    registry=registry,
+    tool_registry=tool_registry,
     jail_path=Path.cwd(),
     format_response="markdown",
     max_retries=5,

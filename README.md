@@ -39,7 +39,7 @@ Forget about telling the AI to "act like a specialist." Define a high-level `Det
 from pathlib import Path
 from deer.core.agent import DeterministicAgent
 from deer.drivers import get_driver_from_parser
-from .tools import registry
+from .tools import tool_registry
 
 agent = DeterministicAgent(
     description="Python Architecture Specialist",
@@ -48,7 +48,7 @@ agent = DeterministicAgent(
         "in advanced module resolution and dependency management."
     ),
     driver=get_driver_from_parser(),
-    registry=registry,
+    tool_registry=tool_registry,
     jail_path=Path.cwd() / "sandbox",  # Strict security boundary
     format_response="markdown",
     max_retries=5
@@ -65,10 +65,10 @@ Combine built-in managers (File, Git, Search) into a single, cohesive unit of ex
 from deer.tools.registry import ToolRegistry
 from deer.tools.builtin import FileManager, GitManager, SearchManager
 
-registry = ToolRegistry()
+tool_registry = ToolRegistry()
 
 # Add specialized capabilities with zero-config
-registry.register(
+tool_registry.register(
     FileManager(),
     GitManager(),
     SearchManager(),

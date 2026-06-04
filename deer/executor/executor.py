@@ -12,8 +12,8 @@ logger = logging.getLogger("DEER")
 
 
 class Executor:
-    def __init__(self, registry: ToolRegistry) -> None:
-        self.registry = registry
+    def __init__(self, tool_registry: ToolRegistry) -> None:
+        self.tool_registry = tool_registry
         self.trace_store = TraceStore()
 
     def execute(self, plan: Plan, payload: {}) -> AgentOutput:
@@ -115,7 +115,7 @@ class Executor:
         tool_name: str,
         params: Dict[str, Any],
     ) -> Any:
-        tool = self.registry.get(tool_name)
+        tool = self.tool_registry.get(tool_name)
         input_params = tool.validate_input(params)
         output = tool.run(params=input_params)
         logger.info(f"Executed tool: {tool_name}")

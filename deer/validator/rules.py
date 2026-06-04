@@ -12,9 +12,9 @@ logger = logging.getLogger("DEER")
 class Rules:
     """Mandatory validation rules for NOMOS executable plans."""
 
-    def __init__(self, plan: Plan, registry: ToolRegistry) -> None:
+    def __init__(self, plan: Plan, tool_registry: ToolRegistry) -> None:
         self.plan = plan
-        self.registry = registry
+        self.tool_registry = tool_registry
 
     def validate(self) -> None:
         """Dynamically discovers and executes all methods prefixed with 'check_'."""
@@ -52,7 +52,7 @@ class Rules:
 
     def check_tools_registered(self, plan: Plan) -> None:
         for s in plan.steps:
-            if s.tool and not self.registry.has(s.tool):
+            if s.tool and not self.tool_registry.has(s.tool):
                 raise ValueError(f"Tool not found in ToolRegistry: {s.tool}")
 
     def check_tools_registered_params(self, plan: Plan) -> None:
@@ -61,7 +61,7 @@ class Rules:
             if not s.tool:
                 continue
 
-            tool = self.registry.get(s.tool)
+            tool = self.tool_registry.get(s.tool)
             if not hasattr(tool, "params_type"):
                 continue
 

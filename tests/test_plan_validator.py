@@ -8,11 +8,11 @@ from deer.validator.plan_validator import PlanValidator
 
 @pytest.fixture
 def validator(tmp_path):
-    registry = ToolRegistry()
+    tool_registry = ToolRegistry()
     file_manager = FileManager()
     file_manager.jail = tmp_path
-    registry.register(file_manager)
-    return PlanValidator(registry)
+    tool_registry.register(file_manager)
+    return PlanValidator(tool_registry)
 
 def test_rejects_missing_required_tool_params(validator):
     plan = Plan(

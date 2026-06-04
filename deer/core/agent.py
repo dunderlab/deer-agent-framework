@@ -38,7 +38,7 @@ class DeterministicAgent:
         identity: str = "DeterministicAgent",
         max_retries: int = 3,
         driver: LLMDriver | None = None,
-        registry: ToolRegistry | None = None,
+        tool_registry: ToolRegistry | None = None,
         format_response: str = "plaintext",
         rollback: Callable = None,
         jail_path: str = None,
@@ -48,21 +48,21 @@ class DeterministicAgent:
         self.identity = identity
         self.description = description
         self.driver = driver
-        self.registry = registry or default_registry()
+        self.tool_registry = tool_registry or default_registry()
         self.console = Console()
 
         self.executor = Executor(
-            registry=self.registry,
+            tool_registry=self.tool_registry,
         )
 
         self.validator = PlanValidator(
-            registry=self.registry,
+            tool_registry=self.tool_registry,
         )
 
         self.planner = Planner(
             identity=identity,
             driver=driver,
-            registry=self.registry,
+            tool_registry=self.tool_registry,
             format_response=format_response,
         )
 
@@ -84,12 +84,12 @@ class DeterministicAgent:
         )
         logger.info(f"Identity: {self.identity}")
         logger.info(
-            f"Available tools:\n{self.registry.describe(include_state_modifying=True)}"
+            f"Available tools:\n{self.tool_registry.describe(include_state_modifying=True)}"
         )
         logger.info(f"Authorized filesystem scope is restricted to: {jail_path}")
 
     def set_jail(self, jail_path):
-        self.registry.set_jail(jail_path)
+        self.tool_registry.set_jail(jail_path)
 
     def should_verify(self, plan) -> bool:
         return any(step.tool for step in plan.steps)
@@ -318,7 +318,7 @@ class DeterministicAgent:
 
     def explain_error(self, error: str):
         error_prompt = ERROR_EXPLAIN_PROMPT.format(
-            error=error, tools=self.registry.describe()
+            error=error, tools=self.tool_registry.describe()
         )
         error_explained = self.driver.generate_text(error_prompt)
         return error_explained
@@ -376,7 +376,7 @@ class DeterministicAgent:
 
     def save_trace(self, filename: str):
         obj = {
-            "tools": list(self.registry.list_tools()),
+            "tools": list(self.tool_registry.list_tools()),
             "trace": self.trace,
             "history": self.history,
         }
@@ -393,7 +393,7 @@ class DeterministicAgent:
         self.pretty_print(
             f">**Agent Profile**  \n"
             f"*{self.description}*  \n"
-            f"root: {self.registry.jail_path}  \n"
+            f"root: {self.tool_registry.jail_path}  \n"
             f"{self.driver}: {self.driver.model_name}  \n"
         )
         print("\n")
@@ -422,7 +422,7 @@ class DeterministicAgent:
 
                 case "tools;":
                     self.pretty_print(
-                        self.registry.describe(
+                        self.tool_registry.describe(
                             include_state_modifying=True, markdown=True
                         )
                     )

@@ -10,14 +10,14 @@ class PlanValidator:
     """Validador de planes que compone múltiples reglas.
 
     Uso:
-        validator = PlanValidator(registry)
+        validator = PlanValidator(tool_registry)
         validator.validate(plan)
     """
 
-    def __init__(self, registry: ToolRegistry) -> None:
-        self.registry = registry
+    def __init__(self, tool_registry: ToolRegistry) -> None:
+        self.tool_registry = tool_registry
 
     def validate(self, plan: Plan) -> None:
 
-        rules = Rules(plan, self.registry)
+        rules = Rules(plan, self.tool_registry)
         rules.validate()

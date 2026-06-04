@@ -13,12 +13,12 @@ class Planner:
         self,
         identity: str,
         driver: LLMDriver | None = None,
-        registry: ToolRegistry | None = None,
+        tool_registry: ToolRegistry | None = None,
         format_response: str = "plain",
         improve_goal: bool = True,
     ):
         self.llm_driver = driver
-        self.registry = registry
+        self.tool_registry = tool_registry
         self.identity = identity
         self.format_response = format_response
         self.improve_goal = improve_goal
@@ -65,7 +65,7 @@ class Planner:
             identity=self.identity,
             goal=agent_input.goal,
             payload=payload,
-            tools=self.registry.describe(include_state_modifying),
+            tools=self.tool_registry.describe(include_state_modifying),
             format_response=self.format_response,
         )
         return planner_prompt

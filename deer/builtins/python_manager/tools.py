@@ -12,7 +12,7 @@ from deer.tools.builtin import (
 
 jail_path = "/Users/yeison/Development/deer-agent-framework/sandbox/root"
 
-registry = ToolRegistry()
+tool_registry = ToolRegistry()
 
 fileManager = FileManager(
     # tools=[
@@ -100,7 +100,7 @@ systemInspector = SystemInspector(
     # ]
 )
 
-registry.register(
+tool_registry.register(
     fileManager,
     gitManager,
     searchManager,
