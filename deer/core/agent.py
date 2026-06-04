@@ -9,6 +9,8 @@ from datetime import datetime
 from prompt_toolkit import prompt
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.history import InMemoryHistory
+from rich.console import Console
+from rich.markdown import Markdown
 
 from deer.prompts import (
     RESPONSE_IMPROVEMENT_PROMPT,
@@ -24,8 +26,7 @@ from deer.executor.executor import Executor
 from deer.core.ui import WELCOME_MESSAGE
 from deer.tools.registry import ToolRegistry, default_registry
 from deer.schema.io import AgentInput, AgentOutput
-from rich.console import Console
-from rich.markdown import Markdown
+from deer.states import BaseStateManager
 
 logger = logging.getLogger("DEER")
 prompt_history = InMemoryHistory()
@@ -40,7 +41,7 @@ class DeterministicAgent:
         driver: LLMDriver | None = None,
         tool_registry: ToolRegistry | None = None,
         format_response: str = "plaintext",
-        rollback: Callable = None,
+        state_manager: BaseStateManager = None,
         jail_path: str = None,
     ) -> None:
         assert format_response in {"markdown", "plaintext"}
@@ -48,7 +49,14 @@ class DeterministicAgent:
         self.identity = identity
         self.description = description
         self.driver = driver
+
+        if isinstance(tool_registry, set):
+            tr = ToolRegistry()
+            tr.register(*[tool() for tool in tool_registry])
+            tool_registry = tr
+
         self.tool_registry = tool_registry or default_registry()
+
         self.console = Console()
 
         self.executor = Executor(
@@ -66,14 +74,15 @@ class DeterministicAgent:
             format_response=format_response,
         )
 
+        self.state_manager = state_manager
+
         assert (
-                max_retries > 0
+            max_retries > 0
         ), f"max_tries_for_plan must be positive, got {max_retries}"
         self.max_retries = max_retries
 
         self.history = []
         self.trace = []
-        self.rollback_function = rollback
 
         if jail_path:
             self.set_jail(jail_path)
@@ -148,15 +157,21 @@ class DeterministicAgent:
     def run(self, agent_input: AgentInput) -> AgentOutput:
         feedback = {}
         run_trace = {}
-
         response_validation = None
+        last_error_message = None
+
+        self.state_snapshot()
 
         for attempt_idx in range(self.max_retries):
+            self.state_restore()
+
             logger.debug(f"Attempt {attempt_idx + 1} of {self.max_retries}")
 
             run_trace[f"Attempt-{attempt_idx + 1}"] = {}
 
             for solution_idx in range(self.max_retries):
+                self.state_restore()
+
                 logger.debug(
                     f"Solution planning {solution_idx + 1} of {self.max_retries}"
                 )
@@ -176,13 +191,8 @@ class DeterministicAgent:
                     f"Agent failed to produce a response after {self.max_retries} attempts"
                 )
                 if last_error_message:
-                    last_error_message_explained = self.explain_error(
-                        last_error_message
-                    )
-                return AgentOutput(
-                    result=last_error_message_explained,
-                    trace=self.executor.trace_store.get_trace(),
-                )
+                    feedback = {"Previous Error": last_error_message}
+                continue
 
             if not self.should_verify(plan):
                 break
@@ -235,7 +245,16 @@ class DeterministicAgent:
             if response.validated:
                 break
 
-            self.rollback()
+        if response is None:
+            logger.warning(
+                f"Agent failed to produce a response after {self.max_retries} attempts"
+            )
+            if last_error_message:
+                last_error_message_explained = self.explain_error(last_error_message)
+            return AgentOutput(
+                result=last_error_message_explained,
+                trace=self.executor.trace_store.get_trace(),
+            )
 
         self.history.extend(
             [
@@ -261,6 +280,8 @@ class DeterministicAgent:
         )
 
         self.planner.goal = agent_input.goal
+        self.state_restore()
+        self.state_purge_engine()
         return response
 
     def send(self, msg):
@@ -285,12 +306,17 @@ class DeterministicAgent:
         self.history = []
         self.trace = []
 
-    def rollback(self):
-        logger.debug(f"Rolling back agent")
-        if self.rollback_function:
-            self.rollback_function()
-        else:
-            logger.debug(f"No rollback function defined")
+    def state_snapshot(self):
+        if self.state_manager:
+            self.state_manager.set_reference_state(self.tool_registry.jail_path)
+
+    def state_restore(self):
+        if self.state_manager:
+            self.state_manager.rollback_to_previous_state()
+
+    def state_purge_engine(self):
+        if self.state_manager:
+            self.state_manager.purge_engine()
 
     def humanize_result(self, output: AgentOutput) -> str:
         trace_str = ""
