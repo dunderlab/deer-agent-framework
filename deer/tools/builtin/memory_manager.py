@@ -32,7 +32,7 @@ class MemoryManager(ToolProvider):
     def store_key_insight(
         self, key: str, value: Any
     ) -> Return(success=bool, message=str):
-        """Persists an atomic piece of learned information or strategic state into a structured JSON memory file."""
+        """Stores critical information or state to 'remember' it across different execution cycles or complex tasks."""
         data = self.load_storage()
         data[key] = value
         self.save_storage(data)
@@ -42,7 +42,7 @@ class MemoryManager(ToolProvider):
     def retrieve_key_insight(
         self, key: str
     ) -> Return(value=Any, exists=bool, message=str):
-        """Fetches a specific stored discovery or strategic state. Returns the value and existence status."""
+        """Retrieves a stored insight by key to access previously learned facts, paths, or configurations."""
         data = self.load_storage()
         if key not in data:
             return {
@@ -59,14 +59,14 @@ class MemoryManager(ToolProvider):
 
     @tool()
     def list_memory_keys(self) -> Return(keys=list[str], count=int):
-        """Returns a list of all currently stored keys to help the agent explore available insights."""
+        """Lists all currently stored keys to explore available insights if you have forgotten their names."""
         data = self.load_storage()
         keys = list(data.keys())
         return {"keys": keys, "count": len(keys)}
 
     @tool(modifies_state=True)
     def clear_context_memory(self) -> Return(success=bool, message=str):
-        """Flushes the local memory file clean, resetting the agent's internal persistence layer for a new task."""
+        """Permanently deletes all stored memory; use only when starting a completely new and unrelated task."""
         if os.path.exists(self.storage_filename):
             os.remove(self.storage_filename)
             return {"success": True, "message": "Memory cleared successfully."}
