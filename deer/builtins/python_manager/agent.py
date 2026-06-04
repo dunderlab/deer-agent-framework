@@ -1,12 +1,9 @@
 from pathlib import Path
 
 from deer.core.agent import DeterministicAgent
+from deer.states import ParallelGitStateManager
 from deer.drivers import get_driver_from_parser
-
-if __package__:
-    from .tools import tool_registry
-else:
-    from tools import tool_registry
+from deer.tools import Preset
 
 agent = DeterministicAgent(
     description="Python Architecture Specialist expert in module lifecycle, dependency management, and package distribution.",
@@ -18,11 +15,11 @@ agent = DeterministicAgent(
         "and deployed across diverse environments."
     ),
     driver=get_driver_from_parser(),
-    tool_registry=tool_registry,
+    tool_registry=Preset.CODE_REPAIR | Preset.DATA_ANALYST,
     jail_path=Path.cwd(),
     format_response="markdown",
     max_retries=5,
-    rollback=None,
+    state_manager=ParallelGitStateManager,
 )
 
 if __name__ == "__main__":
