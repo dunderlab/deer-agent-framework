@@ -19,7 +19,7 @@ agent = DeterministicAgent(
     jail_path=Path.cwd(),
     format_response="markdown",
     max_retries=5,
-    state_manager=ParallelGitStateManager,
+    state_manager=ParallelGitStateManager(),
 )
 
 if __name__ == "__main__":

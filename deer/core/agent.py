@@ -455,7 +455,7 @@ class DeterministicAgent:
                     print("\n")
 
                 case "rollback;":
-                    self.rollback()
+                    self.state_restore()
                     self.pretty_print(
                         "**Rollback executed.** System reverted to the last stable state."
                     )
@@ -474,11 +474,16 @@ class DeterministicAgent:
                         self.pretty_print(f"    {output.text}")
                         print("\n")
 
-    def iterate_debug(self, chain_messages: list[str], repetitions: int, path: str):
+    def iterate_debug(
+        self,
+        chain_messages: list[str],
+        repetitions: int,
+        path: str,
+        callback: Callable[[str, str], None] = None,
+    ):
         logger.setLevel(logging.DEBUG)
         for i in range(repetitions):
             self.clear_history()
-            self.rollback()
             name = f"{self.driver.model_name}-{datetime.now().timestamp()}"
             self.generate_chat_log(
                 chain_messages,
@@ -486,3 +491,5 @@ class DeterministicAgent:
                 save_log=f"{path}/{name}.log",
             )
             self.save_trace(f"{path}/{name}.trace")
+            if callback:
+                callback()
