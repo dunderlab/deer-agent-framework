@@ -15,13 +15,16 @@ logger = logging.getLogger("DEER-LLM")
 
 class LLMDriver(Protocol):
     """Contract for drivers supporting Architectural Brilliance."""
+
     temperature_json = 0.0
     top_p = 1.0
 
     def __init__(self, model_name: str):
         self.model_name = model_name
 
-    def _send_post_request(self, url: str, payload: dict, headers: Optional[dict] = None) -> dict:
+    def _send_post_request(
+        self, url: str, payload: dict, headers: Optional[dict] = None
+    ) -> dict:
         """Centralized helper to handle HTTP POST requests for all drivers."""
         if headers is None:
             headers = {"Content-Type": "application/json"}
@@ -74,24 +77,28 @@ class OpenAIStandardDriver(LLMDriver):
         raise NotImplementedError("Subclasses must implement headers property")
 
     def generate_text(self, prompt: str) -> str:
-        logger.debug(f"Generating text with model {self.model_name} and prompt: {prompt}")
+        logger.debug(
+            f"Generating text with model {self.model_name} and prompt: {prompt}"
+        )
 
         payload = {
             "model": self.model_name,
             "messages": [{"role": "user", "content": prompt}],
-            "temperature": self.temperature_json,
-            "top_p": self.top_p,
         }
 
         try:
-            response_json = self._send_post_request(self.url, payload, headers=self.headers)
+            response_json = self._send_post_request(
+                self.url, payload, headers=self.headers
+            )
             return response_json["choices"][0]["message"]["content"]
         except (KeyError, IndexError) as e:
             logger.error(f"Unexpected response structure from API: {e}")
             raise RuntimeError(f"Failed to parse text from API response: {e}")
 
     def generate_json(self, prompt: str, response_model: Optional[Type[T]] = None) -> T:
-        logger.debug(f"Generating JSON with model {self.model_name} and prompt: {prompt}")
+        logger.debug(
+            f"Generating JSON with model {self.model_name} and prompt: {prompt}"
+        )
 
         payload = {
             "model": self.model_name,
@@ -102,7 +109,9 @@ class OpenAIStandardDriver(LLMDriver):
         }
 
         try:
-            response_json = self._send_post_request(self.url, payload, headers=self.headers)
+            response_json = self._send_post_request(
+                self.url, payload, headers=self.headers
+            )
             response_text = response_json["choices"][0]["message"]["content"]
             data = json.loads(response_text)
         except (KeyError, IndexError, json.JSONDecodeError) as e:
@@ -110,7 +119,7 @@ class OpenAIStandardDriver(LLMDriver):
             # Try fallback extraction
             try:
                 # We need to reach the response_text if it was already assigned before error
-                if 'response_text' in locals():
+                if "response_text" in locals():
                     data = self.extract_json(response_text)
                 else:
                     raise

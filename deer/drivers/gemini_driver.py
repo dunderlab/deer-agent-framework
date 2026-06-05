@@ -23,11 +23,20 @@ class GeminiDriver(LLMDriver):
         return "Gemini"
 
     def generate_text(self, prompt: str) -> str:
-        logger.debug(f"Generating text with model {self.model_name} and prompt: {prompt}")
+        logger.debug(
+            f"Generating text with model {self.model_name} and prompt: {prompt}"
+        )
 
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"responseMimeType": "text/plain"}
+            "generationConfig": {"responseMimeType": "text/plain"},
+        }
+
+        payload = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {
+                "responseMimeType": "text/plain",
+            },
         }
 
         try:
@@ -38,19 +47,30 @@ class GeminiDriver(LLMDriver):
             raise RuntimeError("Failed to parse text from Gemini API response.")
 
     def generate_json(self, prompt: str, response_model: Optional[Type[T]] = None) -> T:
-        logger.debug(f"Generating JSON with model {self.model_name} and prompt: {prompt}")
+        logger.debug(
+            f"Generating JSON with model {self.model_name} and prompt: {prompt}"
+        )
 
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"responseMimeType": "application/json"}
+            "generationConfig": {
+                "responseMimeType": "application/json",
+                "temperature": self.temperature_json,
+                "topP": self.top_p,
+                "topK": 1,
+            },
         }
 
         if response_model:
-            payload["generationConfig"]["responseSchema"] = response_model.model_json_schema()
+            payload["generationConfig"][
+                "responseSchema"
+            ] = response_model.model_json_schema()
 
         try:
             response_json = self._send_post_request(self.url, payload)
-            response_text = response_json["candidates"][0]["content"]["parts"][0]["text"]
+            response_text = response_json["candidates"][0]["content"]["parts"][0][
+                "text"
+            ]
             data = json.loads(response_text)
         except (KeyError, IndexError, json.JSONDecodeError) as e:
             logger.error(f"Error parsing JSON response from Gemini: {e}")
