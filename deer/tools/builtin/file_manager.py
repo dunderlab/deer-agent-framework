@@ -29,11 +29,15 @@ class FileManager(ToolProvider):
 
     @tool()
     def read_file(self, path: str) -> Return(content=str):
-        """Reads the content of a file."""
+        """Reads the content of a file. Falls back to binary mode if text reading fails."""
         safe_path = self.jailed_path(path)
 
-        with open(safe_path, "r") as f:
-            content = f.read()
+        try:
+            with open(safe_path, "r", encoding="utf-8") as f:
+                content = f.read()
+        except UnicodeDecodeError:
+            with open(safe_path, "rb") as f:
+                content = str(f.read())
         return {
             "content": content,
         }
@@ -54,7 +58,7 @@ class FileManager(ToolProvider):
 
     @tool(modifies_state=True)
     def create_directory(self, path: str) -> Return(status=str):
-        """Creates a directory."""
+        """Creates a directory, including all intermediate parent directories if they don't already exist."""
         safe_path = self.jailed_path(path)
         safe_path.mkdir(parents=True, exist_ok=True)
         return {"status": "success"}
