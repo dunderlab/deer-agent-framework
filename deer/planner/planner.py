@@ -65,7 +65,9 @@ class Planner:
             identity=self.identity,
             goal=agent_input.goal,
             payload=payload,
-            tools=self.tool_registry.describe(include_state_modifying),
+            tools=self.tool_registry.describe(
+                include_state_modifying=include_state_modifying
+            ),
             format_response=self.format_response,
         )
         return planner_prompt
