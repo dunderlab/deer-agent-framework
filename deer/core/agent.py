@@ -5,6 +5,7 @@ import pickle
 import sys
 from typing import Callable
 from datetime import datetime
+import os
 
 from prompt_toolkit import prompt
 from prompt_toolkit.formatted_text import HTML
@@ -479,12 +480,28 @@ class DeterministicAgent:
         chain_messages: list[str],
         repetitions: int,
         path: str,
-        callback: Callable[[str, str], None] = None,
+        callback: Callable = None,
     ):
         logger.setLevel(logging.DEBUG)
+        os.makedirs(path, exist_ok=True)
+        # logging.info("Starting debug mode:\n")
+        # logging.info("Tools:")
+        # logger.info(self.tool_registry.describe(include_state_modifying=True))
         for i in range(repetitions):
             self.clear_history()
             name = f"{self.driver.model_name}-{datetime.now().timestamp()}"
+
+            formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
+            file_handler = logging.FileHandler(f"{path}/{name}.log")
+            file_handler.setFormatter(formatter)
+            logger.addHandler(file_handler)
+            logger.info("Starting debug mode")
+            logger.info(f"Model: {self.driver.model_name}")
+            logger.info("Tools:")
+            logger.info(self.tool_registry.describe(include_state_modifying=True))
+            logger.removeHandler(file_handler)
+            file_handler.close()
+
             self.generate_chat_log(
                 chain_messages,
                 print_chat=True,
@@ -493,3 +510,43 @@ class DeterministicAgent:
             self.save_trace(f"{path}/{name}.trace")
             if callback:
                 callback()
+
+    #
+    # def iterate_debug(
+    #     self,
+    #     chain_messages: list[str],
+    #     repetitions: int,
+    #     path: str,
+    #     callback: Callable[[], None] = None,
+    # ) -> None:
+    #     logger.setLevel(logging.DEBUG)
+    #     os.makedirs(path, exist_ok=True)
+    #
+    #     session_name = f"{self.driver.model_name}-{datetime.now().timestamp()}"
+    #     log_file_path = f"{path}/{session_name}_session.log"
+    #
+    #     formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
+    #     file_handler = logging.FileHandler(log_file_path)
+    #     file_handler.setFormatter(formatter)
+    #     logger.addHandler(file_handler)
+    #
+    #     logger.info("Starting debug mode")
+    #     logger.info("Tools:")
+    #     logger.info(self.tool_registry.describe(include_state_modifying=True))
+    #
+    #     logger.removeHandler(file_handler)
+    #     file_handler.close()
+    #
+    #     for i in range(repetitions):
+    #         self.clear_history()
+    #
+    #         self.generate_chat_log(
+    #             chain_messages,
+    #             print_chat=True,
+    #             save_log=log_file_path,
+    #         )
+    #
+    #         if callback:
+    #             callback()
+    #
+    #         self.save_trace(f"{path}/{session_name}_iter_{i}.trace")
