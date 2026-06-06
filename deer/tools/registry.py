@@ -89,6 +89,7 @@ class ToolRegistry:
                 continue
 
             if markdown:
+                # used for the CLI
                 cont = tool.description.split("\n")[0]
                 lines.append(f" - `{tool.name}`: *{cont}*")
             else:
