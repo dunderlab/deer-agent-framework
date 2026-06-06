@@ -13,6 +13,7 @@ Runtime executor:
 - A plan is an ordered list of steps. Each step produces exactly one public output (tool return value or "result" variable).
 - A later step can consume the output of a previous step via "input_from".
 - Inside tool parameters ("params") or logic, you can use "input" to refer to the direct dependency output (from "input_from"), or use a previous step ID (e.g., "s1") to refer to its output.
+- All tool arguments (params) are mandatory and required; they are not optional.
 - In logic, "context" contains all previous outputs, and "params" are local constants.
 
 Structural & Action Rules:
