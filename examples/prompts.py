@@ -4,17 +4,26 @@ SIMPLE_FILE_CREATION_PROMPT = (
 
 PYTHON_PROJECT_PROMPT = (
     """
-Generate the complete structure of a project named 'pynguino' designed to log data from an external API.
-You must create the following files and directories with functional placeholder code:
-	1.	pyproject.toml: Basic project configuration using Poetry or Setuptools.
-	2.	requirements.txt: Must include numpy, requests, and pandas.
-	3.	tests/: A directory with at least one placeholder test file using pytest or unittest.
-	4.	pynguino/: Main module containing the following submodules (each in its own .py file with placeholder functions and type hinting):
-•	core: Main logging logic.
-•	utils: Utility functions (date formatting, string manipulation, etc.).
-•	api: Connection or handling of external API data.
-Please display the final folder structure as a text tree format and then the content of each file clearly labeled.
-""",
+Generate the complete structure of a Python project named 'pynguino' designed to log and process data from an external API.
+
+Technical Constraints:
+- NO real logic implementation. All functions and classes MUST be skeletons (placeholders) using 'pass' or default return values (e.g., return [], return None).
+- All Python files must include full Type Hinting (Python 3.10+) and descriptive docstrings.
+- Adhere strictly to PEP 8 naming conventions and package structure.
+
+Required Deliverables:
+1. Folder Structure: Displayed in a clear text tree format.
+2. pyproject.toml: Base configuration using Poetry, including numpy, requests, and pandas as dependencies.
+3. requirements.txt: Standard dependency list (numpy, requests, pandas).
+4. tests/: A directory containing 'test_core.py' with at least two base test cases using pytest.
+5. pynguino/: Main package (including __init__.py) with the following modules:
+   - api.py: An 'APIClient' class with placeholder methods for authentication and data fetching.
+   - core.py: Main orchestration and logging logic.
+   - utils.py: Utility functions for ISO date formatting and string sanitization.
+
+Output Format:
+Display the directory tree first, followed by the content of each file. Each file must be clearly labeled with its full relative path and wrapped in Markdown code blocks.
+""".strip(),
 )
 
 SEQUENTIAL_FILE_EDITION_PROMPT = (
