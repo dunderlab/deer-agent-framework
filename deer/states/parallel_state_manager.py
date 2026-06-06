@@ -21,7 +21,7 @@ class ParallelGitStateManager(BaseStateManager):
             self.workspace_path = os.path.abspath(workspace_path)
             self.hidden_git_dir = os.path.join(
                 os.path.dirname(self.workspace_path),
-                f".deer_parallel_state_engine-{os.path.basename(self.workspace_path)}",
+                f".deer_state-{os.path.basename(self.workspace_path)}",
             )
 
             self.custom_env = os.environ.copy()
