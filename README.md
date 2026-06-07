@@ -141,6 +141,12 @@ Every decision, tool call, and validation step is recorded. This allows for deep
 
 ## Installation
 
+From PyPI:
+```bash
+pip install deer-agent-framework
+```
+
+From GitHub (development version):
 ```bash
 pip install git+https://github.com/dunderlab/deer-agent-framework.git
 ```
