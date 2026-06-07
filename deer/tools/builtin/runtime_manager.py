@@ -19,7 +19,7 @@ class RuntimeManager(ToolProvider):
 
     @tool()
     def execute_test_suite(self, command: Command, path: str = ".") -> CommandOut:
-        """Runs explicit benchmark testing commands (e.g., 'pytest', 'npm test')."""
+        """Executes a test suite using allowed commands (e.g., pytest, npm test) with a 60-second timeout. Validates the command against a security whitelist before execution."""
         args = shlex.split(command)
         if not args:
             return {
@@ -72,7 +72,7 @@ class RuntimeManager(ToolProvider):
 
     @tool(modifies_state=True)
     def compile_source_code(self, command: Command, path: str = ".") -> CommandOut:
-        """Invokes strict language compilers (e.g., 'gcc', 'javac') on a targeted file."""
+        """Invokes a language compiler (e.g., gcc, javac) to build binaries or validate syntax. Limited by a 30-second timeout and a strict security whitelist."""
         args = shlex.split(command)
         if not args:
             return {
@@ -127,7 +127,7 @@ class RuntimeManager(ToolProvider):
     def check_process_status(
         self, process_name: str
     ) -> Return(running=bool, message=str):
-        """Queries the execution state of a background process or service inside the sandbox."""
+        """Monitors the execution state of background processes using system tools (pgrep/ps). Essential for verifying if services or long-running tasks are active."""
         # For monitoring, we check which tool is available JIT
         try:
             if "pgrep" in self.allowed_commands:
@@ -165,7 +165,7 @@ class RuntimeManager(ToolProvider):
     def terminate_process(
         self, process_name: str, signal_type: Literal["TERM", "KILL"]
     ) -> Return(success=bool, message=str):
-        """Sends a termination signal to a specific active process to prevent hangs."""
+        """Sends termination signals to active processes. Use this to manually stop hung processes or cleanup the environment after execution."""
         try:
             self.check_command("kill")
             result = self.run_command(

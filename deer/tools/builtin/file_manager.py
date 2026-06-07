@@ -15,7 +15,7 @@ class FileManager(ToolProvider):
 
     @tool(modifies_state=True)
     def new_file(self, path: str, content: str) -> Return(exists=bool):
-        """Creates a new file with the given content."""
+        """Writes literal content to a file at the specified path. OVERWRITES the file if it already exists. Automatically creates any missing parent directories. Returns existence confirmation."""
         safe_path = self.jailed_path(path)
 
         safe_path.parent.mkdir(parents=True, exist_ok=True)
@@ -29,7 +29,7 @@ class FileManager(ToolProvider):
 
     @tool()
     def read_file(self, path: str) -> Return(content=str):
-        """Reads the content of a file. Falls back to binary mode if text reading fails."""
+        """Reads the complete content of a file. Decodes as UTF-8 by default; falls back to raw string representation of bytes if decoding fails. Fails if the path is a directory or does not exist."""
         safe_path = self.jailed_path(path)
 
         try:
@@ -44,7 +44,7 @@ class FileManager(ToolProvider):
 
     @tool(modifies_state=True)
     def delete_file(self, path: str) -> Return(exists=bool):
-        """Deletes a file."""
+        """Permanently deletes a file. Fails with a ValueError if the path points to a directory or does not exist. Does not affect parent directories."""
         safe_path = self.jailed_path(path)
 
         if safe_path.is_file():
@@ -58,14 +58,14 @@ class FileManager(ToolProvider):
 
     @tool(modifies_state=True)
     def create_directory(self, path: str) -> Return(status=str):
-        """Creates a directory, including all intermediate parent directories if they don't already exist."""
+        """Idempotent operation: creates the directory and all necessary parent directories. If the directory already exists, it completes successfully without making changes."""
         safe_path = self.jailed_path(path)
         safe_path.mkdir(parents=True, exist_ok=True)
         return {"status": "success"}
 
     @tool(modifies_state=True)
     def delete_directory(self, path: str) -> Return(exists=bool):
-        """Removes a directory and all its contents recursively."""
+        """Recursively and IRREVERSIBLY deletes a directory and all its contents (files and subdirectories). Fails with a ValueError if the path points to a file or does not exist."""
         safe_path = self.jailed_path(path)
 
         if safe_path.is_dir():
@@ -85,7 +85,7 @@ class FileManager(ToolProvider):
         is_file=bool,
         last_modified=float,
     ):
-        """Retrieves metadata about a file or directory, including its existence, size, type, and modification time."""
+        """Retrieves system metadata for a path. Use this to verify existence and distinguish between files and directories before performing I/O operations."""
         safe_path = self.jailed_path(path)
         if not safe_path.exists():
             return {"exists": False}
@@ -101,7 +101,7 @@ class FileManager(ToolProvider):
 
     @tool()
     def directory_tree(self, path: str, max_depth: int) -> Return(tree=dict):
-        """Returns the directory structure as a nested dictionary."""
+        """Generates a structural map of the directory hierarchy. Useful for gaining spatial awareness of the project layout. Fails if the path is not a directory."""
         safe_path = self.jailed_path(path)
 
         if not safe_path.exists():
@@ -144,9 +144,7 @@ class FileManager(ToolProvider):
     def patch_file(
         self, path: str, old_text: str, new_text: str
     ) -> Return(success=bool, num_replacements=int, message=str):
-        """Replaces a specific block of text with a new block inside a targeted file.
-        Only succeeds if exactly one occurrence of old_text is found to prevent accidental multiple replacements.
-        """
+        """Performs a surgical text replacement. ONLY SUCCEEDS IF EXACTLY ONE match for 'old_text' is found. This strict requirement prevents accidental corruption from ambiguous or missing search strings."""
         safe_path = self.jailed_path(path)
         with open(safe_path, "r") as f:
             content = f.read()

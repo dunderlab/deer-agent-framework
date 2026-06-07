@@ -22,47 +22,47 @@ class GitManager(ToolProvider):
 
     @tool()
     def git_status(self, path: str) -> CommandOut:
-        """Returns the short git status for a repository path inside the jail."""
+        """Provides a concise summary of working tree changes. Use this to verify which files are untracked, modified, or staged before proceeding with other git operations."""
         return self.git(path, "status", "--short")
 
     @tool()
     def git_current_branch(self, path: str) -> CommandOut:
-        """Returns the current branch name for a repository path inside the jail."""
+        """Identifies the active branch. Crucial for ensuring changes are applied to the intended context, especially in multi-branch workflows."""
         return self.git(path, "branch", "--show-current")
 
     @tool()
     def git_log(self, path: str, max_count: int) -> CommandOut:
-        """Returns the recent commit log for a repository path inside the jail."""
+        """Retrieves a condensed history of recent commits. Useful for tracking project evolution or identifying specific revisions for inspection."""
         return self.git(
             path, "log", "--oneline", "--decorate", f"--max-count={max_count}"
         )
 
     @tool()
     def git_diff(self, path: str, target: str) -> CommandOut:
-        """Returns the unstaged diff for a target path inside a repository."""
+        """Shows line-by-line differences in the working tree that have NOT been staged yet. Essential for reviewing edits before adding them."""
         return self.git(path, "diff", "--", target)
 
     @tool()
     def git_staged_diff(self, path: str, target: str) -> CommandOut:
-        """Returns the staged diff for a target path inside a repository."""
+        """Shows line-by-line differences for changes already in the staging area. Use this as a final verification before committing."""
         return self.git(path, "diff", "--cached", "--", target)
 
     @tool()
     def git_show(self, path: str, revision: str) -> CommandOut:
-        """Returns details for a git revision inside a repository path."""
+        """Provides a detailed view of a specific commit, including metadata and the full patch. Use this to audit past changes."""
         return self.git(path, "show", "--stat", "--patch", revision)
 
     @tool(modifies_state=True)
     def git_add(self, path: str, target: str) -> CommandOut:
-        """Stages a target path inside a repository."""
+        """Moves changes from the working tree to the staging area. This is a mandatory prerequisite for 'git_commit'."""
         return self.git(path, "add", "--", target)
 
     @tool(modifies_state=True)
     def git_commit(self, path: str, message: str) -> CommandOut:
-        """Creates a commit in a repository path with the provided message."""
+        """Records staged changes into the repository history. Fails if the staging area is empty or if no changes are detected."""
         return self.git(path, "commit", "-m", message)
 
     @tool(modifies_state=True)
     def git_restore(self, path: str, target: str) -> CommandOut:
-        """Restores unstaged changes for a target path inside a repository."""
+        """Reverts unstaged modifications in the working tree. IRREVERSIBLE for uncommitted data; use only to discard unwanted edits."""
         return self.git(path, "restore", "--", target)

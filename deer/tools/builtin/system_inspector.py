@@ -29,14 +29,14 @@ class SystemInspector(ToolProvider):
 
     @tool()
     def get_environment_variable(self, name: str) -> Return(value=Optional[str]):
-        """Safely extracts the value of a specific environment variable via Python's OS abstraction."""
+        """Retrieves the value of an environment variable. Fails (returns None) for sensitive keys (API keys, backend configs) to prevent credential leakage."""
         if name in BLACKLIST_ENV_VARS:
             return {"value": None}
         return {"value": os.environ.get(name)}
 
     @tool()
     def list_active_processes(self) -> Return(processes=str):
-        """Executes a rigid, formatted process check (ps) to report active daemons or background workers."""
+        """Captures a snapshot of all system processes. Use this to identify active background tasks or services that might conflict with current operations."""
         result = self.run_command("ps -aux", cwd=self.jail)
         if result["returncode"] != 0:
             return {"processes": f"Error: {result['stderr']}"}
@@ -44,7 +44,7 @@ class SystemInspector(ToolProvider):
 
     @tool()
     def check_network_sockets(self) -> Return(sockets=str):
-        """Inspects internal port allocations to determine if local servers or microservices are correctly bound."""
+        """Lists listening network ports and bound addresses. Essential for verifying if local servers, databases, or microservices are reachable."""
         # Try netstat first
         result = self.run_command("netstat -tuln", cwd=self.jail)
         if result["returncode"] != 0:

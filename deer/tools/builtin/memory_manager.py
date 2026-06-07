@@ -32,7 +32,7 @@ class MemoryManager(ToolProvider):
     def store_key_insight(
         self, key: str, value: Any
     ) -> Return(success=bool, message=str):
-        """Stores critical information or state to 'remember' it across different execution cycles or complex tasks."""
+        """Persists critical findings or configuration state in a JSON store within the jail. OVERWRITES existing values for the same key. Use this to maintain context across execution cycles."""
         data = self.load_storage()
         data[key] = value
         self.save_storage(data)
@@ -42,7 +42,7 @@ class MemoryManager(ToolProvider):
     def retrieve_key_insight(
         self, key: str
     ) -> Return(value=Any, exists=bool, message=str):
-        """Retrieves a stored insight by key to access previously learned facts, paths, or configurations."""
+        """Retrieves a previously stored insight from the persistent JSON store. Essential for accessing facts or paths learned in earlier steps of the task."""
         data = self.load_storage()
         if key not in data:
             return {
@@ -59,14 +59,14 @@ class MemoryManager(ToolProvider):
 
     @tool()
     def list_memory_keys(self) -> Return(keys=list[str], count=int):
-        """Lists all currently stored keys to explore available insights if you have forgotten their names."""
+        """Lists all keys currently active in the persistent store. Use this to audit available insights if the exact key names are forgotten."""
         data = self.load_storage()
         keys = list(data.keys())
         return {"keys": keys, "count": len(keys)}
 
     @tool(modifies_state=True)
     def clear_context_memory(self) -> Return(success=bool, message=str):
-        """Permanently deletes all stored memory; use only when starting a completely new and unrelated task."""
+        """Permanently and IRREVERSIBLY deletes the memory store. Use this ONLY when pivoting to a completely unrelated task to avoid context pollution."""
         if os.path.exists(self.storage_filename):
             os.remove(self.storage_filename)
             return {"success": True, "message": "Memory cleared successfully."}

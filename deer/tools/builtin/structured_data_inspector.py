@@ -13,7 +13,7 @@ class StructuredDataInspector(ToolProvider):
 
     @tool()
     def inspect_json_keys(self, path: str) -> Return(schema=Dict[str, Any]):
-        """Parses a JSON file and returns only its structural schema layout (keys and data types) to map out big configuration structures without feeding raw data to the context."""
+        """Parses a JSON file to extract its structural schema (keys and data types). Use this to map out large configurations without saturating the context window with raw data."""
         safe_path = self.jailed_path(path)
 
         with open(safe_path, "r") as f:
@@ -36,7 +36,7 @@ class StructuredDataInspector(ToolProvider):
     def preview_csv_columns(
         self, path: str, nrows: int = 5
     ) -> Return(headers=List[str], rows=List[List[Any]]):
-        """Reads the headers and a tight subset of rows from a target CSV dataset to evaluate tabular data structures safely."""
+        """Reads CSV headers and a small subset of rows. Essential for identifying column names, data formats, and delimiters before performing full analysis."""
         safe_path = self.jailed_path(path)
 
         headers = []
@@ -53,7 +53,7 @@ class StructuredDataInspector(ToolProvider):
 
     @tool()
     def query_sqlite_metadata(self, path: str) -> Return(tables=List[Dict[str, Any]]):
-        """Connects to a local SQLite database to list existing table schemas and column layouts, giving the agent a blueprint of the relational state."""
+        """Connects to a local SQLite database to retrieve table schemas and column layouts. Provides the necessary relational blueprint to construct valid SQL queries."""
         safe_path = self.jailed_path(path)
 
         conn = sqlite3.connect(safe_path)
@@ -88,7 +88,7 @@ class StructuredDataInspector(ToolProvider):
     def execute_sqlite_statement(
         self, path: str, statement: str
     ) -> Return(rows_affected=int, success=bool, message=str):
-        """Executes a mutation statement (INSERT/UPDATE/DELETE) on a local SQLite database."""
+        """Executes mutation statements (INSERT, UPDATE, DELETE) on a SQLite database. Returns the count of affected rows to verify the operational impact."""
         safe_path = self.jailed_path(path)
 
         conn = sqlite3.connect(safe_path)
