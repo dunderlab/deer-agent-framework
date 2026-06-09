@@ -28,7 +28,7 @@ def load_env_file(env_path: Path) -> None:
 
 # Your configuration logic remains clean and dependency-free
 local_env = Path(".env")
-user_env = Path.home() / "deer.env"
+user_env = Path.home() / ".deer.env"
 
 if local_env.exists():
     load_env_file(local_env)
