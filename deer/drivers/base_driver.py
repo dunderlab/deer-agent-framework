@@ -56,7 +56,12 @@ class LLMDriver(Protocol):
         text = re.sub(r"^```(?:json)?\s*", "", text)
         text = re.sub(r"^json\s*", "", text)
         text = re.sub(r"\s*```$", "", text)
-        return json.loads(text)
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError as e:
+            raise RuntimeError(
+                f"Failed to parse JSON from response: {e}, response: {text}"
+            )
 
 
 class OpenAIStandardDriver(LLMDriver):
