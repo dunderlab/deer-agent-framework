@@ -1,5 +1,5 @@
 WELCOME_MESSAGE = """
-# DEER - Deterministic Executable Engine for Runtime Agents
+# DEER - Deterministic Executable Engine for Runtime Agents - v{version}
 
 An LLM agent orchestration framework built for:  
 - Strict runtime control

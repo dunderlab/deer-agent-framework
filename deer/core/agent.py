@@ -20,6 +20,7 @@ from deer.prompts import (
     GOAL_VERIFIER_PROMPT,
     VERIFIER_JUDGE_PROMPT,
 )
+from deer import __version__
 from deer.drivers.base_driver import LLMDriver
 from deer.planner.planner import Planner
 from deer.validator.plan_validator import PlanValidator
@@ -423,7 +424,7 @@ class DeterministicAgent:
 
     def show_welcome(self):
         self.console.clear()
-        self.pretty_print(WELCOME_MESSAGE)
+        self.pretty_print(WELCOME_MESSAGE.format(version=__version__))
         self.pretty_print(
             f">**Agent Profile**  \n"
             f"*{self.description}*  \n"

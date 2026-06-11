@@ -32,7 +32,7 @@ def agents_list():
 
 
 def example():
-    console.print("[dim]Example:[/dim] deer python_manager")
+    console.print(f"[dim]Example:[/dim] deer {agents[0]}")
 
 
 def main():

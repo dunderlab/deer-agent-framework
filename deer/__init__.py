@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 
+__version__ = "0.1"
+
 
 def load_env_file(env_path: Path) -> None:
     """Reads a .env file and loads its variables into os.environ natively."""
