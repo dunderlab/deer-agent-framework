@@ -8,6 +8,7 @@ import subprocess
 import shlex
 import shutil
 
+
 class ToolProviderError(ValueError):
     pass
 
@@ -47,11 +48,13 @@ class ToolProvider:
             "Filesystem jail is not configured. "
             "The runtime cannot access the sandbox root path."
         )
+        if not self.jail_.exists():
+            self.jail_.mkdir(parents=True, exist_ok=True)
         return self.jail_
 
     @jail.setter
     def jail(self, jail):
-        self.jail_ = Path(jail).resolve(strict=True)
+        self.jail_ = Path(jail).resolve()
 
     def jailed_path(self, path: str | Path) -> Path:
         """
@@ -109,7 +112,10 @@ class ToolProvider:
             is_allowed = False
             for allowed_cmd in self.allowed_commands:
                 allowed_args = shlex.split(allowed_cmd)
-                if len(args) >= len(allowed_args) and args[: len(allowed_args)] == allowed_args:
+                if (
+                    len(args) >= len(allowed_args)
+                    and args[: len(allowed_args)] == allowed_args
+                ):
                     is_allowed = True
                     break
 
