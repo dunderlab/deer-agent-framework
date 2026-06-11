@@ -292,11 +292,11 @@ class DeterministicAgent:
                 "chat_history": self.history,
             },
         )
-        response = self.run(user_input)
 
         if print_chat:
             print(f">>> {message}")
 
+        response = self.run(user_input)
         if isinstance(response.result, dict):
             response.result = self.humanize_result(response)
         else:
