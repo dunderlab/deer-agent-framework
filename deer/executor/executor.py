@@ -118,7 +118,7 @@ class Executor:
         tool = self.tool_registry.get(tool_name)
         input_params = tool.validate_input(params)
         output = tool.run(params=input_params)
-        logger.info(f"Executed tool: {tool_name}")
+        logger.info(f"Executed tool: {tool_name} with params: {input_params}")
         logger.debug(f"Tool {tool_name} output: {output}")
         return tool.validate_output(output)
 
