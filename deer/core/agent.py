@@ -285,19 +285,26 @@ class DeterministicAgent:
         self.state_purge_engine()
         return response
 
-    def send(self, msg):
+    def send(self, message, print_chat: bool = False):
         user_input = AgentInput(
-            goal=msg,
+            goal=message,
             payload={
                 "chat_history": self.history,
             },
         )
         response = self.run(user_input)
 
+        if print_chat:
+            print(f">>> {message}")
+
         if isinstance(response.result, dict):
             response.result = self.humanize_result(response)
         else:
             response.result = self.improve_result(response)
+
+        if print_chat:
+            print(f"    {response.result}")
+
         return response
 
     def pretty_print(self, out: str):
