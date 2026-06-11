@@ -43,8 +43,8 @@ class FileManager(ToolProvider):
         }
 
     @tool(modifies_state=True)
-    def delete_file(self, path: str) -> Return(exists=bool):
-        """Permanently deletes a file. Fails with a ValueError if the path points to a directory or does not exist. Does not affect parent directories."""
+    def delete_file(self, path: str) -> Return(success=bool):
+        """Permanently deletes a file. Fails with a ValueError if the path points to a directory or does not exist. Does not affect parent directories. Returns success confirmation."""
         safe_path = self.jailed_path(path)
 
         if safe_path.is_file():
@@ -53,7 +53,7 @@ class FileManager(ToolProvider):
             raise ValueError(f"'{path}' is not a file or does not exist.")
 
         return {
-            "exists": not safe_path.exists(),
+            "success": not safe_path.exists(),
         }
 
     @tool(modifies_state=True)
@@ -64,8 +64,8 @@ class FileManager(ToolProvider):
         return {"status": "success"}
 
     @tool(modifies_state=True)
-    def delete_directory(self, path: str) -> Return(exists=bool):
-        """Recursively and IRREVERSIBLY deletes a directory and all its contents (files and subdirectories). Fails with a ValueError if the path points to a file or does not exist."""
+    def delete_directory(self, path: str) -> Return(success=bool):
+        """Recursively and IRREVERSIBLY deletes a directory and all its contents (files and subdirectories). Fails with a ValueError if the path points to a file or does not exist. Returns success confirmation."""
         safe_path = self.jailed_path(path)
 
         if safe_path.is_dir():
@@ -73,8 +73,33 @@ class FileManager(ToolProvider):
         else:
             raise ValueError(f"'{path}' is not a directory or does not exist.")
 
+        if safe_path == self.jail:
+            self.jail.mkdir(parents=True, exist_ok=True)
+            return {"success": True}
+        else:
+            return {
+                "success": not safe_path.exists(),
+            }
+
+    @tool(modifies_state=True)
+    def bulk_delete(
+        self, paths: list[str]
+    ) -> Return(num_deleted=int, num_errors=int, error_messages=list[str]):
+        """Performs a bulk delete operation on a list of paths. Returns the number of successfully deleted files and any errors encountered."""
+        num_deleted = 0
+        num_errors = 0
+        error_messages = []
+        for path in paths:
+            try:
+                self.delete_file(path)
+                num_deleted += 1
+            except ValueError as e:
+                num_errors += 1
+                error_messages.append(str(e))
         return {
-            "exists": not safe_path.exists(),
+            "num_deleted": num_deleted,
+            "num_errors": num_errors,
+            "error_messages": error_messages,
         }
 
     @tool()
