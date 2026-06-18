@@ -15,7 +15,7 @@ agent = DeterministicAgent(
         "and deployed across diverse environments."
     ),
     driver=get_driver_from_parser(),
-    tool_registry=Preset.CODE_REPAIR | Preset.DATA_ANALYST,
+    tool_registry=Preset.CODE_REPAIR | Preset.CODE_EDITOR | Preset.DATA_ANALYST,
     jail_path=Path.cwd(),
     format_response="markdown",
     max_retries=5,

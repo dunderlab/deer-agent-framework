@@ -7,6 +7,11 @@ from deer.tools.builtin import (
     RuntimeManager,
     StructuredDataInspector,
     SystemInspector,
+    PythonEditor,
+    JSONEditor,
+    XMLEditor,
+    YAMLEditor,
+    TOMLEditor,
 )
 
 
@@ -18,6 +23,14 @@ class Preset:
         SearchManager,
         RuntimeManager,
         MemoryManager,
+    }
+
+    CODE_EDITOR = {
+        PythonEditor,
+        JSONEditor,
+        XMLEditor,
+        YAMLEditor,
+        TOMLEditor,
     }
 
     DATA_ANALYST = {

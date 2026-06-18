@@ -1,3 +1,4 @@
+from . import xml_editor
 from .file_manager import FileManager
 from .git_manager import GitManager
 from .search_manager import SearchManager
@@ -6,3 +7,8 @@ from .network_manager import NetworkManager
 from .runtime_manager import RuntimeManager
 from .structured_data_inspector import StructuredDataInspector
 from .system_inspector import SystemInspector
+from .python_editor import PythonEditor
+from .json_editor import JSONEditor
+from .xml_editor import XMLEditor
+from .toml_editor import TOMLEditor
+from .yaml_editor import YAMLEditor
