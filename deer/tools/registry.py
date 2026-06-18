@@ -31,7 +31,7 @@ class ToolRegistry:
                 continue
             try:
                 attr = getattr(provider, attr_name)
-            except:
+            except Exception:
                 continue
 
             if not is_tool_method(attr):
