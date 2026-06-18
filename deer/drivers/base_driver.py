@@ -1,10 +1,9 @@
-from typing import Protocol, Type, TypeVar
 import re
 import json
-import urllib.request
-import urllib.error
-from typing import TypeVar, Type, Optional, Any
 import logging
+import urllib.error
+import urllib.request
+from typing import TypeVar, Type, Optional, Protocol
 
 from pydantic import BaseModel
 
@@ -35,7 +34,7 @@ class LLMDriver(Protocol):
         req = urllib.request.Request(url, data=data, headers=headers)
 
         try:
-            with urllib.request.urlopen(req) as response:
+            with urllib.request.urlopen(req, timeout=30) as response:
                 return json.loads(response.read().decode("utf-8"))
         except urllib.error.HTTPError as e:
             error_body = e.read().decode("utf-8")
@@ -44,6 +43,61 @@ class LLMDriver(Protocol):
         except urllib.error.URLError as e:
             logger.error(f"URL Error: {e.reason}")
             raise RuntimeError(f"Failed to reach server: {e.reason}")
+
+    #
+    # def _send_post_request(
+    #     self, url: str, payload: dict, headers: Optional[dict] = None
+    # ) -> dict:
+    #     """
+    #     Centralized helper to handle HTTP POST requests for all drivers.
+    #     Using httpx for better signal handling and robust timeout management.
+    #     """
+    #     # If headers are provided, we use them; otherwise, we let httpx handle JSON defaults.
+    #     # Note: httpx automatically sets 'Content-Type: application/json' when using the json= parameter.
+    #     request_headers = headers if headers is not None else {}
+    #
+    #     try:
+    #         # We use a Client instance for better connection pooling and timeout control
+    #         with httpx.Client(timeout=30.0) as client:
+    #             # 'json=payload' automatically handles json.dumps and encodes to utf-8
+    #             response = client.post(url, json=payload, headers=request_headers)
+    #
+    #             # This raises an httpx.HTTPStatusError if the response is 4xx or 5xx
+    #             response.raise_for_status()
+    #
+    #             # Return the parsed JSON dictionary
+    #             return response.json()
+    #
+    #     except httpx.TimeoutException:
+    #         # Specifically catch timeouts so the user knows the server is slow
+    #         logger.error(f"Request to {url} timed out.")
+    #         raise RuntimeError("The server took too long to respond (Timeout).")
+    #
+    #     except httpx.HTTPStatusError as e:
+    #         # Handle 4xx and 5xx errors (replaces urllib.error.HTTPError)
+    #         error_body = e.response.text
+    #         logger.error(f"HTTP Error {e.response.status_code}: {error_body}")
+    #         raise RuntimeError(
+    #             f"API request failed with status {e.response.status_code}: {error_body}"
+    #         )
+    #
+    #     except httpx.RequestError as e:
+    #         # Handle connection errors, DNS issues, etc. (replaces urllib.error.URLError)
+    #         logger.error(f"Network request error: {e}")
+    #         raise RuntimeError(f"Failed to reach the server: {e}")
+    #
+    #     except json.JSONDecodeError:
+    #         # Handle cases where the server returns 200 OK but the body isn't valid JSON
+    #         logger.error("Server returned a successful status but invalid JSON body.")
+    #         raise RuntimeError("Server returned an invalid JSON response.")
+    #
+    #     except Exception as e:
+    #         # Crucial: if it's a KeyboardInterrupt, re-raise it immediately so the REPL catches it
+    #         if isinstance(e, KeyboardInterrupt):
+    #             raise e
+    #
+    #         logger.error(f"Unexpected error during POST request: {e}")
+    #         raise RuntimeError(f"An unexpected network error occurred: {e}")
 
     def generate_text(self, prompt: str) -> str:
         raise NotImplementedError("Subclasses must implement generate_text")
