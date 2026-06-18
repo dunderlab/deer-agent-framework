@@ -140,7 +140,7 @@ class RuntimeManager(ToolProvider):
                         "running": result["returncode"] == 0,
                         "message": f"Checked via pgrep.",
                     }
-                except:
+                except Exception:
                     pass  # Fallback to ps
 
             if "ps" in self.allowed_commands:
@@ -151,7 +151,7 @@ class RuntimeManager(ToolProvider):
                         "running": process_name in result["stdout"],
                         "message": f"Checked via ps.",
                     }
-                except:
+                except Exception:
                     pass
 
             return {
