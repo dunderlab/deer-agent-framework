@@ -6,6 +6,7 @@ import sys
 from typing import Callable
 from datetime import datetime
 import os
+import subprocess
 
 from prompt_toolkit import prompt
 from prompt_toolkit.formatted_text import HTML
@@ -282,7 +283,6 @@ class DeterministicAgent:
         )
 
         self.planner.goal = agent_input.goal
-        self.state_restore()
         self.state_purge_engine()
         return response
 
@@ -438,24 +438,31 @@ class DeterministicAgent:
         self.show_welcome()
 
         while True:
-            msg = prompt(
-                HTML("<ansicyan><b>&gt;&gt;&gt; </b></ansicyan>"),
-                history=prompt_history,
-            )
+            try:  # KLEEP THIS DAMM TRY
+                msg = prompt(
+                    HTML("<ansicyan><b>&gt;&gt;&gt; </b></ansicyan>"),
+                    history=prompt_history,
+                )
+            except KeyboardInterrupt:
+                continue
+            except EOFError:
+                break
 
-            self.console.status("[cyan]Planning...", spinner="dots")
+            msg = msg.strip()
+            if not msg:
+                continue
 
-            match msg.strip():
-                case "exit;":
+            match msg:
+                case "/exit":
                     sys.exit(0)
 
-                case "clear;":
+                case "/clear":
                     self.clear_history()
                     self.console.clear()
                     self.pretty_print(f">**Agent Profile**  \n*{self.description}*")
                     print("\n")
 
-                case "tools;":
+                case "/tools":
                     self.pretty_print(
                         self.tool_registry.describe(
                             include_state_modifying=True, markdown=True
@@ -463,25 +470,51 @@ class DeterministicAgent:
                     )
                     print("\n")
 
-                case "rollback;":
+                case "/rollback":
                     self.state_restore()
                     self.pretty_print(
                         "**Rollback executed.** System reverted to the last stable state."
                     )
                     print("\n")
 
-                case _:
-                    if not msg or msg.endswith(";"):
-                        continue
+                case command if command.endswith(";"):
+                    # Remove the ';' from the start to get only the command
+                    cmd_to_run = command[:-1].strip()
 
+                    try:
+                        # Execute the command
+                        result = subprocess.run(
+                            cmd_to_run,
+                            shell=True,
+                            capture_output=True,
+                            text=True,
+                            check=True,
+                        )
+                        print(result.stdout)
+                    except subprocess.CalledProcessError as e:
+                        print(f"Error executing command: {e.stderr}")
+                    except Exception as e:
+                        print(f"An unexpected error occurred: {e}")
+
+                case _:
+                    if msg.startswith("/"):
+                        continue
                     with self.console.status(
                         "[dim]processing request[/]",
                         spinner="point",
                         spinner_style="dim",
                     ):
-                        output = self.send(msg)
-                        self.pretty_print(f"    {output.text}")
-                        print("\n")
+                        try:
+
+                            output = self.send(msg)
+
+                            self.pretty_print(f"    {output.text}")
+                            print("\n")
+                        except KeyboardInterrupt:
+                            self.console.print("\n[dim]Interrupted. Continuing...[/]\n")
+                            continue
+                        except EOFError:
+                            break
 
     def iterate_debug(
         self,
