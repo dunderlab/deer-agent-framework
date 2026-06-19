@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "deer-agent-framework"
-version = "0.1a3"
+version = "0.1a4"
 description = "DEER - Deterministic Executable Engine for Runtime-agents"
 authors = [{ name = "Yeison" }]
 license = { text = "BSD-2-Clause" }
