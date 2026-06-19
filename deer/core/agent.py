@@ -120,7 +120,7 @@ class DeterministicAgent:
     def should_verify(self, plan) -> bool:
         return any(step.tool for step in plan.steps)
 
-    def execute_plan(
+    def generate_and_execute_plan(
         self,
         agent_input: AgentInput,
         feedback: {},
@@ -139,7 +139,7 @@ class DeterministicAgent:
             feedback = {"Planning error": str(planning_error)}
             last_error_message = str(planning_error)
             return None, feedback, last_error_message, None
-        logger.info(f"Plan generated")
+        logger.info(f"1. Plan generated")
         logger.debug(f"Plan steps:")
         for step in plan.steps:
             logger.debug(f"\tstep: {step.id}")
@@ -155,7 +155,7 @@ class DeterministicAgent:
             feedback = {"verification error": str(validation_error)}
             last_error_message = str(validation_error)
             return None, feedback, last_error_message, plan
-        logger.info(f"Plan verified")
+        logger.info(f"2. Plan verified")
 
         try:
             response = self.executor.execute(
@@ -167,7 +167,7 @@ class DeterministicAgent:
             feedback = {"execution error": str(execution_error)}
             last_error_message = str(execution_error)
             return None, feedback, last_error_message, plan
-        logger.info(f"Plan executed")
+        logger.info(f"3. Plan executed")
 
         return response, feedback, last_error_message, plan
 
@@ -196,8 +196,8 @@ class DeterministicAgent:
                     f"Solution-{solution_idx + 1}"
                 ] = datetime.now()
 
-                response, feedback, last_error_message, plan = self.execute_plan(
-                    agent_input, feedback
+                response, feedback, last_error_message, solution_steps = (
+                    self.generate_and_execute_plan(agent_input, feedback)
                 )
                 if response is None:
                     continue
@@ -211,7 +211,7 @@ class DeterministicAgent:
                     feedback = {"Previous Error": last_error_message}
                 continue
 
-            if not self.should_verify(plan):
+            if not self.should_verify(solution_steps):
                 break
 
             feedback_ = {}
@@ -236,7 +236,7 @@ class DeterministicAgent:
                 agent_verifier_input = AgentInput(
                     goal=goal_verifier_prompt, payload=payload_verifier
                 )
-                response_validation, feedback_, _, validation_plan = self.execute_plan(
+                response_validation, feedback_, _, _ = self.generate_and_execute_plan(
                     agent_verifier_input, feedback_, include_state_modifying=False
                 )
 
