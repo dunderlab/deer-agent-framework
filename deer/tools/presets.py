@@ -63,4 +63,9 @@ class Preset:
         RuntimeManager,
         StructuredDataInspector,
         SystemInspector,
+        PythonEditor,
+        JSONEditor,
+        XMLEditor,
+        YAMLEditor,
+        TOMLEditor,
     }
