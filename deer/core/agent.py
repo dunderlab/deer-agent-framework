@@ -505,13 +505,13 @@ class DeterministicAgent:
                         spinner_style="dim",
                     ):
                         try:
-
                             output = self.send(msg)
-
                             self.pretty_print(f"    {output.text}")
+
                             print("\n")
                         except KeyboardInterrupt:
-                            self.console.print("\n[dim]Interrupted. Continuing...[/]\n")
+                            self.console.print("[dim]Interrupted. Continuing...[/]\n")
+                            self.state_restore()
                             continue
                         except EOFError:
                             break
