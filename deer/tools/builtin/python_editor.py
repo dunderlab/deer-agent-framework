@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from deer.tools import ToolProvider, tool
-from deer.schema.io import Return
+from deer.schema import Return
 import libcst as cst
 from typing import Optional
 
@@ -346,7 +346,9 @@ class PythonEditor(ToolProvider):
         }
 
     @tool(modifies_state=True)
-    def add_class(self, path: str, class_code: str) -> Return(success=bool, message=str):
+    def add_class(
+        self, path: str, class_code: str
+    ) -> Return(success=bool, message=str):
         """Upserts a class definition in a Python file, replacing an existing class by name or appending it at EOF."""
 
         safe_path = self.jailed_path(path)

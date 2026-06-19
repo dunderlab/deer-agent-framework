@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from ruamel.yaml import YAML
 from typing import Any, Optional, Union
 from deer.tools import ToolProvider, tool
-from deer.schema.io import Return
+from deer.schema import Return
 
 
 @dataclass
@@ -12,7 +12,7 @@ class JSONEditor(ToolProvider):
     def __post_init__(self):
         super().__post_init__()
         # Use round-trip loader to preserve as much as possible
-        self.yaml = YAML(typ='rt')
+        self.yaml = YAML(typ="rt")
         # Ensure it writes in a way that is compatible with JSON if needed,
         # but the primary goal is preserving the input style.
         self.yaml.preserve_quotes = True
@@ -55,7 +55,7 @@ class JSONEditor(ToolProvider):
         try:
             if not safe_path.exists():
                 return {"value": None, "message": f"File {path} not found."}
-            
+
             with open(safe_path, "r", encoding="utf-8") as f:
                 data = self.yaml.load(f)
 
@@ -102,7 +102,7 @@ class JSONEditor(ToolProvider):
         try:
             if not safe_path.exists():
                 return {"success": False, "message": f"File {path} not found."}
-            
+
             with open(safe_path, "r", encoding="utf-8") as f:
                 data = self.yaml.load(f)
 
@@ -132,7 +132,7 @@ class JSONEditor(ToolProvider):
         try:
             if not safe_path.exists():
                 return {"keys": [], "message": f"File {path} not found."}
-            
+
             with open(safe_path, "r", encoding="utf-8") as f:
                 data = self.yaml.load(f)
 

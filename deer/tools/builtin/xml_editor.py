@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from lxml import etree
 from typing import Any, Optional, Union, List
 from deer.tools import ToolProvider, tool
-from deer.schema.io import Return
+from deer.schema import Return
 
 
 @dataclass
@@ -17,10 +17,7 @@ class XMLEditor(ToolProvider):
     def _save_tree(self, tree: etree._ElementTree, path: str):
         safe_path = self.jailed_path(path)
         tree.write(
-            str(safe_path), 
-            encoding="utf-8", 
-            xml_declaration=True, 
-            pretty_print=True
+            str(safe_path), encoding="utf-8", xml_declaration=True, pretty_print=True
         )
 
     @tool()
@@ -31,7 +28,10 @@ class XMLEditor(ToolProvider):
         try:
             tree = self._get_root(path)
             if not xpath:
-                return {"results": [etree.tostring(tree, encoding="unicode")], "message": "Success"}
+                return {
+                    "results": [etree.tostring(tree, encoding="unicode")],
+                    "message": "Success",
+                }
 
             nodes = tree.xpath(xpath)
             results = []
@@ -40,53 +40,68 @@ class XMLEditor(ToolProvider):
                     results.append(etree.tostring(node, encoding="unicode").strip())
                 else:
                     results.append(str(node))
-            
+
             return {"results": results, "message": "Success"}
         except Exception as e:
             return {"results": [], "message": f"Error: {str(e)}"}
 
     @tool(modifies_state=True)
     def update_xml(
-        self, path: str, xpath: str, value: Optional[str] = None, attribute: Optional[str] = None
+        self,
+        path: str,
+        xpath: str,
+        value: Optional[str] = None,
+        attribute: Optional[str] = None,
     ) -> Return(success=bool, message=str):
         """Surgically updates node text or attributes matching an XPath expression, maintaining the XML's structural integrity."""
         try:
             tree = self._get_root(path)
             nodes = tree.xpath(xpath)
-            
+
             if not nodes:
                 return {"success": False, "message": f"No nodes match XPath: {xpath}"}
 
             for node in nodes:
                 if not isinstance(node, etree._Element):
                     continue
-                
+
                 if attribute:
                     node.set(attribute, value)
                 else:
                     node.text = value
 
             self._save_tree(tree, path)
-            return {"success": True, "message": f"Updated {len(nodes)} nodes matching {xpath}"}
+            return {
+                "success": True,
+                "message": f"Updated {len(nodes)} nodes matching {xpath}",
+            }
         except Exception as e:
             return {"success": False, "message": f"Error: {str(e)}"}
 
     @tool(modifies_state=True)
     def add_xml_node(
-        self, path: str, parent_xpath: str, tag: str, content: Optional[str] = None, attributes: Optional[dict] = None
+        self,
+        path: str,
+        parent_xpath: str,
+        tag: str,
+        content: Optional[str] = None,
+        attributes: Optional[dict] = None,
     ) -> Return(success=bool, message=str):
         """Injects a new child node with optional content and attributes into all elements matching the parent XPath."""
         try:
             tree = self._get_root(path)
             parents = tree.xpath(parent_xpath)
-            
+
             if not parents:
-                return {"success": False, "message": f"No parent nodes match XPath: {parent_xpath}"}
+                return {
+                    "success": False,
+                    "message": f"No parent nodes match XPath: {parent_xpath}",
+                }
 
             for parent in parents:
                 if not isinstance(parent, etree._Element):
                     continue
-                
+
                 child = etree.SubElement(parent, tag)
                 if content:
                     child.text = content
@@ -95,7 +110,10 @@ class XMLEditor(ToolProvider):
                         child.set(k, str(v))
 
             self._save_tree(tree, path)
-            return {"success": True, "message": f"Added node <{tag}> to {len(parents)} parents"}
+            return {
+                "success": True,
+                "message": f"Added node <{tag}> to {len(parents)} parents",
+            }
         except Exception as e:
             return {"success": False, "message": f"Error: {str(e)}"}
 
@@ -107,7 +125,7 @@ class XMLEditor(ToolProvider):
         try:
             tree = self._get_root(path)
             nodes = tree.xpath(xpath)
-            
+
             if not nodes:
                 return {"success": False, "message": f"No nodes match XPath: {xpath}"}
 
@@ -118,9 +136,15 @@ class XMLEditor(ToolProvider):
                         parent.remove(node)
                 elif isinstance(node, etree._ElementUnicodeResult):
                     # This is likely an attribute or text result, can't "remove" via parent.remove
-                    return {"success": False, "message": "Cannot remove attributes or text directly via XPath. Target the parent element."}
+                    return {
+                        "success": False,
+                        "message": "Cannot remove attributes or text directly via XPath. Target the parent element.",
+                    }
 
             self._save_tree(tree, path)
-            return {"success": True, "message": f"Removed {len(nodes)} nodes matching {xpath}"}
+            return {
+                "success": True,
+                "message": f"Removed {len(nodes)} nodes matching {xpath}",
+            }
         except Exception as e:
             return {"success": False, "message": f"Error: {str(e)}"}

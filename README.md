@@ -40,7 +40,7 @@ from pathlib import Path
 from deer.core.agent import DeterministicAgent
 from deer.states import ParallelGitStateManager
 from deer.drivers import get_driver_from_parser
-from deer.tools import Preset
+from deer.tools.presets import Preset
 
 agent = DeterministicAgent(
     description="Python Architecture Specialist",

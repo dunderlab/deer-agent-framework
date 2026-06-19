@@ -2,7 +2,7 @@ from typing import Any, Dict, Iterable
 
 from .base import Tool
 from .decorators import MethodTool, get_tool_metadata, is_tool_method
-from deer.schema.io import Return
+from deer.schema import Return
 
 
 class ToolRegistry:

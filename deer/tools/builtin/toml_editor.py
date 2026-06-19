@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import tomlkit
 from typing import Any, Optional, Union
 from deer.tools import ToolProvider, tool
-from deer.schema.io import Return
+from deer.schema import Return
 
 
 @dataclass
@@ -21,7 +21,7 @@ class TOMLEditor(ToolProvider):
             if part not in current:
                 current[part] = tomlkit.table()
             current = current[part]
-        
+
         last_part = path_parts[-1]
         current[last_part] = value
 
@@ -86,7 +86,7 @@ class TOMLEditor(ToolProvider):
             last_part = parts[-1]
 
             parent = data if not parent_parts else self._get_nested(data, parent_parts)
-            
+
             if last_part in parent:
                 del parent[last_part]
             else:

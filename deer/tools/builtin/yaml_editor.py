@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from ruamel.yaml import YAML
 from typing import Any, Optional, Union
 from deer.tools import ToolProvider, tool
-from deer.schema.io import Return
+from deer.schema import Return
 import io
 
 
@@ -55,14 +55,14 @@ class YAMLEditor(ToolProvider):
         try:
             if not safe_path.exists():
                 return {"value": None, "message": f"File {path} not found."}
-            
+
             with open(safe_path, "r", encoding="utf-8") as f:
                 data = self.yaml.load(f)
 
             if yaml_path:
                 parts = yaml_path.split(".")
                 value = self._get_nested(data, parts)
-                # Convert ruamel types to primitive if needed for Return schema, 
+                # Convert ruamel types to primitive if needed for Return schema,
                 # but Return(value=Any) should handle it.
                 return {"value": value, "message": "Success"}
 
@@ -102,7 +102,7 @@ class YAMLEditor(ToolProvider):
         try:
             if not safe_path.exists():
                 return {"success": False, "message": f"File {path} not found."}
-            
+
             with open(safe_path, "r", encoding="utf-8") as f:
                 data = self.yaml.load(f)
 
@@ -132,7 +132,7 @@ class YAMLEditor(ToolProvider):
         try:
             if not safe_path.exists():
                 return {"keys": [], "message": f"File {path} not found."}
-            
+
             with open(safe_path, "r", encoding="utf-8") as f:
                 data = self.yaml.load(f)
 

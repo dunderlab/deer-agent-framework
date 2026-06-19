@@ -3,7 +3,7 @@ import urllib.error
 from dataclasses import dataclass
 
 from deer.tools import ToolProvider, tool
-from deer.schema.io import Return
+from deer.schema import Return
 
 
 @dataclass
