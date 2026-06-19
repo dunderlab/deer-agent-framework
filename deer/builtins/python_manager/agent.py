@@ -22,5 +22,10 @@ agent = DeterministicAgent(
     state_manager=ParallelGitStateManager(),
 )
 
-if __name__ == "__main__":
+
+def main():
     agent.repl()
+
+
+if __name__ == "__main__":
+    main()
