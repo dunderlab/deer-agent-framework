@@ -38,8 +38,9 @@ Forget about telling the AI to "act like a specialist." Define a high-level `Det
 ```python
 from pathlib import Path
 from deer.core.agent import DeterministicAgent
+from deer.states import ParallelGitStateManager
 from deer.drivers import get_driver_from_parser
-from .tools import tool_registry
+from deer.tools import Preset
 
 agent = DeterministicAgent(
     description="Python Architecture Specialist",
@@ -48,10 +49,11 @@ agent = DeterministicAgent(
         "in advanced module resolution and dependency management."
     ),
     driver=get_driver_from_parser(),
-    tool_registry=tool_registry,
+    tool_registry=Preset.CODE_REPAIR | Preset.CODE_EDITOR | Preset.DATA_ANALYST,
     jail_path=Path.cwd() / "sandbox",  # Strict security boundary
     format_response="markdown",
-    max_retries=5
+    max_retries=5,
+    state_manager=ParallelGitStateManager(),
 )
 
 if __name__ == "__main__":
