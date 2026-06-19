@@ -28,4 +28,13 @@ An LLM agent orchestration framework built for:
 - `/clear`     → Clear the console and reset the session
 - `/exit`      → Terminate the session
 - `/rollback`  → Revert the system to the last stable state
+
+## System Escapes
+
+- `!<command>` → Execute an OS shell command (e.g., `!ls -la` or `!pwd`)
+
+## Shortcuts
+
+- `Tab`        → Auto-complete commands and navigate suggestions
+- `Ctrl+C`     → Stop processing the current task
 """

@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-__version__ = "0.1.8"
+__version__ = "0.1.9"
 
 
 def load_env_file(env_path: Path) -> None:

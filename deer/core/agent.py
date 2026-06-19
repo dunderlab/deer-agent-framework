@@ -7,10 +7,12 @@ from typing import Callable
 from datetime import datetime
 import os
 import subprocess
+from pathlib import Path
 
 from prompt_toolkit import prompt
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.history import InMemoryHistory
+from prompt_toolkit.completion import WordCompleter
 from rich.console import Console
 from rich.markdown import Markdown
 
@@ -32,7 +34,8 @@ from deer.schema.io import AgentInput, AgentOutput
 from deer.states import BaseStateManager
 
 logger = logging.getLogger("DEER")
-prompt_history = InMemoryHistory()
+# prompt_history = InMemoryHistory()
+# prompt_history = '.deer.history'
 
 
 class DeterministicAgent:
@@ -48,6 +51,9 @@ class DeterministicAgent:
         jail_path: str = None,
     ) -> None:
         assert format_response in {"markdown", "plaintext"}
+
+        self.history_filename = ".deer.history"
+        self.prompt_history = self.load_history()
 
         self.identity = identity
         self.description = description
@@ -438,11 +444,13 @@ class DeterministicAgent:
         self.show_welcome()
 
         while True:
-            try:  # KLEEP THIS DAMM TRY
+            try:
                 msg = prompt(
                     HTML("<ansicyan><b>&gt;&gt;&gt; </b></ansicyan>"),
-                    history=prompt_history,
+                    history=self.prompt_history,
+                    completer=self.completer,
                 )
+                self.save_history()
             except KeyboardInterrupt:
                 continue
             except EOFError:
@@ -477,9 +485,9 @@ class DeterministicAgent:
                     )
                     print("\n")
 
-                case command if command.endswith(";"):
-                    # Remove the ';' from the start to get only the command
-                    cmd_to_run = command[:-1].strip()
+                case command if command.startswith("!"):
+                    # Remove the '!' from the start to get only the command
+                    cmd_to_run = command[1:].strip()
 
                     try:
                         # Execute the command
@@ -510,7 +518,7 @@ class DeterministicAgent:
 
                             print("\n")
                         except KeyboardInterrupt:
-                            self.console.print("[dim]Interrupted. Continuing...[/]\n")
+                            self.console.print("[dim]Command aborted by user[/]\n")
                             self.state_restore()
                             continue
                         except EOFError:
@@ -525,9 +533,6 @@ class DeterministicAgent:
     ):
         logger.setLevel(logging.DEBUG)
         os.makedirs(path, exist_ok=True)
-        # logging.info("Starting debug mode:\n")
-        # logging.info("Tools:")
-        # logger.info(self.tool_registry.describe(include_state_modifying=True))
         for i in range(repetitions):
             self.clear_history()
             name = f"{self.driver.model_name}-{datetime.now().timestamp()}"
@@ -552,42 +557,22 @@ class DeterministicAgent:
             if callback:
                 callback()
 
-    #
-    # def iterate_debug(
-    #     self,
-    #     chain_messages: list[str],
-    #     repetitions: int,
-    #     path: str,
-    #     callback: Callable[[], None] = None,
-    # ) -> None:
-    #     logger.setLevel(logging.DEBUG)
-    #     os.makedirs(path, exist_ok=True)
-    #
-    #     session_name = f"{self.driver.model_name}-{datetime.now().timestamp()}"
-    #     log_file_path = f"{path}/{session_name}_session.log"
-    #
-    #     formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
-    #     file_handler = logging.FileHandler(log_file_path)
-    #     file_handler.setFormatter(formatter)
-    #     logger.addHandler(file_handler)
-    #
-    #     logger.info("Starting debug mode")
-    #     logger.info("Tools:")
-    #     logger.info(self.tool_registry.describe(include_state_modifying=True))
-    #
-    #     logger.removeHandler(file_handler)
-    #     file_handler.close()
-    #
-    #     for i in range(repetitions):
-    #         self.clear_history()
-    #
-    #         self.generate_chat_log(
-    #             chain_messages,
-    #             print_chat=True,
-    #             save_log=log_file_path,
-    #         )
-    #
-    #         if callback:
-    #             callback()
-    #
-    #         self.save_trace(f"{path}/{session_name}_iter_{i}.trace")
+    def load_history(self):
+        history_file = Path.home() / self.history_filename
+        if not history_file.exists():
+            self.prompt_history = InMemoryHistory()
+            return self.prompt_history
+
+        with open(history_file, "rb") as f:
+            self.prompt_history = pickle.load(f)
+        return self.prompt_history
+
+    def save_history(self):
+        history_file = Path.home() / self.history_filename
+        with open(history_file, "wb") as f:
+            pickle.dump(self.prompt_history, f)
+
+    @property
+    def completer(self):
+        internal_commands = ["/tools", "/clear", "/exit", "/rollback"]
+        return WordCompleter(internal_commands, ignore_case=False)
