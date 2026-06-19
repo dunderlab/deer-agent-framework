@@ -38,6 +38,14 @@ logger = logging.getLogger("DEER")
 # prompt_history = '.deer.history'
 
 
+COMMANDS = {
+    "/tools": "Show tools and capabilities",
+    "/clear": "Clear the console and reset the session",
+    "/exit": "Terminate the session",
+    "/rollback": "Revert the system to the last stable state",
+}
+
+
 class DeterministicAgent:
     def __init__(
         self,
@@ -429,8 +437,17 @@ class DeterministicAgent:
             pickle.dump(obj, f)
 
     def show_welcome(self):
+
+        commands_formated = ""
+        for command in COMMANDS:
+            commands_formated += (
+                f"- {('`'+command+'`').ljust(12, ' ')} → {COMMANDS[command]}\n "
+            )
+
         self.console.clear()
-        self.pretty_print(WELCOME_MESSAGE.format(version=__version__))
+        self.pretty_print(
+            WELCOME_MESSAGE.format(version=__version__, commands=commands_formated)
+        )
         self.pretty_print(
             f">**Agent Profile**  \n"
             f"*{self.description}*  \n"
@@ -438,6 +455,32 @@ class DeterministicAgent:
             f"{self.driver}: {self.driver.model_name}  \n"
         )
         print("\n")
+
+    def run_command(self, command):
+        match command:
+            case "/exit":
+                sys.exit(0)
+
+            case "/clear":
+                self.clear_history()
+                self.console.clear()
+                self.pretty_print(f">**Agent Profile**  \n*{self.description}*")
+                print("\n")
+
+            case "/tools":
+                self.pretty_print(
+                    self.tool_registry.describe(
+                        include_state_modifying=True, markdown=True
+                    )
+                )
+                print("\n")
+
+            case "/rollback":
+                self.state_restore()
+                self.pretty_print(
+                    "**Rollback executed.** System reverted to the last stable state."
+                )
+                print("\n")
 
     def repl(self):
         logger.setLevel(logging.CRITICAL)
@@ -461,29 +504,8 @@ class DeterministicAgent:
                 continue
 
             match msg:
-                case "/exit":
-                    sys.exit(0)
-
-                case "/clear":
-                    self.clear_history()
-                    self.console.clear()
-                    self.pretty_print(f">**Agent Profile**  \n*{self.description}*")
-                    print("\n")
-
-                case "/tools":
-                    self.pretty_print(
-                        self.tool_registry.describe(
-                            include_state_modifying=True, markdown=True
-                        )
-                    )
-                    print("\n")
-
-                case "/rollback":
-                    self.state_restore()
-                    self.pretty_print(
-                        "**Rollback executed.** System reverted to the last stable state."
-                    )
-                    print("\n")
+                case command if command in COMMANDS:
+                    self.run_command(command)
 
                 case command if command.startswith("!"):
                     # Remove the '!' from the start to get only the command
@@ -506,6 +528,9 @@ class DeterministicAgent:
 
                 case _:
                     if msg.startswith("/"):
+                        logging.warning(
+                            f"Command `{msg}` not recognized. Did you mean one of these: {list(COMMANDS)}"
+                        )
                         continue
                     with self.console.status(
                         "[dim]processing request[/]",
