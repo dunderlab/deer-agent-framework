@@ -2,8 +2,8 @@ pydantic==2.13.4
 rich==15.0.0
 prompt_toolkit==3.0.52
 matplotlib==3.10.9
-pytest>=9.0.3
-libcst
-tomlkit
-ruamel.yaml
-lxml
+pytest==9.0.3
+libcst==1.8.6
+tomlkit==0.15.0
+ruamel.yaml==0.19.1
+lxml==6.1.1

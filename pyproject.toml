@@ -26,8 +26,12 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "pydantic>=2.0",
-    "rich",
-    "prompt_toolkit",
+    "rich>=15.0.0",
+    "prompt_toolkit>=3.0.52",
+    "libcst>=1.8.6",
+    "tomlkit>=0.15.0",
+    "ruamel.yaml>=0.19.1",
+    "lxml>=6.1.1",
 ]
 
 [project.optional-dependencies]
