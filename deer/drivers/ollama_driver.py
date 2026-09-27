@@ -1,65 +1,95 @@
 import json
-from typing import TypeVar, Type, Optional
-
+from typing import TypeVar, Type, Optional, Union, Generator
 from pydantic import BaseModel
-
-from .base_driver import LLMDriver, logger
+from .base_driver import LLMDriver, logger, Message
 
 T = TypeVar("T", bound=BaseModel)
 
 
 class OllamaDriver(LLMDriver):
-    def __init__(self, model_name: str, host: str = "http://localhost:11434"):
-        super().__init__(model_name)
+    def __init__(self, model_name: str, host: str = "http://localhost:11434", temperature: float = 0.0, top_p: float = 1.0):
+        super().__init__(model_name, temperature, top_p)
         self.base_url = host.rstrip("/")
-        self.url = f"{self.base_url}/api/generate"
+
+    @property
+    def url(self) -> str:
+        return f"{self.base_url}/api/chat"
 
     def __repr__(self) -> str:
         return "Ollama"
 
-    def generate_text(self, prompt: str) -> str:
-        logger.debug(
-            f"Generating text with model {self.model_name} and prompt: {prompt}"
-        )
+    def generate(
+        self, messages: list[Message], response_model: Optional[Type[T]] = None
+    ) -> Union[str, T]:
 
-        payload = {"model": self.model_name, "prompt": prompt, "stream": False}
+        """
+        Generates a response from Ollama.
+        If response_model is provided, it forces the model to follow the schema.
+        """
+        logger.debug(f"Generating response with Ollama model {self.model_name}")
 
-        response_json = self._send_post_request(self.url, payload)
-        return response_json.get("response", "")
-
-    def generate_json(self, prompt: str, response_model: Optional[Type[T]] = None) -> T:
-        logger.debug(
-            f"Generating JSON with model {self.model_name} and prompt: {prompt}"
-        )
-
+        # Base payload for /api/chat
         payload = {
             "model": self.model_name,
-            "prompt": prompt,
-            "stream": False,
+            "messages": messages,
+            "stream": False,  # Must be False for deterministic programmatic access
             "options": {
-                "temperature": self.temperature_json,
+                "temperature": self.temperature,
                 "top_p": self.top_p,
             },
         }
 
+        # FORCE SCHEMA: In Ollama, the 'format' field can take a JSON Schema directly
         if response_model:
+            # Generate the JSON Schema from the Pydantic model
             payload["format"] = response_model.model_json_schema()
-        else:
-            payload["format"] = "json"
-
-        response_json = self._send_post_request(self.url, payload)
-        response_text = response_json.get("response", "")
 
         try:
-            data = json.loads(response_text)
-        except json.JSONDecodeError as e:
-            if hasattr(self, "extract_json"):
-                data = self.extract_json(response_text)
-            else:
-                logger.error(f"Failed to decode JSON from response: {e}")
-                raise
+            # Ollama doesn't require special headers for local use, but we use the base helper
+            response_json = self._send_post_request(payload)
 
-        if response_model:
-            data = response_model.model_validate(data)
+            # Ollama /api/chat response structure: {"message": {"role": "assistant", "content": "..."}}
+            content = response_json["message"]["content"]
 
-        return data
+            if response_model:
+                # Strict validation: Convert the JSON string to a Pydantic object
+                return response_model.model_validate_json(content)
+
+            return content
+
+        except (KeyError, RuntimeError) as e:
+            logger.error(f"Ollama structured output failed: {e}")
+            raise RuntimeError(
+                f"Ollama failed to follow the deterministic contract: {e}"
+            )
+
+    def generate_stream(
+        self, messages: list[dict[str, str]]
+    ) -> Generator[str, None, None]:
+        """
+        Implementation of streaming for Ollama.
+        Yields tokens as they arrive from the API.
+        """
+        payload = {
+            "model": self.model_name,
+            "messages": messages,
+            "stream": True,
+            "options": {"temperature": self.temperature, "top_p": self.top_p},
+        }
+
+        try:
+            # Use the new streaming helper from the base class
+            for line in self._send_streaming_request(payload):
+                if not line:
+                    continue
+
+                # Parse each JSON chunk from Ollama
+                chunk = json.loads(line.decode("utf-8"))
+
+                # Ollama structure: {"message": {"role": "assistant", "content": "..."}}
+                if "message" in chunk and "content" in chunk["message"]:
+                    yield chunk["message"]["content"]
+
+        except Exception as e:
+            logger.error(f"Ollama streaming failed: {e}")
+            yield f"\n[ERROR]: Stream interrupted: {e}"
