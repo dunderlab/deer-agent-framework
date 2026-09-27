@@ -9,8 +9,10 @@ T = TypeVar("T", bound=BaseModel)
 
 
 class OllamaDriver(LLMDriver):
-    def __init__(self, model_name: str, host: str = "http://localhost:11434"):
-        super().__init__(model_name)
+    def __init__(
+        self, model_name: str, host: str = "http://localhost:11434", timeout: int = 30
+    ):
+        super().__init__(model_name, timeout)
         self.base_url = host.rstrip("/")
         self.url = f"{self.base_url}/api/generate"
 

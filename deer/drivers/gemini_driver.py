@@ -29,11 +29,6 @@ class GeminiDriver(LLMDriver):
 
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"responseMimeType": "text/plain"},
-        }
-
-        payload = {
-            "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {
                 "responseMimeType": "text/plain",
             },

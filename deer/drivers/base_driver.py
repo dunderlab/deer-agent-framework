@@ -18,8 +18,9 @@ class LLMDriver(Protocol):
     temperature_json = 0.0
     top_p = 1.0
 
-    def __init__(self, model_name: str):
+    def __init__(self, model_name: str, timeout: int = 30):
         self.model_name = model_name
+        self.timeout = timeout
 
     def _send_post_request(
         self, url: str, payload: dict, headers: Optional[dict] = None
@@ -34,7 +35,7 @@ class LLMDriver(Protocol):
         req = urllib.request.Request(url, data=data, headers=headers)
 
         try:
-            with urllib.request.urlopen(req, timeout=30) as response:
+            with urllib.request.urlopen(req, timeout=self.timeout) as response:
                 return json.loads(response.read().decode("utf-8"))
         except urllib.error.HTTPError as e:
             error_body = e.read().decode("utf-8")
