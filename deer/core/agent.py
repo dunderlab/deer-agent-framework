@@ -1,6 +1,8 @@
 import logging
-from typing import Optional, Union
+from typing import Optional, Union, Literal
 from pathlib import Path
+
+from typing_extensions import Any
 
 from deer.engine import Planner, PipelineExecutor, PlanValidator
 from deer.engine.schemas import ExecutionTrace, AgentConclusion
@@ -68,16 +70,15 @@ class DeterministicAgent:
 
         # Agent History
         self.agent_history: list[ChatMessage] = []
-        self.agent_history.append(
-            ChatMessage(
-                role=Role.SYSTEM,
-                content=self.planner.build_system_prompt(),
-            )
-        )
+        self.clear_agent_history()
 
         # Validator History
         self.validator_history: list[ChatMessage] = []
         self.clear_validator_history()
+
+        # Traces
+        self.traces: dict[Literal["solution", "verification"], list[Any]] = {}
+        self.clear_traces()
 
         logger.info(f"DEER - Deterministic Executable Engine for Runtime-agents")
         logger.info(
@@ -94,6 +95,14 @@ class DeterministicAgent:
             ChatMessage(
                 role=Role.SYSTEM,
                 content=self.planner.build_system_prompt(state_filter="READ_ONLY"),
+            )
+        ]
+
+    def clear_agent_history(self):
+        self.agent_history = [
+            ChatMessage(
+                role=Role.SYSTEM,
+                content=self.planner.build_system_prompt(),
             )
         ]
 
@@ -133,13 +142,24 @@ class DeterministicAgent:
         )
         return trace
 
+    def save_trace_solution(self, trace_solution):
+        self.traces["solution"].append(trace_solution)
+
+    def save_trace_verification(self, trace_verification):
+        self.traces["verification"].append(trace_verification)
+
+    def clear_traces(self):
+        self.traces = {"solution": [], "verification": []}
+
     def run(self, goal: str, trace_solution=None, trace_verification=None):
 
         if trace_solution is None:
             trace_solution = self.run_solution(goal)
+            self.save_trace_solution(trace_solution)
 
         if trace_verification is None:
             trace_verification = self.run_verification(goal)
+            self.save_trace_verification(trace_verification)
 
         # Conclusion
         conclusion = self.generate_conclusion(goal, trace_solution, trace_verification)
@@ -171,7 +191,10 @@ class DeterministicAgent:
         return conclusion.summary
 
     def generate_conclusion(
-        self, goal: str, trace_solution: ExecutionTrace, trace_verification: ExecutionTrace
+        self,
+        goal: str,
+        trace_solution: ExecutionTrace,
+        trace_verification: ExecutionTrace,
     ) -> str:
 
         messages = [
@@ -180,7 +203,12 @@ class DeterministicAgent:
                 content="You are a professional technical assistant. "
                 "Summarize execution results clearly.",
             ),
-            ChatMessage(role=Role.USER, content=self.planner.build_conclusion_prompt(goal, trace_solution, trace_verification)),
+            ChatMessage(
+                role=Role.USER,
+                content=self.planner.build_conclusion_prompt(
+                    goal, trace_solution, trace_verification
+                ),
+            ),
         ]
 
         return self.driver.generate(messages=messages, response_model=AgentConclusion)
