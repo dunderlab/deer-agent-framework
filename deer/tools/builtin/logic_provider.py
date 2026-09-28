@@ -1,12 +1,9 @@
 import ast
 import math
-import logging
 from typing import Any, Dict
 
 from deer.tools import ToolProvider, tool
 from deer.tools.schemas import Return
-
-logger = logging.getLogger("DEER-LLM")
 
 # --- THE AST WHITE-LIST YOU DEFINED ---
 ALLOWED_NODE_TYPES = (
@@ -98,7 +95,9 @@ SAFE_GLOBALS = {
 
 class LogicProvider(ToolProvider):
     @tool(modifies_state=False)
-    def evaluate(self, expression: str, context: Dict[str, Any]) -> Return(result=Any):
+    def evaluate(
+        self, expression: str, context: Dict[str, Any]
+    ) -> Return(result=Any, success=bool, error=str):
         """
         Evaluates a mathematical or logical Python expression safely. Allows basic arithmetic, comparisons, list/dict comprehensions, and a set of safe math functions. Example: expression="sum([x for x in data if x > 10])", context={"data": [1, 12, 5, 20]}
         """
@@ -108,14 +107,25 @@ class LogicProvider(ToolProvider):
 
             # 2. SECURITY CHECK: Verify all nodes are in the whitelist
             for node in ast.walk(tree):
-                if type(node) not in ALLOWED_NODE_TYPES:
-                    raise RuntimeError(
-                        f"Security Breach: Forbidden operation detected: {type(node).__name__}"
-                    )
-                if node.attr.startswith("__"):
-                    raise RuntimeError(
-                        f"Security Breach: Access to private attribute {node.attr} is forbidden."
-                    )
+                # FIX 1: Ensure ast.Expression is allowed (the root node)
+                if (
+                    type(node) not in ALLOWED_NODE_TYPES
+                    and type(node) is not ast.Expression
+                ):
+                    return {
+                        "result": None,
+                        "success": False,
+                        "error": f"Security Breach: Forbidden operation detected: {type(node).__name__}",
+                    }
+
+                # FIX 2: Only check for __ attributes if the node is actually an Attribute node
+                if isinstance(node, ast.Attribute):
+                    if node.attr.startswith("__"):
+                        return {
+                            "result": None,
+                            "success": False,
+                            "error": f"Security Breach: Access to private attribute {node.attr} is forbidden.",
+                        }
 
             # 3. EXECUTION: Evaluate the AST using the safe globals and the provided context
             # We use the 'context' as the locals dictionary for the eval
@@ -125,8 +135,7 @@ class LogicProvider(ToolProvider):
                 context,
             )
 
-            return {"result": result}
+            return {"result": result, "success": True, "error": ""}
 
         except Exception as e:
-            logger.error(f"Logic Evaluation Error: {e}")
-            return {"result": None, "error": str(e)}
+            return {"result": None, "success": False, "error": str(e)}

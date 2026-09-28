@@ -1,5 +1,7 @@
 from .core.agent import DeterministicAgent
 
+__version__ = "0.2"
+
 # import os
 # from pathlib import Path
 #

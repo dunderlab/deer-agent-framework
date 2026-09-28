@@ -12,7 +12,7 @@ from deer.tools.schemas import Return
 class StructuredDataInspector(ToolProvider):
 
     @tool()
-    def inspect_json_keys(self, path: str) -> Return(schema=Dict[str, Any]):
+    def inspect_json_keys(self, path: str) -> Return(json_schema=Dict[str, Any]):
         """Parses a JSON file to extract its structural schema (keys and data types). Use this to map out large configurations without saturating the context window with raw data."""
         safe_path = self.jailed_path(path)
 
@@ -30,7 +30,7 @@ class StructuredDataInspector(ToolProvider):
             else:
                 return type(obj).__name__
 
-        return {"schema": get_schema(data)}
+        return {"json_schema": get_schema(data)}
 
     @tool()
     def preview_csv_columns(

@@ -2,13 +2,9 @@ import argparse
 import sys
 import os
 
-from .base_driver import LLMDriver
-from .gemini_driver import GeminiDriver
-from .ollama_driver import OllamaDriver
-from .openai_driver import OpenAIDriver
-from .azure_driver import AzureOpenAIDriver
-
 from deer.utils.console import error
+
+from deer.drivers import GeminiDriver, OllamaDriver, OpenAIDriver, AzureOpenAIDriver
 
 backends = {
     "gemini",

@@ -16,7 +16,8 @@ from deer.tools.presets import LogicProvider
 
 from deer.drivers import LLMDriver, ChatMessage
 
-from deer.vector_memory import VectorMemory
+from .vector_memory import VectorMemory
+
 
 import pickle
 
@@ -35,9 +36,8 @@ class DeterministicAgent:
         vector_memory: Optional[VectorMemory] = None,
         max_attempts: int = 3,
     ):
-        pass
-
         self.agent_dir = working_dir / ".deer"
+        self.max_attempts = max_attempts
 
         # Context
         self.identity = identity
@@ -82,8 +82,8 @@ class DeterministicAgent:
         self.clear_agent_history()
 
         # Validator History
-        self.validator_history: list[ChatMessage] = []
-        self.clear_validator_history()
+        self.verificator_history: list[ChatMessage] = []
+        self.clear_verificator_history()
 
         # Traces
         self.traces: dict[Literal["solution", "verification"], list[Any]] = {}
@@ -99,8 +99,8 @@ class DeterministicAgent:
         )
         logger.info(f"Authorized filesystem scope is restricted to: {working_dir}")
 
-    def clear_validator_history(self):
-        self.validator_history = [
+    def clear_verificator_history(self):
+        self.verificator_history = [
             ChatMessage(
                 role=Role.SYSTEM,
                 content=self.planner.build_system_prompt(state_filter="READ_ONLY"),
@@ -180,7 +180,7 @@ class DeterministicAgent:
         )
         trace, _ = self._execute_phase(
             goal=verification_goal,
-            history=self.validator_history,
+            history=self.verificator_history,
             update_history_attr="validator_history",
         )
         return trace
@@ -194,7 +194,13 @@ class DeterministicAgent:
     def clear_traces(self):
         self.traces = {"solution": [], "verification": []}
 
-    def run(self, goal: str, trace_solution=None, trace_verification=None):
+    def run(
+        self,
+        goal: str,
+        trace_solution=None,
+        trace_verification=None,
+        iteration: int = 0,
+    ):
 
         if trace_solution is None:
             trace_solution = self.run_solution(goal)
@@ -208,8 +214,11 @@ class DeterministicAgent:
         conclusion = self.generate_conclusion(goal, trace_solution, trace_verification)
 
         if conclusion.goal_achieved:
-            self.clear_validator_history()
+            self.clear_verificator_history()
             return conclusion.user_message
+        else:
+            if iteration >= self.max_attempts:
+                return "I couldn't find a reliable way to solve this request after several attempts. Please try rephrasing your goal."
 
         if conclusion.needs_resolution:
             self.agent_history.append(
@@ -218,17 +227,25 @@ class DeterministicAgent:
                     content=f"EXECUTION FAILURE: {conclusion.summary}. Please redesign the plan.",
                 )
             )
-            return self.run(goal, trace_solution=None, trace_verification=None)
+            return self.run(
+                goal,
+                trace_solution=None,
+                trace_verification=None,
+                iteration=iteration + 1,
+            )
 
         if conclusion.needs_reverification:
-            self.validator_history.append(
+            self.verificator_history.append(
                 ChatMessage(
                     role=Role.SYSTEM,
                     content=f"VERIFICATION GLITCH: {conclusion.summary}. Retrying verification...",
                 )
             )
             return self.run(
-                goal, trace_solution=trace_solution, trace_verification=None
+                goal,
+                trace_solution=trace_solution,
+                trace_verification=None,
+                iteration=iteration + 1,
             )
 
         return conclusion.summary

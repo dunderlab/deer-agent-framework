@@ -1,11 +1,11 @@
-import sys
-import importlib.util
 from rich.text import Text
+from deer.utils.console import console, error, info
+from deer.builtins.agents import available_agents
+import importlib.util
+import sys
 import logging
 
-from deer.builtins import agents
-from deer.utils.console import console, error, info
-from deer.drivers import drivers_parser
+from .parser import drivers_parser
 
 logger = logging.getLogger("DEER")
 
@@ -28,13 +28,13 @@ def title():
 def agents_list():
     console.print()
     console.print("[bold]Available agents[/bold]")
-    for name in agents:
+    for name in available_agents:
         console.print(f"  • [green]{name}[/green]")
     console.print()
 
 
 def example():
-    console.print(f"[dim]Example:[/dim] deer {agents[0]}")
+    console.print(f"[dim]Example:[/dim] deer {list(available_agents.keys())[0]}")
 
 
 def run_agent_in_process(agent_path, backend=None, model=None):
@@ -64,9 +64,11 @@ def main():
 
     if selected_agent := args.agent:
 
-        if selected_agent in agents:
+        if selected_agent in available_agents:
             info(f"Launching agent '{selected_agent}'")
-            run_agent_in_process(agents[selected_agent], args.backend, args.model)
+            run_agent_in_process(
+                available_agents[selected_agent], args.backend, args.model
+            )
             sys.exit(0)
 
         error(f"Unknown agent '{selected_agent}'")

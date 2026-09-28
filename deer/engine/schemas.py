@@ -55,6 +55,20 @@ class StepTrace(BaseModel):
     execution_time: float
     error: Optional[str] = None
 
+    def __str__(self):
+        if self.error:
+            line = f"Error: {self.error}\n"
+        else:
+            line = ""
+        return (
+            f"Tool name: {self.tool_name}\n"
+            f"Resolved args: {self.resolved_args}\n"
+            f"Output: {self.output}\n"
+            f"Status: {self.status}\n"
+            f"Execution time: {self.execution_time}\n"
+            f"{line}"
+        )
+
 
 class ExecutionTrace(BaseModel):
     """
@@ -64,6 +78,13 @@ class ExecutionTrace(BaseModel):
     goal: str
     steps: list[StepTrace] = []
     overall_status: str = "PENDING"
+
+    def __str__(self):
+        return (
+            "  -> ".join([step.tool_name for step in self.steps])
+            + "\n\n"
+            + "\n".join([str(step) for step in self.steps])
+        )
 
 
 class AgentConclusion(BaseModel):
