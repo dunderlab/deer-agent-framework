@@ -8,9 +8,12 @@ from pydantic import BaseModel
 
 
 class ToolRegistry:
-    def __init__(self) -> None:
+    def __init__(self, tools=[]) -> None:
         self._tools: Dict[str, Tool] = {}
         self._providers: list = []
+
+        if tools:
+            self.register(*[tool() for tool in tools])
 
     def register(self, *provider_tools: list):
         for tool in provider_tools:

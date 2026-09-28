@@ -1,4 +1,4 @@
-from .core.agent import DeterministicAgent
+from deer.core import DeterministicAgent
 
 __version__ = "0.2"
 

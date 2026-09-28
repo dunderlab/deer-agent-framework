@@ -31,32 +31,35 @@ class DeterministicAgent:
         description: str,
         identity: str,
         driver: LLMDriver,
-        tool_registry: ToolRegistry | set[ToolProvider],
         working_dir: Path,
+        tool_registry: Optional[ToolRegistry | set[ToolProvider]] = None,
         vector_memory: Optional[VectorMemory] = None,
         max_attempts: int = 3,
     ):
-        self.agent_dir = working_dir / ".deer"
-        self.max_attempts = max_attempts
 
         # Context
         self.identity = identity
         self.description = description
+        self.max_attempts = max_attempts
+        self.agent_dir = (working_dir / ".deer").resolve()
         self.working_dir = working_dir.resolve()
 
         # LLMDriver
         self.driver = driver
 
         # ToolRegistry
-        if isinstance(tool_registry, set):
+        if isinstance(tool_registry, (set, tuple, list)):
             tr = ToolRegistry()
             tr.register(*[tool() for tool in tool_registry])
-            tool_registry = tr
-        self.tool_registry = tool_registry
-        self.tool_registry.set_jail(working_dir)
+            self.tool_registry = tr
+        elif tool_registry is None:
+            self.tool_registry = ToolRegistry()
+        elif isinstance(tool_registry, ToolRegistry):
+            self.tool_registry = tool_registry
 
         if not self.tool_registry.has("evaluate"):
             self.tool_registry.register(LogicProvider())
+        self.tool_registry.set_jail(working_dir)
 
         # Vector Memory
         if vector_memory:
@@ -125,9 +128,7 @@ class DeterministicAgent:
             "history": self.agent_history,
         }
 
-        filename = (
-            self.working_dir / ".deer" / "traces" / f"trace-{datetime.now()}.trace"
-        )
+        filename = self.agent_dir / "traces" / f"trace-{datetime.now()}.trace"
 
         if not os.path.exists(os.path.dirname(filename)):
             os.mkdir(os.path.dirname(filename))

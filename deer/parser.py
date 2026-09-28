@@ -13,7 +13,16 @@ backends = {
     "azure",
 }
 
-drivers_parser = argparse.ArgumentParser(description="DEER Agent Framework CLI")
+
+class NoExitArgumentParser(argparse.ArgumentParser):
+    def error(self, message):
+        if getattr(self, "silent", False):
+            raise ValueError(message)
+        else:
+            return super().error(message)
+
+
+drivers_parser = NoExitArgumentParser(description="DEER Agent Framework CLI")
 
 drivers_parser.add_argument(
     "agent",
@@ -39,18 +48,24 @@ drivers_parser.add_argument(
 
 def get_driver_from_parser():
 
-    args = drivers_parser.parse_args()
+    try:
+        drivers_parser.silent = True
+        args = drivers_parser.parse_args()
+        drivers_parser.silent = False
+    except:
+        drivers_parser.silent = False
+        return False
 
     if args.backend not in backends:
         error(
             f"Unsupported backend '{args.backend}'. "
             f"Supported backends are: {', '.join(backends)}."
         )
-        sys.exit(1)
+        return False
 
     if not args.model:
         error("A model identifier must be provided.")
-        sys.exit(1)
+        return False
 
     match args.backend:
 

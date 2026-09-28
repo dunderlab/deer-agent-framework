@@ -1,2 +1,2 @@
 from .agent import DeterministicAgent
-from
+from .memory import VectorMemory

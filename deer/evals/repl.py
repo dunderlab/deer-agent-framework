@@ -79,7 +79,7 @@ class AgentREPL:
         return WordCompleter(internal_commands, ignore_case=False)
 
     def load_prompt_history(self):
-        history_file = self.agent.working_dir / ".deer" / "prompt_history"
+        history_file = self.agent.agent_dir / "prompt_history"
 
         if not history_file.exists():
             self.prompt_history = InMemoryHistory()
@@ -90,7 +90,7 @@ class AgentREPL:
         return
 
     def save_history(self):
-        history_file = self.agent.working_dir / ".deer" / "prompt_history"
+        history_file = self.agent.agent_dir / "prompt_history"
         with open(history_file, "wb") as f:
             pickle.dump(self.prompt_history, f)
 

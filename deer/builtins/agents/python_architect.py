@@ -1,11 +1,18 @@
 from deer import DeterministicAgent
-from deer.tools import Preset
+
 from deer.evals import AgentREPL
 from deer.parser import get_driver_from_parser
 
-# from deer.drivers import OllamaDriver
+from deer.tools import ToolRegistry, Preset
+from deer.core import VectorMemory
+from deer.drivers import OllamaDriver
 
 from pathlib import Path
+
+# Infrastructure
+driver = get_driver_from_parser() or OllamaDriver(model_name="gemma4:31b-cloud")
+memory = VectorMemory(path=Path.cwd() / ".deer" / "vector_db")
+registry = ToolRegistry(Preset.CODE_REPAIR | Preset.CODE_EDITOR | Preset.DATA_ANALYST)
 
 agent = DeterministicAgent(
     description="AI specialist in Python architecture, runtime module resolution, and dependency management.",
@@ -16,11 +23,24 @@ agent = DeterministicAgent(
         "from engineering scalable code structures to resolving complex import mechanisms and optimizing "
         "deployment pipelines across public or internal repositories."
     ),
-    driver=get_driver_from_parser(),
-    # driver=OllamaDriver(model_name="gemma4:31b-cloud"),
-    tool_registry=Preset.CODE_REPAIR | Preset.CODE_EDITOR | Preset.DATA_ANALYST,
+    driver=driver,
+    tool_registry=registry,
+    vector_memory=memory,
     working_dir=Path.cwd(),
     max_attempts=3,
+)
+
+
+agent.vector_memory.add_document(
+    doc_id="user_pref_01",
+    text="Al usuario le gusta el café espresso sin azúcar y prefiere programar en Python.",
+    metadata={"category": "preferences", "importance": "high"},
+)
+
+memory.add_document(
+    doc_id="fact_01",
+    text="La capital de Francia es París.",
+    metadata={"category": "general_knowledge"},
 )
 
 

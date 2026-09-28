@@ -4,30 +4,32 @@ import json
 import os
 import logging
 from typing import Any, Optional, Union
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+
 class VectorMemory:
 
-    def __init__(self, path: str) -> None:
+    def __init__(self, path: Path) -> None:
         """
         Initialize the VectorMemory system using ChromaDB.
 
         Parameters
         ----------
-        path : str, optional
-            The path where the persistent database will be stored. 
-            Defaults to "./vector_db".
+        path : Path
+            The path where the persistent database will be stored.
         """
-        self.path = path
+        self.path = path.resolve()
         self.client = chromadb.PersistentClient(path=path)
         self.emb_fn = embedding_functions.DefaultEmbeddingFunction()
         self.collection = self.client.get_or_create_collection(
-            name="agent_memory", 
-            embedding_function=self.emb_fn
+            name="agent_memory", embedding_function=self.emb_fn
         )
 
-    def add_document(self, doc_id: str, text: str, metadata: Optional[dict[str, Any]] = None) -> None:
+    def add_document(
+        self, doc_id: str, text: str, metadata: Optional[dict[str, Any]] = None
+    ) -> None:
         """
         Add a document to the vector collection.
 
@@ -38,7 +40,7 @@ class VectorMemory:
         text : str
             The content of the document to be embedded and stored.
         metadata : dict, optional
-            Additional metadata associated with the document. 
+            Additional metadata associated with the document.
             If 'hit_count' is not provided, it will be initialized to 0.
         """
         meta = metadata if metadata else {}
@@ -66,7 +68,13 @@ class VectorMemory:
             'id', 'text', and 'metadata'.
         """
         # 1. Vector search
-        results = self.collection.query(query_texts=[query_text], n_results=n_results)
+        results = self.collection.query(
+            query_texts=[query_text],
+            n_results=n_results,
+        )
+
+        if not results["ids"] or not results["ids"][0]:
+            return []
 
         ids = results["ids"][0]
         documents = results["documents"][0]
@@ -112,20 +120,20 @@ class VectorMemory:
 
     def audit_full_memory(self, top_n: Optional[int] = None) -> list[dict[str, Any]]:
         """
-        Extracts everything, calculates estimated disk weight, 
+        Extracts everything, calculates estimated disk weight,
         and sorts by popularity.
 
         Parameters
         ----------
         top_n : int, optional
-            The maximum number of results to return. 
+            The maximum number of results to return.
             If None, all documents are returned. Defaults to None.
 
         Returns
         -------
         list of dict
             A list of audit records sorted by popularity (hit_count) descending.
-            Each record includes 'id', 'hit_count', 'size_bytes', 'size_human', 
+            Each record includes 'id', 'hit_count', 'size_bytes', 'size_human',
             and 'text_preview'.
         """
         # 1. Total extraction (Including embeddings for weight calculation)
@@ -147,7 +155,9 @@ class VectorMemory:
             # A. Estimated space calculation
             text_bytes = len(docs[i].encode("utf-8")) if docs[i] else 0
             meta_bytes = len(json.dumps(metas[i]).encode("utf-8")) if metas[i] else 0
-            current_vector_bytes = vector_size_bytes if embs is not None and i < len(embs) else 0
+            current_vector_bytes = (
+                vector_size_bytes if embs is not None and i < len(embs) else 0
+            )
             total_bytes = text_bytes + meta_bytes + current_vector_bytes
 
             # B. Popularity extraction
@@ -189,21 +199,25 @@ class VectorMemory:
 
     def get_db_info(self) -> dict[str, int]:
         """
-        Retrieve general information about the database, 
+        Retrieve general information about the database,
         including total document count and estimated disk size.
 
         Returns
         -------
         dict
-            A dictionary containing 'total_documents' (int) 
+            A dictionary containing 'total_documents' (int)
             and 'disk_size_bytes' (int).
         """
         total_size = 0
         for dirpath, _, filenames in os.walk(self.path):
             for f in filenames:
                 fp = os.path.join(dirpath, f)
-                if not os.path.islink(fp): total_size += os.path.getsize(fp)
-        return {"total_documents": self.collection.count(), "disk_size_bytes": total_size}
+                if not os.path.islink(fp):
+                    total_size += os.path.getsize(fp)
+        return {
+            "total_documents": self.collection.count(),
+            "disk_size_bytes": total_size,
+        }
 
     def _parse_size_to_bytes(self, size_str: Union[str, int]) -> float:
         """
@@ -219,7 +233,8 @@ class VectorMemory:
         float
             The equivalent size in bytes.
         """
-        if isinstance(size_str, int): return float(size_str)
+        if isinstance(size_str, int):
+            return float(size_str)
         units = {"B": 1, "KB": 1024, "MB": 1024**2, "GB": 1024**3, "TB": 1024**4}
         size_str = size_str.upper().strip()
 
@@ -240,8 +255,8 @@ class VectorMemory:
         """
         # 1. Get all IDs and their metadata
         all_data = self.collection.get()
-        ids = all_data['ids']
-        metas = all_data['metadatas']
+        ids = all_data["ids"]
+        metas = all_data["metadatas"]
 
         if not ids:
             logger.info("The database is already empty.")
@@ -257,7 +272,9 @@ class VectorMemory:
         # 3. Execute bulk deletion
         if ids_to_delete:
             self.collection.delete(ids=ids_to_delete)
-            logger.info(f"Cleanup completed. Deleted {len(ids_to_delete)} documents with no queries.")
+            logger.info(
+                f"Cleanup completed. Deleted {len(ids_to_delete)} documents with no queries."
+            )
         else:
             logger.info("No documents with zero queries were found.")
 

@@ -54,8 +54,7 @@ from deer.tools import ToolRegistry, Preset
 # Infrastructure
 driver = OllamaDriver(model_name="llama3")
 memory = VectorMemory(path="./agent_memory")
-registry = ToolRegistry()
-registry.register(Preset.CODE_REPAIR | Preset.CODE_EDITOR | Preset.DATA_ANALYST)
+registry = ToolRegistry(Preset.CODE_REPAIR | Preset.CODE_EDITOR | Preset.DATA_ANALYST)
 
 agent = DeterministicAgent(
     description="Python Architecture Specialist",
