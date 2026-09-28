@@ -2,7 +2,9 @@
 
 ### **Stop building "Vibe-based" Agents. Start Engineering Deterministic Agents.**
 
-**DEER** is the first framework designed for building **Deterministic Agents** in production environments where "it usually works" isn't good enough. While other frameworks rely on massive system prompts and probabilistic loops, DEER subordinates LLMs to rigid, code-defined software structures.
+**DEER** is the first framework designed for building **Deterministic Agents** in production environments where "it
+usually works" isn't good enough. While other frameworks rely on massive system prompts and probabilistic loops, DEER
+subordinates LLMs to rigid, code-defined software structures.
 
 ![License](https://img.shields.io/badge/license-BSD--2--Clause-blue.svg)
 ![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)
@@ -21,26 +23,31 @@
 
 ## Why DEER?
 
-Most agent frameworks suffer from **"Prompt Drift"**: you change one word in a system prompt and the whole logic breaks. DEER replaces "vibes" with **Deterministic Agents** powered by **Code Contracts**.
+Most agent frameworks suffer from **"Prompt Drift"**: you change one word in a system prompt and the whole logic breaks.
+DEER replaces "vibes" with **Deterministic Agents** powered by **Code Contracts**.
 
-*   **Logic over Prompts:** Define your **Deterministic Agent**'s behavior in Python, not in a 2000-word text file.
-*   **Typed Tooling:** Every tool has a Pydantic-validated input and output. No more "hallucinated" arguments.
-*   **Jailed by Design:** Built-in filesystem sandboxing (Jail) ensures your **Deterministic Agent** can't escape its directory.
-*   **Verification Loops:** The agent doesn't just "execute"; it validates the result against the original goal using deterministic traces.
+* **Logic over Prompts:** Define your **Deterministic Agent**'s behavior in Python, not in a 2000-word text file.
+* **Typed Tooling:** Every tool has a Pydantic-validated input and output. No more "hallucinated" arguments.
+* **Jailed by Design:** Built-in filesystem sandboxing (Jail) ensures your **Deterministic Agent** can't escape its
+  directory.
+* **Verification Loops:** The agent doesn't just "execute"; it validates the result against the original goal using
+  deterministic traces.
 
 ---
 
 ## The DEER Workflow: Code-First Implementation
 
 ### 1. Define your Deterministic Agent's Identity
-Forget about telling the AI to "act like a specialist." Define a high-level `DeterministicAgent` with clear boundaries and a specific tool registry.
+
+Forget about telling the AI to "act like a specialist." Define a high-level `DeterministicAgent` with clear boundaries
+and a specific tool registry.
 
 ```python
 from pathlib import Path
-from deer.core.agent import DeterministicAgent
-from deer.states import ParallelGitStateManager
-from deer.drivers import get_driver_from_parser
-from deer.tools.presets import Preset
+from deer import DeterministicAgent
+from deer.tools import Preset
+from deer.evals import AgentREPL
+from deer.parser import get_driver_from_parser
 
 agent = DeterministicAgent(
     description="Python Architecture Specialist",
@@ -51,17 +58,23 @@ agent = DeterministicAgent(
     driver=get_driver_from_parser(),
     tool_registry=Preset.CODE_REPAIR | Preset.CODE_EDITOR | Preset.DATA_ANALYST,
     jail_path=Path.cwd() / "sandbox",  # Strict security boundary
-    format_response="markdown",
-    max_retries=5,
-    state_manager=ParallelGitStateManager(),
+    max_attempts=5,
 )
 
+
+def main():
+    repl = AgentREPL(agent)
+    repl.repl()  # Instant interactive shell****
+
+
 if __name__ == "__main__":
-    agent.repl()  # Instant interactive shell
+    main()
 ```
 
 ### 2. Assemble your Tool Registry
-Combine built-in managers (File, Git, Search) into a single, cohesive unit of execution for your **Deterministic Agent**.
+
+Combine built-in managers (File, Git, Search) into a single, cohesive unit of execution for your **Deterministic
+Agent**.
 
 ```python
 from deer.tools.registry import ToolRegistry
@@ -78,10 +91,14 @@ tool_registry.register(
 ```
 
 ### 3. Create Custom Tools with Pydantic Validation
-Extending your **Deterministic Agent** is as simple as writing a class. The `@tool` decorator automatically generates the JSON schema for the LLM, ensuring perfect compatibility.
+
+Extending your **Deterministic Agent** is as simple as writing a class. The `@tool` decorator automatically generates
+the JSON schema for the LLM, ensuring perfect compatibility.
 
 ```python
-from deer.tools import ToolProvider, tool, Return
+from deer.tools import ToolProvider, tool
+from deer.tools.schemas import Return
+
 
 class MyCustomProvider(ToolProvider):
     @tool(modifies_state=True)
@@ -95,19 +112,20 @@ class MyCustomProvider(ToolProvider):
 
 ## Built-in Deterministic Agents
 
-The framework includes pre-configured **Deterministic Agents** in the `deer/builtins/` directory. These serve as both ready-to-use tools and reference implementations for building your own specialized architects and managers.
+The framework includes pre-configured **Deterministic Agents** in the `deer/builtins/` directory. These serve as both
+ready-to-use tools and reference implementations for building your own specialized architects and managers.
 
 ---
 
 ## Technical Differentiation
 
-| Feature | Traditional Frameworks (LangChain, etc.) | **DEER Deterministic Agents** |
-| :--- | :--- | :--- |
-| **Execution Flow** | Probabilistic (LLM decides next step) | **Deterministic** (Backend-validated Plan) |
-| **Tool Arguments** | Often Hallucinated | **Strictly Typed** (Pydantic Models) |
-| **Security** | None / Manual | **Built-in Jail (Sandbox)** |
-| **Debugging** | Black box / Tricky logs | **Step-by-Step Trace Replay** |
-| **Output** | Raw Text | **Validated & Humanized Data** |
+| Feature            | Traditional Frameworks (LangChain, etc.) | **DEER Deterministic Agents**              |
+|:-------------------|:-----------------------------------------|:-------------------------------------------|
+| **Execution Flow** | Probabilistic (LLM decides next step)    | **Deterministic** (Backend-validated Plan) |
+| **Tool Arguments** | Often Hallucinated                       | **Strictly Typed** (Pydantic Models)       |
+| **Security**       | None / Manual                            | **Built-in Jail (Sandbox)**                |
+| **Debugging**      | Black box / Tricky logs                  | **Step-by-Step Trace Replay**              |
+| **Output**         | Raw Text                                 | **Validated & Humanized Data**             |
 
 ---
 
@@ -115,40 +133,48 @@ The framework includes pre-configured **Deterministic Agents** in the `deer/buil
 
 A **Deterministic Agent** in DEER doesn't just "chat". It processes requests through a linear production line:
 
-1.  **Refinement:** The **Deterministic Agent** improves the user's goal for technical clarity.
-2.  **Planning:** The agent generates a complete JSON pipeline *before* executing anything.
-3.  **Static Analysis:** The `PlanValidator` checks the plan for cycles or type mismatches.
-4.  **Jailed Execution:** Tools run inside a secure sandbox.
-5.  **Verification:** A secondary "judge" loop confirms the result matches the goal.
+1. **Refinement:** The **Deterministic Agent** improves the user's goal for technical clarity.
+2. **Planning:** The agent generates a complete JSON pipeline *before* executing anything.
+3. **Static Analysis:** The `PlanValidator` checks the plan for cycles or type mismatches.
+4. **Jailed Execution:** Tools run inside a secure sandbox.
+5. **Verification:** A secondary "judge" loop confirms the result matches the goal.
 
 ---
 
 ## Empirical Evidence: Engineering vs. Vibes
 
-DEER isn't just a "good idea"—it's a measured engineering framework. Below is the data from **100 consecutive executions** of a complex Python architecture task using the `gemma4:31b` model.
+DEER isn't just a "good idea"—it's a measured engineering framework. Below is the data from **100 consecutive
+executions** of a complex Python architecture task using the `gemma4:31b` model.
 
 ### 1. Planning Determinism
-While traditional agents hallucinate different paths every time, DEER's planning and validation loop ensures high predictability. 
+
+While traditional agents hallucinate different paths every time, DEER's planning and validation loop ensures high
+predictability.
 
 ![Deterministic Path Frequencies](assets/planification_validation_paths_frequencies.svg)
-*Figure 1: Path frequency distribution. 90% of executions follow the same validated optimal path, ensuring production-grade reliability.*
+*Figure 1: Path frequency distribution. 90% of executions follow the same validated optimal path, ensuring
+production-grade reliability.*
 
 ### 2. Full Trace Introspección
+
 Every decision, tool call, and validation step is recorded. This allows for deep auditing and performance profiling.
 
 ![Trace Step Analysis](assets/planification_validation_paths.svg)
-*Figure 2: Multi-trace step analysis showing the density and consistency of the agent's internal logic across multiple runs.*
+*Figure 2: Multi-trace step analysis showing the density and consistency of the agent's internal logic across multiple
+runs.*
 
 ---
 
 ## Installation
 
 From PyPI:
+
 ```bash
 pip install deer-agent-framework
 ```
 
 From GitHub (development version):
+
 ```bash
 pip install git+https://github.com/dunderlab/deer-agent-framework.git
 ```
@@ -158,6 +184,7 @@ pip install git+https://github.com/dunderlab/deer-agent-framework.git
 ---
 
 ## License
+
 Licensed under the **BSD 2-Clause License**. See [LICENSE](LICENSE) for details.
 
 ---
