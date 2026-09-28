@@ -1,13 +1,19 @@
 import json
 from typing import TypeVar, Type, Optional, Union, Generator
 from pydantic import BaseModel
-from .base_driver import LLMDriver, logger, Message
+from .base_driver import LLMDriver, logger, ChatMessage
 
 T = TypeVar("T", bound=BaseModel)
 
 
 class OllamaDriver(LLMDriver):
-    def __init__(self, model_name: str, host: str = "http://localhost:11434", temperature: float = 0.0, top_p: float = 1.0):
+    def __init__(
+        self,
+        model_name: str,
+        host: str = "http://localhost:11434",
+        temperature: float = 0.0,
+        top_p: float = 1.0,
+    ):
         super().__init__(model_name, temperature, top_p)
         self.base_url = host.rstrip("/")
 
@@ -19,9 +25,8 @@ class OllamaDriver(LLMDriver):
         return "Ollama"
 
     def generate(
-        self, messages: list[Message], response_model: Optional[Type[T]] = None
+        self, messages: list[ChatMessage], response_model: Optional[Type[T]] = None
     ) -> Union[str, T]:
-
         """
         Generates a response from Ollama.
         If response_model is provided, it forces the model to follow the schema.
@@ -53,7 +58,9 @@ class OllamaDriver(LLMDriver):
 
             if response_model:
                 # Strict validation: Convert the JSON string to a Pydantic object
-                return response_model.model_validate_json(content)
+                # return response_model.model_validate_json(content)
+                clean_json_str = self.extract_json(content)
+                return response_model.model_validate_json(clean_json_str)
 
             return content
 

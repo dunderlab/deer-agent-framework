@@ -1,16 +1,16 @@
 import json
 import logging
+import re
 import urllib.error
 import urllib.request
 from abc import ABC, abstractmethod
-from typing import TypeVar, Type, Optional, Union, Generator
+from typing import TypeVar, Type, Optional, Union, Generator, Any
+from .schemas import ChatMessage
 
 from pydantic import BaseModel
 
 T = TypeVar("T", bound=BaseModel)
 logger = logging.getLogger("DEER-LLM")
-
-Message = dict[str, str]
 
 
 class LLMDriver(ABC):
@@ -27,13 +27,25 @@ class LLMDriver(ABC):
 
     @property
     def headers(self) -> dict:
-        return {
-            "Content-Type": "application/json"
-        }
+        return {"Content-Type": "application/json"}
 
-    def _send_post_request( self, payload: dict) -> dict:
+    def _send_post_request(self, payload: dict) -> dict:
 
-        data = json.dumps(payload).encode("utf-8")
+        # data = json.dumps(payload).encode("utf-8")
+        # We need to ensure all Pydantic models in the payload are converted to dicts.
+        # We use a helper function to recursively convert everything.
+        def sanitize_payload(obj: Any) -> Any:
+            if isinstance(obj, BaseModel):
+                return obj.model_dump()  # Convert Pydantic model to dict
+            if isinstance(obj, list):
+                return [sanitize_payload(item) for item in obj]
+            if isinstance(obj, dict):
+                return {k: sanitize_payload(v) for k, v in obj.items()}
+            return obj
+
+        sanitized_payload = sanitize_payload(payload)
+        data = json.dumps(sanitized_payload).encode("utf-8")
+
         req = urllib.request.Request(self.url, data=data, headers=self.headers)
 
         try:
@@ -43,14 +55,27 @@ class LLMDriver(ABC):
             logger.error(f"Request error: {e}")
             raise RuntimeError(f"API request failed: {e}")
 
-    def _send_streaming_request(
-        self, payload: dict
-    ) -> Generator[bytes, None, None]:
+    def _send_streaming_request(self, payload: dict) -> Generator[bytes, None, None]:
         """
         Low-level helper to handle streaming HTTP requests.
         Yields raw bytes line by line from the server.
         """
-        data = json.dumps(payload).encode("utf-8")
+
+        # data = json.dumps(payload).encode("utf-8")
+        # We need to ensure all Pydantic models in the payload are converted to dicts.
+        # We use a helper function to recursively convert everything.
+        def sanitize_payload(obj: Any) -> Any:
+            if isinstance(obj, BaseModel):
+                return obj.model_dump()  # Convert Pydantic model to dict
+            if isinstance(obj, list):
+                return [sanitize_payload(item) for item in obj]
+            if isinstance(obj, dict):
+                return {k: sanitize_payload(v) for k, v in obj.items()}
+            return obj
+
+        sanitized_payload = sanitize_payload(payload)
+        data = json.dumps(sanitized_payload).encode("utf-8")
+
         req = urllib.request.Request(self.url, data=data, headers=self.headers)
 
         try:
@@ -65,23 +90,38 @@ class LLMDriver(ABC):
 
     @abstractmethod
     def generate(
-        self, messages: list[Message], response_model: Optional[Type[T]] = None
+        self, messages: list[ChatMessage], response_model: Optional[Type[T]] = None
     ) -> Union[str, T]:
         pass
 
     @abstractmethod
-    def generate_stream(self, messages: list[Message]) -> Generator[str, None, None]:
+    def generate_stream(
+        self, messages: list[ChatMessage]
+    ) -> Generator[str, None, None]:
         """
         Streaming generation.
         Yields tokens as they are received from the API.
         """
         pass
 
+    def extract_json(self, text: str) -> dict:
+        text = text.strip()
+        text = re.sub(r"^```(?:json)?\s*", "", text)
+        text = re.sub(r"^json\s*", "", text)
+        text = re.sub(r"\s*```$", "", text)
+        try:
+            return text
+            # return json.loads(text)
+        except json.JSONDecodeError as e:
+            raise RuntimeError(
+                f"Failed to parse JSON from response: {e}, response: {text}"
+            )
+
 
 class OpenAIStandardDriver(LLMDriver):
 
     def generate(
-        self, messages: list[Message], response_model: Optional[Type[T]] = None
+        self, messages: list[ChatMessage], response_model: Optional[Type[T]] = None
     ) -> Union[str, T]:
         payload = {
             "model": self.model_name,
