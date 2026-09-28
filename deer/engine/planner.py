@@ -49,6 +49,7 @@ class Planner:
             "4. Precision: Ensure that arguments match the types defined in the signatures.\n"
             "5. Determinism: The plan must be a linear sequence of steps that logically leads to the goal.\n\n"
             f"AVAILABLE TOOLS:\n{tools_menu}\n\n"
+            "For complex data filtering, mathematical calculations, or list transformations, use the 'evaluate' tool with Python-style expressions.\n\n"
             "RESPONSE FORMAT:\n"
             "You must respond exclusively with a JSON object following the ExecutionPlan schema.\n"
             "Respond exclusively with the JSON object. Do NOT wrap the response in markdown code blocks or add any introductory text."

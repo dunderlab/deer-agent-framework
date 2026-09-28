@@ -1,19 +1,24 @@
 import logging
+import os.path
+import shutil
 from typing import Optional, Union, Literal
 from pathlib import Path
 
 from typing_extensions import Any
-
+from datetime import datetime
 from deer.engine import Planner, PipelineExecutor, PlanValidator
 from deer.engine.schemas import ExecutionTrace, AgentConclusion
 
 from deer.drivers.schemas import Role
 from deer.tools import ToolRegistry, ToolProvider
+from deer.tools.presets import LogicProvider
 
 
 from deer.drivers import LLMDriver, ChatMessage
 
 from deer.vector_memory import VectorMemory
+
+import pickle
 
 logger = logging.getLogger("DEER")
 
@@ -37,6 +42,7 @@ class DeterministicAgent:
         # Context
         self.identity = identity
         self.description = description
+        self.working_dir = working_dir.resolve()
 
         # LLMDriver
         self.driver = driver
@@ -48,6 +54,9 @@ class DeterministicAgent:
             tool_registry = tr
         self.tool_registry = tool_registry
         self.tool_registry.set_jail(working_dir)
+
+        if not self.tool_registry.has("evaluate"):
+            self.tool_registry.register(LogicProvider())
 
         # Vector Memory
         if vector_memory:
@@ -105,6 +114,40 @@ class DeterministicAgent:
                 content=self.planner.build_system_prompt(),
             )
         ]
+
+    def save_trace(self):
+        obj = {
+            "tools": list(self.tool_registry.list_tools()),
+            "traces": {
+                "solution": self.traces["solution"],
+                "verification": self.traces["verification"],
+            },
+            "history": self.agent_history,
+        }
+
+        filename = (
+            self.working_dir / ".deer" / "traces" / f"trace-{datetime.now()}.trace"
+        )
+
+        if not os.path.exists(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+
+        with open(filename, "wb") as f:
+            pickle.dump(obj, f)
+
+        logger.info(f"Trace generated in {filename}")
+
+    def clear_working_dir(self, ignore=[]):
+
+        for item in os.listdir(self.working_dir):
+            if item in ignore:
+                continue
+
+            full_path = self.working_dir / item
+            if os.path.isdir(full_path):
+                shutil.rmtree(full_path)
+            else:
+                os.remove(full_path)
 
     def _execute_phase(
         self, goal: str, history: list[ChatMessage], update_history_attr: str

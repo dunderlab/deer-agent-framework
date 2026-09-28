@@ -11,3 +11,4 @@ from .json_editor import JSONEditor
 from .xml_editor import XMLEditor
 from .toml_editor import TOMLEditor
 from .yaml_editor import YAMLEditor
+from .logic_provider import LogicProvider

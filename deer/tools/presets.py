@@ -12,6 +12,7 @@ from deer.tools.builtin import (
     XMLEditor,
     YAMLEditor,
     TOMLEditor,
+    LogicProvider,
 )
 
 
@@ -68,4 +69,5 @@ class Preset:
         XMLEditor,
         YAMLEditor,
         TOMLEditor,
+        LogicProvider,
     }

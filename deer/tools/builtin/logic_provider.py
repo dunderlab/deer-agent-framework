@@ -100,11 +100,7 @@ class LogicProvider(ToolProvider):
     @tool(modifies_state=False)
     def evaluate(self, expression: str, context: Dict[str, Any]) -> Return(result=Any):
         """
-        Evaluates a mathematical or logical Python expression safely.
-        Allows basic arithmetic, comparisons, list/dict comprehensions,
-        and a set of safe math functions.
-
-        Example: expression="sum([x for x in data if x > 10])", context={"data": [1, 12, 5, 20]}
+        Evaluates a mathematical or logical Python expression safely. Allows basic arithmetic, comparisons, list/dict comprehensions, and a set of safe math functions. Example: expression="sum([x for x in data if x > 10])", context={"data": [1, 12, 5, 20]}
         """
         try:
             # 1. Parse the expression into an AST
@@ -115,6 +111,10 @@ class LogicProvider(ToolProvider):
                 if type(node) not in ALLOWED_NODE_TYPES:
                     raise RuntimeError(
                         f"Security Breach: Forbidden operation detected: {type(node).__name__}"
+                    )
+                if node.attr.startswith("__"):
+                    raise RuntimeError(
+                        f"Security Breach: Access to private attribute {node.attr} is forbidden."
                     )
 
             # 3. EXECUTION: Evaluate the AST using the safe globals and the provided context

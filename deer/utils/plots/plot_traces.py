@@ -742,13 +742,13 @@ def get_plot_data(
         planning_sequences.extend(
             [
                 [step.tool_name for step in trace.steps]
-                for trace in trace["trace"]["solution"]
+                for trace in trace["traces"]["solution"]
             ]
         )
         validation_sequences.extend(
             [
                 [step.tool_name for step in trace.steps]
-                for trace in trace["trace"]["verification"]
+                for trace in trace["traces"]["verification"]
             ]
         )
 
