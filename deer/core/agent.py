@@ -16,7 +16,7 @@ from deer.tools.presets import LogicProvider
 
 from deer.drivers import LLMDriver, ChatMessage
 
-from .vector_memory import VectorMemory
+from .memory import VectorMemory
 
 
 import pickle
