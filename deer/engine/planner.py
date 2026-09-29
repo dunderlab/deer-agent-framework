@@ -57,11 +57,16 @@ class Planner:
         )
 
     def build_conclusion_prompt(self, goal, trace_solution, trace_verification):
+
+        if not trace_verification:
+            verification = "VERIFICATION NO NEEDED"
+        else:
+            verification = f"VERIFICATION TRACE:\n{trace_verification.model_dump_json(indent=2)}\n\n"
         return (
             "You are the DEER Technical Auditor. Your goal is to synthesize the execution results into a final verdict.\n\n"
             f"USER GOAL: {goal}\n\n"
             f"ACTION TRACE:\n{trace_solution.model_dump_json(indent=2)}\n\n"
-            f"VERIFICATION TRACE:\n{trace_verification.model_dump_json(indent=2)}\n\n"
+            f"{verification}"
             "REQUIRED STRUCTURE:\n"
             "{\n"
             '  "summary": "string",\n'
