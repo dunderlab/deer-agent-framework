@@ -31,19 +31,6 @@ agent = DeterministicAgent(
 )
 
 
-agent.vector_memory.add_document(
-    doc_id="user_pref_01",
-    text="Al usuario le gusta el café espresso sin azúcar y prefiere programar en Python.",
-    metadata={"category": "preferences", "importance": "high"},
-)
-
-memory.add_document(
-    doc_id="fact_01",
-    text="La capital de Francia es París.",
-    metadata={"category": "general_knowledge"},
-)
-
-
 def main():
     repl = AgentREPL(agent)
     repl.repl()
