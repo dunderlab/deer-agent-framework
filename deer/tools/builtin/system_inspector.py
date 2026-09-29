@@ -25,7 +25,16 @@ class SystemInspector(ToolProvider):
 
     @property
     def allowed_commands(self):
-        return ["ps -aux", "netstat -tuln", "ss -tuln"]
+        return [
+            "ps aux",
+            "netstat -tuln",
+            "ss -tuln",
+            "top -b -n1",
+            "free",
+            "df",
+            "find",
+            "ls",
+        ]
 
     @tool()
     def get_environment_variable(self, name: str) -> Return(value=Optional[str]):
@@ -37,7 +46,7 @@ class SystemInspector(ToolProvider):
     @tool()
     def list_active_processes(self) -> Return(processes=str):
         """Captures a snapshot of all system processes. Use this to identify active background tasks or services that might conflict with current operations."""
-        result = self.run_command("ps -aux", cwd=self.jail)
+        result = self.run_command("ps aux", cwd=self.jail)
         if result["returncode"] != 0:
             return {"processes": f"Error: {result['stderr']}"}
         return {"processes": result["stdout"]}
@@ -54,3 +63,11 @@ class SystemInspector(ToolProvider):
         if result["returncode"] != 0:
             return {"sockets": f"Error: {result['stderr']}"}
         return {"sockets": result["stdout"]}
+
+    @tool()
+    def get_resource_usage(self) -> Return(cpu=str, ram=str, disk=str):
+        """Returns the current system resource consumption. Useful for deciding if a heavy task can be executed."""
+        cpu = self.run_command("top -bn1 | grep 'Cpu(s)'", cwd=self.jail)["stdout"]
+        ram = self.run_command("free -h", cwd=self.jail)["stdout"]
+        disk = self.run_command("df -h /", cwd=self.jail)["stdout"]
+        return {"cpu": cpu, "ram": ram, "disk": disk}
