@@ -22,7 +22,8 @@ COMMANDS = {
     "/exit": "Terminate the session",
     "/rollback": "Revert the system to the last stable state",
     "/trace": "Display the detailed execution trace and variable resolution of the last plan.",
-    "/history": "Display a log of previous messages and commands",
+    "/history": "Display the history of messages and commands",
+    "/vhistory": "Display the history of verifier messages and commands",
 }
 
 WELCOME_MESSAGE = """
@@ -155,6 +156,13 @@ class AgentREPL:
 
             case "/history":
                 for i, chat in enumerate(self.agent.agent_history[1:]):
+                    self.console.print(f"[bold yellow]Chat {i+1}:[/bold yellow]")
+                    print(f"{chat}")
+                    # self.pretty_print(str(chat))
+                    print("\n")
+
+            case "/vhistory":
+                for i, chat in enumerate(self.agent.verificator_history[1:]):
                     self.console.print(f"[bold yellow]Chat {i+1}:[/bold yellow]")
                     print(f"{chat}")
                     # self.pretty_print(str(chat))
