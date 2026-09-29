@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import List, Dict
 
@@ -94,10 +95,15 @@ class Planner:
         local_history = list(history)
 
         if iteration == 0:
-            context_block = "\n".join(
-                [f"Context {i}: {c['text']}" for i, c in enumerate(context)]
-            )
-            user_content = f"CONTEXT:\n{context_block}\n\nUSER GOAL: {goal}"
+
+            if context:
+                context_block = {
+                    f"context-{i}": c["text"] for i, c in enumerate(context)
+                }
+                user_content = json.dumps({"context": context_block, "goal": goal})
+            else:
+                user_content = json.dumps({"goal": goal})
+
             local_history.append(ChatMessage(role=Role.USER, content=user_content))
 
         try:
