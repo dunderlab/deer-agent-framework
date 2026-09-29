@@ -22,6 +22,7 @@ COMMANDS = {
     "/exit": "Terminate the session",
     "/rollback": "Revert the system to the last stable state",
     "/trace": "Display the detailed execution trace and variable resolution of the last plan.",
+    "/history": "Display a log of previous messages and commands",
 }
 
 WELCOME_MESSAGE = """
@@ -75,7 +76,7 @@ class AgentREPL:
 
     @property
     def completer(self):
-        internal_commands = ["/tools", "/clear", "/exit", "/rollback", "/trace"]
+        internal_commands = list(COMMANDS.keys())
         return WordCompleter(internal_commands, ignore_case=False)
 
     def load_prompt_history(self):
@@ -147,8 +148,16 @@ class AgentREPL:
             case "/trace":
                 trace = self.agent.traces["solution"]
                 for i, step in enumerate(trace):
-                    print(f"Trace {i+1}:")
+                    self.console.print(f"[bold yellow]Trace {i+1}:[/bold yellow]")
                     print(f"{step}")
+                    # self.pretty_print(str(step))
+                    print("\n")
+
+            case "/history":
+                for i, chat in enumerate(self.agent.agent_history[1:]):
+                    self.console.print(f"[bold yellow]Chat {i+1}:[/bold yellow]")
+                    print(f"{chat}")
+                    # self.pretty_print(str(chat))
                     print("\n")
 
     def repl(self):
