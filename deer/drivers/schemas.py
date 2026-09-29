@@ -23,3 +23,6 @@ class ChatMessage(BaseModel):
 
     role: Role = Field(..., description="The role of the message sender.")
     content: str = Field(..., description="The actual text content of the message.")
+
+    def __str__(self) -> str:
+        return f"Role: {self.role.value}\n" f"Content: {self.content}"
