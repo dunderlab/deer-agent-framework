@@ -35,6 +35,7 @@ class DeterministicAgent:
         tool_registry: Optional[ToolRegistry | set[ToolProvider]] = None,
         vector_memory: Optional[VectorMemory] = None,
         max_attempts: int = 3,
+        enable_verification: bool = True,
     ):
 
         # Context
@@ -43,6 +44,7 @@ class DeterministicAgent:
         self.max_attempts = max_attempts
         self.agent_dir = (working_dir / ".deer").resolve()
         self.working_dir = working_dir.resolve()
+        self.enable_verification = enable_verification
 
         # LLMDriver
         self.driver = driver
@@ -209,7 +211,7 @@ class DeterministicAgent:
             trace_solution = self.run_solution(goal)
             self.save_trace_solution(trace_solution)
 
-        if trace_verification is None:
+        if (trace_verification is None) and self.enable_verification:
             trace_verification = self.run_verification(goal)
             self.save_trace_verification(trace_verification)
 
@@ -237,7 +239,7 @@ class DeterministicAgent:
                 iteration=iteration + 1,
             )
 
-        if conclusion.needs_reverification:
+        if conclusion.needs_reverification and self.enable_verification:
             self.verificator_history.append(
                 ChatMessage(
                     role=Role.SYSTEM,
