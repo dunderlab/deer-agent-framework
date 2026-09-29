@@ -23,7 +23,7 @@ class Preset:
         GitManager,
         SearchManager,
         RuntimeManager,
-        MemoryManager,
+        # MemoryManager,
     }
 
     CODE_EDITOR = {
@@ -38,28 +38,29 @@ class Preset:
         StructuredDataInspector,
         FileManager,
         SearchManager,
-        MemoryManager,
+        # MemoryManager,
     }
 
     SYSTEM_ADMIN = {
         SystemInspector,
         RuntimeManager,
         FileManager,
-        MemoryManager,
+        # MemoryManager,
+        SearchManager,
     }
 
     WEB_AUTONOMOUS = {
         NetworkManager,
         FileManager,
         SearchManager,
-        MemoryManager,
+        # MemoryManager,
     }
 
     ALL_TOOLS = {
         FileManager,
         GitManager,
         SearchManager,
-        MemoryManager,
+        # MemoryManager,
         NetworkManager,
         RuntimeManager,
         StructuredDataInspector,
