@@ -182,7 +182,7 @@ class DeterministicAgent:
         trace, _ = self._execute_phase(
             goal=verification_goal,
             history=self.verificator_history,
-            update_history_attr="validator_history",
+            update_history_attr="verificator_history",
         )
         return trace
 
@@ -202,6 +202,8 @@ class DeterministicAgent:
         trace_verification=None,
         iteration: int = 0,
     ):
+        if iteration == 0:
+            self.clear_verificator_history()
 
         if trace_solution is None:
             trace_solution = self.run_solution(goal)
@@ -215,7 +217,7 @@ class DeterministicAgent:
         conclusion = self.generate_conclusion(goal, trace_solution, trace_verification)
 
         if conclusion.goal_achieved:
-            self.clear_verificator_history()
+            # self.clear_verificator_history()
             return conclusion.user_message
         else:
             if iteration >= self.max_attempts:
