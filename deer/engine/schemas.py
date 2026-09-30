@@ -36,8 +36,15 @@ class ExecutionPlan(BaseModel):
     goal: str = Field(
         ..., description="The original objective the agent is trying to solve."
     )
+
     steps: List[ToolStep] = Field(
-        ..., description="The ordered sequence of tool calls to be executed linearly."
+        default_factory=list,
+        description="The ordered sequence of tool calls to be executed linearly. Empty if no tools are needed.",
+    )
+
+    response: Optional[str] = Field(
+        None,
+        description="The final answer or reasoning provided by the model. This is used when no tool steps are required or to provide the final conclusion after steps are executed.",
     )
 
 
@@ -76,6 +83,7 @@ class ExecutionTrace(BaseModel):
     """
 
     goal: str
+    response: Optional[str]
     steps: list[StepTrace] = []
     overall_status: str = "PENDING"
 
