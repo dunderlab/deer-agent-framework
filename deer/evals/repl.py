@@ -183,7 +183,7 @@ class AgentREPL:
                     print("\n")
 
     def repl(self):
-        # logger.setLevel(logging.CRITICAL)
+        logger.setLevel(logging.CRITICAL)
         self.show_welcome()
 
         while True:
