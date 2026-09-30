@@ -1,10 +1,8 @@
 import argparse
-import sys
 import os
+from pathlib import Path
 
 from deer.utils.console import error
-
-from deer.drivers import GeminiDriver, OllamaDriver, OpenAIDriver, AzureOpenAIDriver
 
 backends = {
     "gemini",
@@ -23,6 +21,7 @@ class NoExitArgumentParser(argparse.ArgumentParser):
 
 
 drivers_parser = NoExitArgumentParser(description="DEER Agent Framework CLI")
+# drivers_parser = argparse.ArgumentParser(description="DEER Agent Framework CLI")
 
 drivers_parser.add_argument(
     "agent",
@@ -45,8 +44,19 @@ drivers_parser.add_argument(
     help="Model identifier for the selected backend",
 )
 
+path_parser = NoExitArgumentParser(description="DEER Agent Framework CLI")
+
+path_parser.add_argument(
+    "--path",
+    default=os.environ.get("DEER_PATH"),
+    required=False,
+    help="The root directory of the agent where it will perform its work and operations",
+)
+
 
 def get_driver_from_parser():
+
+    from deer.drivers import GeminiDriver, OllamaDriver, OpenAIDriver, AzureOpenAIDriver
 
     try:
         drivers_parser.silent = True
@@ -80,3 +90,19 @@ def get_driver_from_parser():
 
         case "azure":
             return AzureOpenAIDriver(model_name=args.model)
+
+
+def get_path_from_parser():
+
+    try:
+        path_parser.silent = True
+        args = path_parser.parse_args()
+        path_parser.silent = False
+    except:
+        path_parser.silent = False
+        return False
+
+    if not args.path:
+        return False
+    else:
+        return Path(args.path).resolve()
