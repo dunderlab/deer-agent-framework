@@ -1,5 +1,5 @@
 import pytest
-from deer.vector_memory import VectorMemory
+from deer.memory import VectorMemory
 
 
 @pytest.fixture
@@ -14,7 +14,7 @@ def temp_memory(tmp_path):
     db_dir.mkdir()
 
     # Pass the absolute string path to the memory class
-    memory = VectorMemory(path=str(db_dir))
+    memory = VectorMemory(path=db_dir)
     return memory
 
 
