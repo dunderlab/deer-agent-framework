@@ -47,7 +47,7 @@ logic. DEER replaces probabilistic "vibes" with a **Deterministic Execution Engi
 ```python
 from pathlib import Path
 from deer.core.agent import DeterministicAgent
-from deer.core.memory import VectorMemory
+from deer.core.vector import VectorMemory
 from deer.drivers import OllamaDriver
 from deer.tools import ToolRegistry, Preset
 

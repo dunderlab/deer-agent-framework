@@ -1,5 +1,32 @@
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
+from enum import Enum
+
+
+class Role(str, Enum):
+    """
+    Strict enumeration of allowed roles in a conversation.
+    Using 'str' as a mixin allows the role to be treated as a string
+    while maintaining Enum validation.
+    """
+
+    SYSTEM = "system"
+    USER = "user"
+    ASSISTANT = "assistant"
+    TOOL = "tool"
+
+
+class ChatMessage(BaseModel):
+    """
+    A single message in a conversation history.
+    Ensures that every message has a role and content.
+    """
+
+    role: Role = Field(..., description="The role of the message sender.")
+    content: str = Field(..., description="The actual text content of the message.")
+
+    def __str__(self) -> str:
+        return f"Role: {self.role.value}\n" f"Content: {self.content}"
 
 
 class ToolStep(BaseModel):
@@ -17,10 +44,6 @@ class ToolStep(BaseModel):
     arguments: Dict[str, Any] = Field(
         ...,
         description="The arguments for the tool. Use {{step_id.key}} to reference previous outputs.",
-    )
-    return_schema: Dict[str, str] = Field(
-        ...,
-        description="The expected return structure of the tool (e.g., {'result': 'bool'}).",
     )
     reasoning: str = Field(
         ...,

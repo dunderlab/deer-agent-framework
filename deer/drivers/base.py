@@ -5,7 +5,7 @@ import urllib.error
 import urllib.request
 from abc import ABC, abstractmethod
 from typing import TypeVar, Type, Optional, Union, Generator, Any
-from .schemas import ChatMessage
+from deer.models import ChatMessage
 
 from pydantic import BaseModel
 

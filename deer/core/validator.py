@@ -1,10 +1,11 @@
 import re
+from pickle import FALSE
 from typing import Set
 import inspect
 import logging
 
 from deer.tools.registry import ToolRegistry
-from .schemas import ExecutionPlan
+from deer.models import ExecutionPlan
 
 logger = logging.getLogger("DEER")
 
@@ -106,7 +107,11 @@ class Rules:
 
             # 2. After validating the current step, add its output schema to the known_outputs
             # This ensures a step cannot reference itself or a future step.
-            known_outputs[s.step_id] = s.return_schema
+            known_outputs[s.step_id] = self._output_keys(s.tool_name)
+
+    def _output_keys(self, tool_name: str) -> set[str]:
+        tool = self.tool_registry.get(tool_name)
+        return set(tool.return_type)
 
 
 class PlanValidator:
@@ -120,7 +125,11 @@ class PlanValidator:
     def __init__(self, tool_registry: ToolRegistry) -> None:
         self.tool_registry = tool_registry
 
-    def validate(self, plan: ExecutionPlan) -> None:
-
+    def validate(self, plan: ExecutionPlan) -> [bool, str]:
         rules = Rules(plan, self.tool_registry)
-        rules.validate()
+
+        try:
+            rules.validate()
+            return True, ""
+        except Exception as e:
+            return False, e

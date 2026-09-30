@@ -1,15 +1,11 @@
 import os
 from typing import Optional
 
-from .base_driver import OpenAIStandardDriver
+from .base import OpenAIStandardDriver
 
 
 class AzureOpenAIDriver(OpenAIStandardDriver):
-    def __init__(
-        self,
-        model_name: str,
-        api_version: str = "2024-02-15-preview"
-    ):
+    def __init__(self, model_name: str, api_version: str = "2024-02-15-preview"):
         super().__init__(model_name)
         self.api_key = os.getenv("AZURE_OPENAI_API_KEY")
         self.endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
@@ -32,10 +28,7 @@ class AzureOpenAIDriver(OpenAIStandardDriver):
 
     @property
     def headers(self) -> dict:
-        return {
-            "api-key": self.api_key,
-            "Content-Type": "application/json"
-        }
+        return {"api-key": self.api_key, "Content-Type": "application/json"}
 
     def __repr__(self) -> str:
         return "AzureOpenAI"

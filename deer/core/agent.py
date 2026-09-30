@@ -1,21 +1,18 @@
 import logging
-import os.path
 import shutil
-from typing import Optional, Union, Literal, Any
+from typing import Optional, Literal, Any
 from pathlib import Path
-
 from datetime import datetime
-from deer.engine import Planner, PipelineExecutor, PlanValidator
-from deer.engine.schemas import ExecutionTrace, AgentConclusion
 
-from deer.drivers.schemas import Role
+from deer.models import ExecutionTrace, AgentConclusion, Role, ChatMessage
 from deer.tools import ToolRegistry, ToolProvider
 from deer.tools.presets import LogicProvider
+from deer.memory import VectorMemory
+from deer.drivers import LLMDriver
 
-
-from deer.drivers import LLMDriver, ChatMessage
-
-from .memory import VectorMemory
+from .planner import Planner
+from .executor import PipelineExecutor
+from .validator import PlanValidator
 
 
 import pickle
@@ -130,9 +127,7 @@ class DeterministicAgent:
         }
 
         filename = self.agent_dir / "traces" / f"trace-{datetime.now()}.trace"
-
-        if not os.path.exists(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
+        filename.parent.mkdir(parents=True, exist_ok=True)
 
         with open(filename, "wb") as f:
             pickle.dump(obj, f)
@@ -140,16 +135,15 @@ class DeterministicAgent:
         logger.info(f"Trace generated in {filename}")
 
     def clear_working_dir(self, ignore=[]):
-
-        for item in os.listdir(self.working_dir):
+        for item in self.working_dir.iterdir():
             if item in ignore:
                 continue
 
             full_path = self.working_dir / item
-            if os.path.isdir(full_path):
+            if full_path.is_dir():
                 shutil.rmtree(full_path)
             else:
-                os.remove(full_path)
+                full_path.unlink()
 
     def _execute_phase(
         self, goal: str, history: list[ChatMessage], update_history_attr: str
@@ -162,9 +156,17 @@ class DeterministicAgent:
         )
 
         # Validate
-        self.plan_validator.validate(plan)
+        validated, validated_info = self.plan_validator.validate(plan)
 
-        trace = self.pipeline_executor.execute(plan)
+        if validated:
+            trace = self.pipeline_executor.execute(plan)
+        else:
+            trace = ExecutionTrace(
+                goal=plan.goal,
+                response=validated_info,
+                overall_status="CRASHED",
+            )
+
         setattr(self, update_history_attr, updated_history)
         return trace, updated_history
 

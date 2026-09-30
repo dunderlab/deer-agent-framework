@@ -2,10 +2,8 @@ import json
 import logging
 from typing import List, Dict
 
-from .schemas import ExecutionPlan
-
-from deer.drivers.schemas import ChatMessage, Role
 from deer.tools import ToolRegistry
+from deer.models import ExecutionPlan, ChatMessage, Role
 
 logger = logging.getLogger("DEER-LLM")
 
@@ -38,7 +36,6 @@ class Planner:
             '      "step_id": "string",\n'
             '      "tool_name": "string",\n'
             '      "arguments": { "key": "value" },\n'
-            '      "return_schema": { "key": "type" },\n'
             '      "reasoning": "string"\n'
             "    }\n"
             "  ]\n"
@@ -96,7 +93,7 @@ class Planner:
         context: List[Dict],
         history: List[ChatMessage],
         iteration: int = 0,
-    ) -> tuple["ExecutionPlan", List[ChatMessage]]:  # <--- Retorna ambos
+    ) -> tuple["ExecutionPlan", List[ChatMessage]]:
 
         # 1. Creamos la copia local para el proceso de refinamiento
         local_history = list(history)

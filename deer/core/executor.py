@@ -1,11 +1,8 @@
 import logging
 import time
-from typing import Any, Dict, Optional
-
-from pydantic import BaseModel
-
+from typing import Any, Dict
 from deer.tools import ToolRegistry
-from .schemas import ExecutionPlan, ExecutionTrace, StepTrace
+from deer.models import ExecutionPlan, ExecutionTrace, StepTrace
 
 logger = logging.getLogger("DEER-LLM")
 

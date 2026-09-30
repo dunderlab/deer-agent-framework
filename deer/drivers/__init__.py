@@ -1,7 +1,5 @@
-from .base_driver import LLMDriver
-from .gemini_driver import GeminiDriver
-from .ollama_driver import OllamaDriver
-from .openai_driver import OpenAIDriver
-from .azure_driver import AzureOpenAIDriver
-
-from .schemas import ChatMessage
+from .base import LLMDriver
+from .gemini import GeminiDriver
+from .ollama import OllamaDriver
+from .openai import OpenAIDriver
+from .azure import AzureOpenAIDriver

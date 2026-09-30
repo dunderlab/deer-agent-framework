@@ -46,4 +46,4 @@ where = ["."]
 include = ["deer*"]
 
 [project.scripts]
-deer = "deer.main:main"
+deer = "deer.cli.main:main"

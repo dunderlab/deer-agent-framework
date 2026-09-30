@@ -9,7 +9,7 @@ from deer.drivers import OllamaDriver
 
 from pathlib import Path
 
-# Infrastructurez
+# Infrastructure
 driver = get_driver_from_parser() or OllamaDriver(model_name="gemma4:31b-cloud")
 memory = VectorMemory(path=Path.cwd() / ".deer" / "vector_db")
 registry = ToolRegistry(Preset.CODE_REPAIR | Preset.CODE_EDITOR | Preset.DATA_ANALYST)

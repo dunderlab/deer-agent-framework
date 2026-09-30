@@ -1,7 +1,6 @@
 import os
-from typing import Optional
 
-from .base_driver import OpenAIStandardDriver
+from .base import OpenAIStandardDriver
 
 
 class OpenAIDriver(OpenAIStandardDriver):
@@ -19,7 +18,7 @@ class OpenAIDriver(OpenAIStandardDriver):
     def headers(self) -> dict:
         return {
             "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
 
     def __repr__(self) -> str:
