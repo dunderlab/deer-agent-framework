@@ -28,7 +28,7 @@ class PipelineExecutor:
         logger.info(f"Executing pipeline for goal: {plan.goal}")
         self.execution_context = {}
 
-        trace = ExecutionTrace(goal=plan.goal)
+        trace = ExecutionTrace(goal=plan.goal, response=plan.response)
 
         try:
             for step in plan.steps:
