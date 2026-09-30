@@ -51,6 +51,8 @@ ALLOWED_NODE_TYPES = (
     ast.keyword,
     ast.ListComp,
     ast.DictComp,
+    ast.SetComp,
+    ast.GeneratorExp,
     ast.comprehension,
 )
 
