@@ -4,7 +4,6 @@ import shutil
 from typing import Optional, Union, Literal
 from pathlib import Path
 
-from typing_extensions import Any
 from datetime import datetime
 from deer.engine import Planner, PipelineExecutor, PlanValidator
 from deer.engine.schemas import ExecutionTrace, AgentConclusion
@@ -189,10 +188,12 @@ class DeterministicAgent:
         return trace
 
     def save_trace_solution(self, trace_solution):
-        self.traces["solution"].append(trace_solution)
+        if trace_solution.steps:
+            self.traces["solution"].append(trace_solution)
 
     def save_trace_verification(self, trace_verification):
-        self.traces["verification"].append(trace_verification)
+        if trace_verification.steps:
+            self.traces["verification"].append(trace_verification)
 
     def clear_traces(self):
         self.traces = {"solution": [], "verification": []}
@@ -211,7 +212,11 @@ class DeterministicAgent:
             trace_solution = self.run_solution(goal)
             self.save_trace_solution(trace_solution)
 
-        if (trace_verification is None) and self.enable_verification:
+        if (
+            (trace_verification is None)
+            and trace_solution.steps
+            and self.enable_verification
+        ):
             trace_verification = self.run_verification(goal)
             self.save_trace_verification(trace_verification)
 
