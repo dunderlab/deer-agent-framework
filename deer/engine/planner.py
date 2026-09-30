@@ -42,6 +42,7 @@ class Planner:
             '      "reasoning": "string"\n'
             "    }\n"
             "  ]\n"
+            '  "response": "string",\n'
             "}\n\n"
             "CORE RULES:\n"
             "1. Do not execute any code. Only design the plan.\n"
@@ -49,6 +50,7 @@ class Planner:
             "3. Data Flow: To use the output of a previous step, use the syntax {{step_id.key}}.\n"
             "4. Precision: Ensure that arguments match the types defined in the signatures.\n"
             "5. Determinism: The plan must be a linear sequence of steps that logically leads to the goal.\n\n"
+            "6. Direct Response: If the goal can be solved using your internal knowledge without any external tools, set 'steps' to an empty list [] and provide the final answer directly in the 'response' field.\n\n"
             f"AVAILABLE TOOLS:\n{tools_menu}\n\n"
             "For complex data filtering, mathematical calculations, or list transformations, use the 'evaluate' tool with Python-style expressions.\n\n"
             "RESPONSE FORMAT:\n"
