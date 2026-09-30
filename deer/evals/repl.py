@@ -12,6 +12,9 @@ from rich.console import Console
 from rich.markdown import Markdown
 import subprocess
 
+from prompt_toolkit.completion import Completer, WordCompleter
+
+
 from deer import __version__
 
 logger = logging.getLogger("DEER")
@@ -65,6 +68,17 @@ An LLM agent orchestration framework built for:
 """
 
 
+class SmartCommandCompleter(Completer):
+    def __init__(self, commands):
+        self.base_completer = WordCompleter(commands, ignore_case=False)
+
+    def get_completions(self, document, complete_event):
+        word_before_cursor = document.get_word_before_cursor()
+        if not word_before_cursor:
+            return []
+        return self.base_completer.get_completions(document, complete_event)
+
+
 class AgentREPL:
 
     def __init__(self, agent: DeterministicAgent):
@@ -78,7 +92,7 @@ class AgentREPL:
     @property
     def completer(self):
         internal_commands = list(COMMANDS.keys())
-        return WordCompleter(internal_commands, ignore_case=False)
+        return SmartCommandCompleter(internal_commands)
 
     def load_prompt_history(self):
         history_file = self.agent.agent_dir / "prompt_history"
@@ -178,6 +192,7 @@ class AgentREPL:
                     HTML("<ansicyan><b>&gt;&gt;&gt; </b></ansicyan>"),
                     history=self.prompt_history,
                     completer=self.completer,
+                    # multiline=True,
                 )
                 self.save_history()
             except KeyboardInterrupt:
