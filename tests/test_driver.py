@@ -1,5 +1,6 @@
 import pytest
-from deer.drivers import OllamaDriver, ChatMessage
+from deer.drivers import OllamaDriver
+from deer.models import ChatMessage, Role
 
 
 @pytest.fixture
@@ -8,11 +9,10 @@ def driver():
     return driver
 
 
-def test_hecho(driver):
-
+def test_driver(driver):
     messages: list[ChatMessage] = [
-        {"role": "user", "content": "Hola mundo"},
+        ChatMessage(role=Role.USER, content="Hola mundo"),
     ]
     response = driver.generate(messages)
-
-    pass
+    assert response is not None, "The model did not respond"
+    assert len(response) > 0, "The model returned an empty response"
