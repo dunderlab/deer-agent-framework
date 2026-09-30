@@ -1,5 +1,5 @@
 from deer.tools import ToolProvider, tool
-from deer.tools.schemas import Return
+from deer.tools.schemas import Return, Case
 
 
 from dataclasses import dataclass
@@ -14,7 +14,13 @@ class FileManagerError(ValueError):
 @dataclass
 class FileManager(ToolProvider):
 
-    @tool(modifies_state=True)
+    @tool(
+        modifies_state=True,
+        tests=[
+            Case({"path": "a.txt", "content": "hola"}, {"exists": True}),
+            Case({"path": "a/b/c.txt", "content": "hola"}, {"exists": True}),
+        ],
+    )
     def new_file(self, path: str, content: str) -> Return(exists=bool):
         """Writes literal content to a file at the specified path. OVERWRITES the file if it already exists. Automatically creates any missing parent directories. Returns existence confirmation."""
         safe_path = self.jailed_path(path)
@@ -28,7 +34,15 @@ class FileManager(ToolProvider):
             "exists": safe_path.exists(),
         }
 
-    @tool()
+    @tool(
+        tests=[
+            Case(
+                {"path": "notes/a.txt"},
+                {"content": "hola"},
+                files={"notes/a.txt": "hola"},
+            ),
+        ],
+    )
     def read_file(self, path: str) -> Return(content=str):
         """Reads the complete content of a file. Decodes as UTF-8 by default; falls back to raw string representation of bytes if decoding fails. Fails if the path is a directory or does not exist."""
         safe_path = self.jailed_path(path)

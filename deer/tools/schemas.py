@@ -1,8 +1,16 @@
 import itertools
-from typing import Any, Optional, Dict
+from dataclasses import dataclass, field
+from typing import Any
 from pydantic import BaseModel, create_model, ConfigDict
 
 _counter = itertools.count()
+
+
+@dataclass(frozen=True)
+class Case:
+    args: dict[str, Any]
+    expected: dict[str, Any] | None = None
+    files: dict[str, str | bytes] = field(default_factory=dict)
 
 
 def Return(**fields: Any) -> type[BaseModel]:

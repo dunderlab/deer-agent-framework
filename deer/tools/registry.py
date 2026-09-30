@@ -52,6 +52,7 @@ class ToolRegistry:
                     modifies_state=metadata["modifies_state"],
                     params_type=metadata["params_type"],
                     return_type=metadata["return_type"],
+                    tests=metadata.get("tests", []),
                     method=attr,
                 )
             )

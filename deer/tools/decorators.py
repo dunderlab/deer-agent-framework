@@ -1,10 +1,11 @@
-import inspect
-from typing import get_type_hints, Any, Callable
+from typing import get_type_hints, Any, Callable, Optional
 from dataclasses import dataclass
 
 from pydantic import BaseModel
 
 from .base import Tool
+
+from .schemas import Case
 
 _TOOL_METADATA_ATTR = "__deer_tool_metadata__"
 _MISSING = object()
@@ -13,6 +14,7 @@ _MISSING = object()
 def tool(
     *,
     modifies_state: bool = False,
+    tests: Optional[list[Case]] = [],
 ):
     """Mark an instance method as a deterministic tool."""
 
@@ -24,6 +26,7 @@ def tool(
             name=func.__name__,
             description=func.__doc__,
             modifies_state=modifies_state,
+            tests=tests,
         )
         setattr(
             func,
@@ -46,6 +49,7 @@ class MethodTool(Tool):
     return_type: Any
     method: Callable[..., Any]
     modifies_state: bool
+    tests: list[Case]
 
     def run(
         self,
@@ -78,6 +82,7 @@ def _build_tool_metadata(
     name: str,
     description: str,
     modifies_state: bool,
+    tests: list = [],
 ) -> dict[str, Any]:
     if not name or not name.strip():
         raise ValueError("Tool name cannot be empty.")
@@ -113,6 +118,7 @@ def _build_tool_metadata(
         "description": description.strip(),
         # "full_description": full_description,
         "modifies_state": modifies_state,
+        "tests": tests,
         "params_type": params_type,
         "return_type": return_type,
     }
