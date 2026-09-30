@@ -1,7 +1,7 @@
 from deer import DeterministicAgent
 
 from deer.evals import AgentREPL
-from deer.parser import get_driver_from_parser
+from deer.parser import get_driver_from_parser, get_path_from_parser
 
 from deer.tools import ToolRegistry, Preset
 from deer.core import VectorMemory
@@ -13,6 +13,7 @@ from pathlib import Path
 driver = get_driver_from_parser() or OllamaDriver(model_name="gemma4:31b-cloud")
 memory = VectorMemory(path=Path.home() / "deer_os_sandbox" / ".deer" / "vector_db")
 registry = ToolRegistry(Preset.SYSTEM_ADMIN)
+working_dir = get_path_from_parser() or Path.cwd()
 
 agent = DeterministicAgent(
     description="Natural Language to OS Translator",
@@ -25,7 +26,7 @@ agent = DeterministicAgent(
     driver=driver,
     tool_registry=registry,
     vector_memory=memory,
-    working_dir=Path.home() / "deer_os_sandbox",
+    working_dir=working_dir,
     max_attempts=3,
     enable_verification=False,
 )
