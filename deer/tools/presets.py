@@ -9,6 +9,7 @@ from deer.tools.builtin import (
     CSVManager,
     SystemObserver,
     PythonStructEditor,
+    DependencyAnalyzer,
     JSONEditor,
     XMLEditor,
     YAMLEditor,
@@ -29,6 +30,7 @@ class Preset:
 
     CODE_EDITOR = {
         PythonStructEditor,
+        DependencyAnalyzer,
         JSONEditor,
         XMLEditor,
         YAMLEditor,
@@ -67,6 +69,7 @@ class Preset:
         CSVManager,
         SystemObserver,
         PythonStructEditor,
+        DependencyAnalyzer,
         JSONEditor,
         XMLEditor,
         YAMLEditor,
