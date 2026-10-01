@@ -50,6 +50,14 @@ def matches(expected, actual) -> bool:
     return expected == actual
 
 
+def check_paths(root, expected_paths):
+    for rel in expected_paths:
+        if rel.endswith("/"):
+            assert (root / rel).is_dir(), f"Expected directory '{rel}' to exist"
+        else:
+            assert (root / rel).is_file(), f"Expected file '{rel}' to exist"
+
+
 def collect_cases():
     registry = build_registry()
     for name in registry.list_tools():
@@ -71,5 +79,12 @@ def test_tool(tool_registry, jail_path, tool_name, case):
     prepare_files(jail_path, case.files, case.dirs)
 
     tool = tool_registry.get(tool_name)
+
+    if case.raises:
+        with pytest.raises(case.raises):
+            tool.method(**case.args)
+        return
+
     result = tool.method(**case.args)
     assert matches(case.expected, result), f"Expected {case.expected}, got {result}"
+    check_paths(jail_path, case.expected_paths)
