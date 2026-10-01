@@ -11,7 +11,16 @@ from deer.tools.schemas import Return, Case
 @dataclass
 class HTTPClient(ToolProvider):
 
-    @tool()
+    @tool(
+        tests=[
+            # Test: Connection failure with an invalid domain
+            # This validates that the 'Exception' block catches the failure and returns status 0
+            Case(
+                {"url": "http://this.domain.does.not.exist.test"},
+                {"status": 0, "body": "", "message": str},
+            ),
+        ]
+    )
     def http_request(
         self,
         url: str,
@@ -70,7 +79,15 @@ class HTTPClient(ToolProvider):
         except Exception as e:
             return {"success": False, "path": "", "message": f"Download failed: {e}"}
 
-    @tool()
+    @tool(
+        tests=[
+            # Test: URL unreachable
+            Case(
+                {"url": "http://this.domain.does.not.exist.test"},
+                {"available": False, "status": 0, "message": str},
+            ),
+        ]
+    )
     def check_url(self, url: str) -> Return(available=bool, status=int, message=str):
         """Sends a HEAD request to check whether a URL responds. 'available' is True whenever the server answers, even with an error status such as 404 or 500; it is False only if the connection fails."""
         req = urllib.request.Request(url, method="HEAD")
