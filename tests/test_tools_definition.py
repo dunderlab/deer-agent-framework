@@ -19,7 +19,13 @@ def tool_registry():
 
         @tool(modifies_state=True)
         def boolean_tool_mod(self, arg1: str, arg2: int) -> Return(result=bool):
-            """This is the `boolean_tool_mod` description."""
+            """This is the `boolean_tool_mod` description.
+            Is Multiline
+
+
+
+            ...
+            """
             return {
                 "result": True,
             }
