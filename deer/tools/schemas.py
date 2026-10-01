@@ -13,6 +13,13 @@ class Case:
     files: dict[str, str | bytes] = field(default_factory=dict)
     dirs: list[str] = field(default_factory=list)
     expected_paths: list[str] = field(default_factory=list)
+    expected_json: dict[str, Any] = field(default_factory=dict)
+
+    expected_yaml: dict[str, Any] = field(default_factory=dict)
+    expected_contains: dict[str, list[str]] = field(default_factory=dict)
+    expected_absent: dict[str, list[str]] = field(default_factory=dict)
+    expected_toml: dict[str, Any] = field(default_factory=dict)
+
     raises: type[Exception] | None = None
 
 

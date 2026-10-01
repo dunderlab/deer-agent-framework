@@ -1,6 +1,14 @@
 import pytest
-from deer.tools import ToolRegistry, Preset
 from typing import get_args, get_origin
+import json
+
+from ruamel.yaml import YAML
+import tomllib
+
+
+from deer.tools import ToolRegistry, Preset
+
+_safe_yaml = YAML(typ="safe")
 
 
 def build_registry() -> ToolRegistry:
@@ -58,6 +66,40 @@ def check_paths(root, expected_paths):
             assert (root / rel).is_file(), f"Expected file '{rel}' to exist"
 
 
+def check_json(root, expected_json):
+    for rel, expected in expected_json.items():
+        actual = json.loads((root / rel).read_text(encoding="utf-8"))
+        assert actual == expected, f"{rel}: expected {expected}, got {actual}"
+
+
+def check_yaml(root, expected_yaml):
+    for rel, expected in expected_yaml.items():
+        actual = _safe_yaml.load((root / rel).read_text(encoding="utf-8"))
+        assert actual == expected, f"{rel}: expected {expected}, got {actual}"
+
+
+def check_contains(root, expected_contains):
+    for rel, fragments in expected_contains.items():
+        text = (root / rel).read_text(encoding="utf-8")
+        for fragment in fragments:
+            assert fragment in text, f"{rel}: '{fragment}' missing from:\n{text}"
+
+
+def check_absent(root, expected_absent):
+    for rel, fragments in expected_absent.items():
+        text = (root / rel).read_text(encoding="utf-8")
+        for fragment in fragments:
+            assert (
+                fragment not in text
+            ), f"{rel}: '{fragment}' should be absent from:\n{text}"
+
+
+def check_toml(root, expected_toml):
+    for rel, expected in expected_toml.items():
+        actual = tomllib.loads((root / rel).read_text(encoding="utf-8"))
+        assert actual == expected, f"{rel}: expected {expected}, got {actual}"
+
+
 def collect_cases():
     registry = build_registry()
     for name in registry.list_tools():
@@ -88,3 +130,7 @@ def test_tool(tool_registry, jail_path, tool_name, case):
     result = tool.method(**case.args)
     assert matches(case.expected, result), f"Expected {case.expected}, got {result}"
     check_paths(jail_path, case.expected_paths)
+    check_json(jail_path, case.expected_json)
+    check_yaml(jail_path, case.expected_yaml)
+    check_contains(jail_path, case.expected_contains)
+    check_absent(jail_path, case.expected_absent)

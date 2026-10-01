@@ -2,8 +2,7 @@ from deer.tools.builtin import (
     FileManager,
     GitManager,
     SearchManager,
-    MemoryManager,
-    NetworkManager,
+    HTTPClient,
     RuntimeManager,
     StructuredDataInspector,
     SystemInspector,
@@ -23,7 +22,6 @@ class Preset:
         GitManager,
         SearchManager,
         RuntimeManager,
-        # MemoryManager,
     }
 
     CODE_EDITOR = {
@@ -38,30 +36,26 @@ class Preset:
         StructuredDataInspector,
         FileManager,
         SearchManager,
-        # MemoryManager,
     }
 
     SYSTEM_ADMIN = {
         SystemInspector,
         RuntimeManager,
         FileManager,
-        # MemoryManager,
         SearchManager,
     }
 
     WEB_AUTONOMOUS = {
-        NetworkManager,
+        HTTPClient,
         FileManager,
         SearchManager,
-        # MemoryManager,
     }
 
     ALL_TOOLS = {
         FileManager,
         GitManager,
         SearchManager,
-        # MemoryManager,
-        NetworkManager,
+        HTTPClient,
         RuntimeManager,
         StructuredDataInspector,
         SystemInspector,
