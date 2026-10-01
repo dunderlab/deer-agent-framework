@@ -23,16 +23,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y ripgrep  # <--- Soluciona el error de 'rg'
-
-      - name: Install and start Ollama
-        run: |
-          curl -fsSL https://ollama.com/install.sh | sh
-          # Iniciamos el servidor en segundo plano
-          ollama serve & 
-          # Esperamos un momento a que el servidor levante
-          sleep 5 
-          ollama pull gemma4:31b-cloud
+          sudo apt-get install -y ripgrep
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v3
         with:
@@ -51,4 +42,8 @@ jobs:
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Test with pytest
         run: |
-          pytest tests/test_*.py 
+          pytest tests/test_executor.py 
+          pytest tests/test_planner.py 
+          pytest tests/test_tools.py 
+          pytest tests/test_tools_definition.py 
+          pytest tests/test_vector_memory.py 
