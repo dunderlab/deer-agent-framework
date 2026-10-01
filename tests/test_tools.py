@@ -1,5 +1,6 @@
 import pytest
 from deer.tools import ToolRegistry, Preset
+from typing import get_args, get_origin
 
 
 def build_registry() -> ToolRegistry:
@@ -8,7 +9,10 @@ def build_registry() -> ToolRegistry:
     return tr
 
 
-def prepare_files(root, files):
+def prepare_files(root, files, dirs):
+    for rel_dir in dirs:
+        (root / rel_dir).mkdir(parents=True, exist_ok=True)
+
     for rel_path, content in files.items():
         target = root / rel_path
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -31,6 +35,10 @@ def tool_registry(jail_path):
 
 
 def matches(expected, actual) -> bool:
+    origin = get_origin(expected)
+    if origin is list:
+        (item_type,) = get_args(expected)
+        return isinstance(actual, list) and all(matches(item_type, x) for x in actual)
     if isinstance(expected, type):
         return isinstance(actual, expected)
     if isinstance(expected, dict):
@@ -60,7 +68,7 @@ def collect_cases():
 
 @pytest.mark.parametrize("tool_name, case", collect_cases())
 def test_tool(tool_registry, jail_path, tool_name, case):
-    prepare_files(jail_path, case.files)
+    prepare_files(jail_path, case.files, case.dirs)
 
     tool = tool_registry.get(tool_name)
     result = tool.method(**case.args)
