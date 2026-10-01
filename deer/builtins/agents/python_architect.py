@@ -1,18 +1,21 @@
 from deer import DeterministicAgent
-
-from deer.evals import AgentREPL
-from deer.parser import get_driver_from_parser, get_path_from_parser
-
+from deer.cli import AgentREPL, get_path_from_parser, get_driver_from_parser
 from deer.tools import ToolRegistry, Preset
-from deer.core import VectorMemory
+from deer.tools.builtin import HTTPClient, SystemObserver
 from deer.drivers import OllamaDriver
+from deer.memory import VectorMemory
 
 from pathlib import Path
 
 # Infrastructure
 driver = get_driver_from_parser() or OllamaDriver(model_name="gemma4:31b-cloud")
 memory = VectorMemory(path=Path.cwd() / ".deer" / "vector_db")
-registry = ToolRegistry(Preset.CODE_REPAIR | Preset.CODE_EDITOR | Preset.DATA_ANALYST)
+registry = ToolRegistry(
+    Preset.CODE_REPAIR
+    | Preset.CODE_EDITOR
+    | Preset.DATA_ANALYST
+    | {HTTPClient, SystemObserver}
+)
 working_dir = get_path_from_parser() or Path.cwd()
 
 agent = DeterministicAgent(
