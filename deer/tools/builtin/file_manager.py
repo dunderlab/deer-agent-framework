@@ -12,8 +12,16 @@ class FileManager(ToolProvider):
     @tool(
         modifies_state=True,
         tests=[
-            Case({"path": "a.txt", "content": "hola"}, {"exists": True}),
-            Case({"path": "a/b/c.txt", "content": "hola"}, {"exists": True}),
+            Case(
+                {"path": "a.txt", "content": "hola"},
+                {"exists": True},
+                expected_paths=["a.txt"],
+            ),
+            Case(
+                {"path": "a/b/c.txt", "content": "hola"},
+                {"exists": True},
+                expected_paths=["a/b/c.txt"],
+            ),
         ],
     )
     def new_file(self, path: str, content: str) -> Return(exists=bool):
@@ -61,7 +69,8 @@ class FileManager(ToolProvider):
             Case(
                 {"path": "notes/a.txt"},
                 {"success": True},
-                files={"notes/a.txt": "hola"},
+                files={"notes/a.txt": "a", "notes/b.txt": "b"},
+                expected_paths=["notes/b.txt"],
             ),
         ],
     )
@@ -85,6 +94,7 @@ class FileManager(ToolProvider):
             Case(
                 {"path": "a"},
                 {"success": True},
+                expected_paths=["a/"],
             ),
         ],
     )
@@ -103,6 +113,14 @@ class FileManager(ToolProvider):
                 {"path": "a"},
                 {"success": True},
                 dirs=["a"],
+                expected_paths=[],
+            ),
+            Case(
+                {"path": "a"},
+                {"success": True},
+                dirs=["b"],
+                expected_paths=["b"],
+                raises=FileNotFoundError,
             ),
         ],
     )
@@ -115,7 +133,7 @@ class FileManager(ToolProvider):
         if safe_path.is_dir():
             shutil.rmtree(safe_path)
         else:
-            raise ValueError(f"'{path}' is not a directory or does not exist.")
+            raise FileNotFoundError(f"'{path}' is not a directory or does not exist.")
 
         if safe_path == self.jail:
             self.jail.mkdir(parents=True, exist_ok=True)
@@ -131,7 +149,8 @@ class FileManager(ToolProvider):
             Case(
                 {"paths": ["a", "b", "c", "d"]},
                 {"num_deleted": 2, "num_errors": 2, "error_messages": list[str]},
-                files={"a": "a", "c": "c"},
+                files={"a": "a", "c": "c", "e": "e"},
+                expected_paths=["e"],
             ),
         ],
     )
