@@ -11,6 +11,7 @@ class Case:
     args: dict[str, Any]
     expected: dict[str, Any] | None = None
     files: dict[str, str | bytes] = field(default_factory=dict)
+    dirs: list[str] = field(default_factory=list)
 
 
 def Return(**fields: Any) -> type[BaseModel]:
