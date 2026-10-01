@@ -20,14 +20,18 @@ from deer.tools.builtin import (
 
 class Preset:
 
+    # For diagnosing, fixing, and verifying bugs in existing code.
     CODE_REPAIR = {
         FileManager,
         GitManager,
         CodeSearcher,
         CommandRunner,
         ProcessManager,
+        PythonStructEditor,
+        DependencyAnalyzer,
     }
 
+    # For structural changes to source code and project configurations.
     CODE_EDITOR = {
         PythonStructEditor,
         DependencyAnalyzer,
@@ -35,15 +39,20 @@ class Preset:
         XMLEditor,
         YAMLEditor,
         TOMLEditor,
+        CommandRunner,
+        GitManager,
     }
 
+    # For analyzing and extracting insights from structured datasets.
     DATA_ANALYST = {
         SQLiteManager,
         CSVManager,
         FileManager,
         CodeSearcher,
+        LogicProvider,
     }
 
+    # For monitoring and managing system health and background processes.
     SYSTEM_ADMIN = {
         SystemObserver,
         CommandRunner,
@@ -52,10 +61,30 @@ class Preset:
         CodeSearcher,
     }
 
-    WEB_AUTONOMOUS = {
+    # For interacting with remote endpoints and processing network data.
+    NETWORK_OPERATOR = {
         HTTPClient,
         FileManager,
         CodeSearcher,
+        JSONEditor,
+        CSVManager,
+    }
+
+    # For surgical structural improvements and impact analysis.
+    REFACTORING_EXPERT = {
+        PythonStructEditor,
+        DependencyAnalyzer,
+        CodeSearcher,
+        GitManager,
+    }
+
+    # For safely modifying configuration files without touching source code.
+    CONFIG_SPECIALIST = {
+        JSONEditor,
+        XMLEditor,
+        YAMLEditor,
+        TOMLEditor,
+        FileManager,
     }
 
     ALL_TOOLS = {
