@@ -71,7 +71,8 @@ from pathlib import Path
 from deer.core.agent import DeterministicAgent
 from deer.memory import VectorMemory
 from deer.drivers import OllamaDriver
-from deer.tools import ToolRegistry, Preset
+from deer.tools import ToolRegistry
+from deer.tools.presets import Preset
 
 # Infrastructure
 driver = OllamaDriver(model_name="llama3")

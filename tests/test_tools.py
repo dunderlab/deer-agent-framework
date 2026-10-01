@@ -6,7 +6,8 @@ from ruamel.yaml import YAML
 import tomllib
 
 
-from deer.tools import ToolRegistry, Preset
+from deer.tools import ToolRegistry
+from deer.tools.presets import Preset
 
 _safe_yaml = YAML(typ="safe")
 
