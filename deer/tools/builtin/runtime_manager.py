@@ -1,181 +1,102 @@
-import shlex
 from dataclasses import dataclass
-from typing import Literal, get_args
+from typing import Literal
 
 from deer.tools import ToolProvider, tool
-from deer.tools.schemas import Return, CommandOut
+from deer.tools.schemas import Case, CommandOut
 
+# Use the Literal directly in the method signature to expose options to the agent
 Command = Literal[
     "python", "python3", "gcc", "g++", "javac", "npm", "node", "jest", "vitest"
 ]
+MAX_TIMEOUT = 300
+
+# Standard response for rejected operations
+REJECTED = {"stdout": "", "stderr": str, "returncode": -1, "message": str}
+
+
+def _failure(message: str) -> dict:
+    """Helper to construct a standardized failure response."""
+    return {"stdout": "", "stderr": message, "returncode": -1, "message": message}
 
 
 @dataclass
-class RuntimeManager(ToolProvider):
+class CommandRunner(ToolProvider):
+    """
+    Provides capabilities to execute a restricted set of compilers,
+    interpreters, and test runners within the jailed environment.
+    """
 
-    @property
-    def allowed_commands(self):
-        return list(get_args(Command)) + ["pgrep", "ps", "kill"]
+    @tool(
+        modifies_state=True,
+        tests=[
+            # Test: Invalid timeout (too low)
+            Case(
+                {"binary": "python3", "args": ["--version"], "timeout_seconds": 0},
+                {**REJECTED, "message": str},
+            ),
+            # Test: Jailbreak attempt (path traversal)
+            Case(
+                {"binary": "python3", "args": ["--version"], "path": "../outside"},
+                raises=Exception,
+            ),
+            # Test: Basic successful execution
+            Case(
+                {"binary": "python3", "args": ["-c", "print('hi')"]},
+                {
+                    "stdout": "hi\n",
+                    "stderr": str,
+                    "returncode": 0,
+                    "message": str,
+                },
+            ),
+        ],
+    )
+    def run_program(
+        self,
+        binary: Command,
+        args: list[str],
+        path: str = ".",
+        timeout_seconds: int = 60,
+    ) -> CommandOut:
+        """Executes a specific binary to compile, test, or run scripts.
+        Choose 'binary' from the allowed list. Pass flags and file paths as a list in 'args'.
+        Set working directory via 'path' and execution time via 'timeout_seconds' (1-300s). Shell operators (;, &&, |, >, <) are NOT supported.
+        """
 
-    @tool()
-    def execute_test_suite(self, command: Command, path: str = ".") -> CommandOut:
-        """Executes a test suite using allowed commands (e.g., pytest, npm test) with a 60-second timeout. Validates the command against a security whitelist before execution."""
-        args = shlex.split(command)
-        if not args:
-            return {
-                "stdout": "",
-                "stderr": "Empty command",
-                "returncode": -1,
-                "message": "Command cannot be empty.",
-            }
+        # 1. Validate path boundaries
+        self.jailed_path(path)
 
-        base_cmd = args[0]
+        # 2. Validate timeout constraints
+        if not 1 <= timeout_seconds <= MAX_TIMEOUT:
+            return _failure(f"timeout_seconds must be between 1 and {MAX_TIMEOUT}.")
 
-        # 1. Security Check (Whitelist)
-        if base_cmd not in self.allowed_commands:
-            return {
-                "stdout": "",
-                "stderr": f"Command '{base_cmd}' is not allowed.",
-                "returncode": -1,
-                "message": f"Security restriction: '{base_cmd}' is not in the allowed list.",
-            }
-
-        # 2. Availability Check (JIT)
+        # 3. Verify binary exists in environment
         try:
-            self.check_command(base_cmd)
+            self.check_command(binary)
         except Exception as e:
-            return {
-                "stdout": "",
-                "stderr": str(e),
-                "returncode": -1,
-                "message": f"Environment error: {str(e)}",
-            }
+            return _failure(f"Environment error: {e}")
 
-        # 3. Execution
+        # 4. Execution
         try:
-            result = self.run_command(command, cwd=path, timeout_seconds=60)
-            return {
-                **result,
-                "message": (
-                    "Test suite execution completed."
-                    if result["returncode"] == 0
-                    else "Test suite failed."
-                ),
-            }
-        except Exception as e:
-            return {
-                "stdout": "",
-                "stderr": str(e),
-                "returncode": -1,
-                "message": f"Execution error: {str(e)}",
-            }
+            # We construct the command by quoting the binary and each argument.
+            # This ensures that arguments containing spaces or special characters
+            # are handled safely by the underlying run_command.
+            import shlex
 
-    @tool(modifies_state=True)
-    def compile_source_code(self, command: Command, path: str = ".") -> CommandOut:
-        """Invokes a language compiler (e.g., gcc, javac) to build binaries or validate syntax. Limited by a 30-second timeout and a strict security whitelist."""
-        args = shlex.split(command)
-        if not args:
-            return {
-                "stdout": "",
-                "stderr": "Empty command",
-                "returncode": -1,
-                "message": "Command cannot be empty.",
-            }
+            safe_command = shlex.join([binary] + args)
 
-        base_cmd = args[0]
-
-        # 1. Security Check
-        if base_cmd not in self.allowed_commands:
-            return {
-                "stdout": "",
-                "stderr": f"Command '{base_cmd}' is not allowed.",
-                "returncode": -1,
-                "message": "Security restriction.",
-            }
-
-        # 2. Availability Check (JIT)
-        try:
-            self.check_command(base_cmd)
-        except Exception as e:
-            return {
-                "stdout": "",
-                "stderr": str(e),
-                "returncode": -1,
-                "message": f"Compiler not found: {str(e)}",
-            }
-
-        # 3. Execution
-        try:
-            result = self.run_command(command, cwd=path, timeout_seconds=30)
-            return {
-                **result,
-                "message": (
-                    "Compilation successful."
-                    if result["returncode"] == 0
-                    else "Compilation failed."
-                ),
-            }
-        except Exception as e:
-            return {
-                "stdout": "",
-                "stderr": str(e),
-                "returncode": -1,
-                "message": f"Compilation error: {str(e)}",
-            }
-
-    @tool()
-    def check_process_status(
-        self, process_name: str
-    ) -> Return(running=bool, message=str):
-        """Monitors the execution state of background processes using system tools (pgrep/ps). Essential for verifying if services or long-running tasks are active."""
-        # For monitoring, we check which tool is available JIT
-        try:
-            if "pgrep" in self.allowed_commands:
-                try:
-                    self.check_command("pgrep")
-                    result = self.run_command(
-                        f"pgrep {process_name}", cwd=".", timeout_seconds=5
-                    )
-                    return {
-                        "running": result["returncode"] == 0,
-                        "message": f"Checked via pgrep.",
-                    }
-                except Exception:
-                    pass  # Fallback to ps
-
-            if "ps" in self.allowed_commands:
-                try:
-                    self.check_command("ps")
-                    result = self.run_command("ps -e", cwd=".", timeout_seconds=5)
-                    return {
-                        "running": process_name in result["stdout"],
-                        "message": f"Checked via ps.",
-                    }
-                except Exception:
-                    pass
-
-            return {
-                "running": False,
-                "message": "No process monitoring tools available.",
-            }
-        except Exception as e:
-            return {"running": False, "message": f"Status check error: {str(e)}"}
-
-    @tool(modifies_state=True)
-    def terminate_process(
-        self, process_name: str, signal_type: Literal["TERM", "KILL"]
-    ) -> Return(success=bool, message=str):
-        """Sends termination signals to active processes. Use this to manually stop hung processes or cleanup the environment after execution."""
-        try:
-            self.check_command("kill")
             result = self.run_command(
-                f"kill -{signal_type} $(pgrep {process_name})",
-                cwd=".",
-                timeout_seconds=5,
+                safe_command, cwd=path, timeout_seconds=timeout_seconds
             )
-            return {
-                "success": result["returncode"] == 0,
-                "message": f"Process '{process_name}' terminated successfully.",
-            }
         except Exception as e:
-            return {"success": False, "message": f"Termination error: {str(e)}"}
+            return _failure(f"Execution error: {e}")
+
+        # 5. Response formatting
+        exit_code = result.get("returncode", -1)
+        status_message = (
+            "Command completed successfully."
+            if exit_code == 0
+            else f"Command failed with exit code {exit_code}."
+        )
+
+        return {**result, "message": status_message}
