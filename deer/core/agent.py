@@ -134,9 +134,9 @@ class DeterministicAgent:
 
         logger.info(f"Trace generated in {filename}")
 
-    def clear_working_dir(self, ignore=[]):
+    def clear_working_dir(self, ignore=None):
         for item in self.working_dir.iterdir():
-            if item in ignore:
+            if ignore and item in ignore:
                 continue
 
             full_path = self.working_dir / item

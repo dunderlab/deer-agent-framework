@@ -14,7 +14,7 @@ _MISSING = object()
 def tool(
     *,
     modifies_state: bool = False,
-    tests: Optional[list[Case]] = [],
+    tests: Optional[list[Case]] = None,
 ):
     """Mark an instance method as a deterministic tool."""
 
@@ -82,7 +82,7 @@ def _build_tool_metadata(
     name: str,
     description: str,
     modifies_state: bool,
-    tests: list = [],
+    tests: list = None,
 ) -> dict[str, Any]:
     if not name or not name.strip():
         raise ValueError("Tool name cannot be empty.")
