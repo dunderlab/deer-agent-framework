@@ -1,7 +1,7 @@
 from deer import DeterministicAgent
 from deer.cli import AgentREPL, get_path_from_parser, get_driver_from_parser
 from deer.tools import ToolRegistry, Preset
-from deer.tools.builtin import HTTPClient, SystemObserver
+from deer.tools.providers import HTTPClient, SystemObserver
 from deer.drivers import OllamaDriver
 from deer.memory import VectorMemory
 
