@@ -1,4 +1,4 @@
-from deer.tools.builtin import (
+from deer.tools.providers import (
     FileManager,
     GitManager,
     CodeSearcher,

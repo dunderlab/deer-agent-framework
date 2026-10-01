@@ -103,7 +103,7 @@ class DevCommandRunner(BaseCommandRunner):
             ),
         ],
     )
-    def run_program(
+    def run_dev_program(
         self,
         binary: DevCommand,
         args: List[str],
@@ -133,7 +133,7 @@ class SysAdminRunner(BaseCommandRunner):
             ),
         ],
     )
-    def run_program(
+    def run_admin_program(
         self,
         binary: AdminCommand,
         args: List[str],
