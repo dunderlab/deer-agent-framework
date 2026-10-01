@@ -115,49 +115,6 @@ def _is_forbidden_attr(attr: str) -> bool:
     return attr in FORBIDDEN_ATTRS or attr.startswith(FORBIDDEN_ATTR_PREFIXES)
 
 
-# class LogicProvider(ToolProvider):
-#     @tool(modifies_state=False)
-#     def evaluate(
-#         self, expression: str, context: Dict[str, Any]
-#     ) -> Return(result=Any, success=bool, error=str):
-#         """Evaluates a mathematical or logical Python expression safely.
-#         Allows basic arithmetic, comparisons, list/dict comprehensions, and a set of safe math functions.
-#         Example: expression="sum([x for x in data if x > 10])", context={"data": [1, 12, 5, 20]}
-#         """
-#         try:
-#             tree = ast.parse(expression, mode="eval")
-#
-#             for node in ast.walk(tree):
-#                 if (
-#                     type(node) not in ALLOWED_NODE_TYPES
-#                     and type(node) is not ast.Expression
-#                 ):
-#                     return {
-#                         "result": None,
-#                         "success": False,
-#                         "error": f"Security Breach: Forbidden operation detected: {type(node).__name__}",
-#                     }
-#
-#                 if isinstance(node, ast.Attribute):
-#                     if node.attr.startswith("__"):
-#                         return {
-#                             "result": None,
-#                             "success": False,
-#                             "error": f"Security Breach: Access to private attribute {node.attr} is forbidden.",
-#                         }
-#
-#             result = eval(
-#                 compile(tree, filename="<dynamic_logic>", mode="eval"),
-#                 SAFE_GLOBALS,
-#                 context,
-#             )
-#
-#             return {"result": result, "success": True, "error": ""}
-#
-#         except Exception as e:
-#             return {"result": None, "success": False, "error": str(e)}
-
-
 class LogicProvider(ToolProvider):
     @tool(
         modifies_state=False,
@@ -361,7 +318,10 @@ class LogicProvider(ToolProvider):
             # "__builtins__" goes last so the context cannot restore it.
             namespace = {**SAFE_GLOBALS, **(context or {}), "__builtins__": {}}
 
+            # pylint: disable=eval-used
             result = eval(compile(tree, "<dynamic_logic>", "eval"), namespace)
+            # pylint: enable=eval-used
+
             return {"result": result, "success": True, "error": ""}
 
         except Exception as e:

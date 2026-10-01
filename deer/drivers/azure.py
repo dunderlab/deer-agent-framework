@@ -32,3 +32,9 @@ class AzureOpenAIDriver(OpenAIStandardDriver):
 
     def __repr__(self) -> str:
         return "AzureOpenAI"
+
+    def generate(self, prompt):
+        return ""
+
+    def generate_stream(self, prompt):
+        return ""
