@@ -1,6 +1,6 @@
 import pytest
 from deer.tools import ToolRegistry
-from deer.tools.builtin import LogicProvider
+from deer.tools.providers import LogicProvider
 from deer.core.executor import PipelineExecutor
 from deer.models import ExecutionPlan, ToolStep
 

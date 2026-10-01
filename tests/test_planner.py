@@ -1,6 +1,6 @@
 import pytest
 from deer.tools import ToolRegistry
-from deer.tools.builtin import FileManager
+from deer.tools.providers import FileManager
 from deer.drivers import OllamaDriver
 
 from deer.core.planner import Planner, Role, ChatMessage
