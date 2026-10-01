@@ -1,6 +1,6 @@
 from .file_manager import FileManager
 from .git_manager import GitManager
-from .runtime_manager import CommandRunner
+from .runtime_manager import DevCommandRunner, SysAdminRunner
 from .process_manager import ProcessManager
 from .sqlite_manager import SQLiteManager
 from .csv_manager import CSVManager

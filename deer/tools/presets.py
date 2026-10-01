@@ -3,7 +3,8 @@ from deer.tools.builtin import (
     GitManager,
     CodeSearcher,
     HTTPClient,
-    CommandRunner,
+    DevCommandRunner,
+    SysAdminRunner,
     ProcessManager,
     SQLiteManager,
     CSVManager,
@@ -25,7 +26,7 @@ class Preset:
         FileManager,
         GitManager,
         CodeSearcher,
-        CommandRunner,
+        DevCommandRunner,
         ProcessManager,
         PythonStructEditor,
         DependencyAnalyzer,
@@ -39,7 +40,7 @@ class Preset:
         XMLEditor,
         YAMLEditor,
         TOMLEditor,
-        CommandRunner,
+        DevCommandRunner,
         GitManager,
     }
 
@@ -55,7 +56,7 @@ class Preset:
     # For monitoring and managing system health and background processes.
     SYSTEM_ADMIN = {
         SystemObserver,
-        CommandRunner,
+        SysAdminRunner,
         ProcessManager,
         FileManager,
         CodeSearcher,
@@ -92,7 +93,8 @@ class Preset:
         GitManager,
         CodeSearcher,
         HTTPClient,
-        CommandRunner,
+        DevCommandRunner,
+        SysAdminRunner,
         ProcessManager,
         SQLiteManager,
         CSVManager,

@@ -1,16 +1,12 @@
+import shlex
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, TypeVar, Generic, List, Dict, Any
 
 from deer.tools import ToolProvider, tool
 from deer.tools.schemas import Case, CommandOut
 
-# Use the Literal directly in the method signature to expose options to the agent
-Command = Literal[
-    "python", "python3", "gcc", "g++", "javac", "npm", "node", "jest", "vitest"
-]
+# --- Global Constants ---
 MAX_TIMEOUT = 300
-
-# Standard response for rejected operations
 REJECTED = {"stdout": "", "stderr": str, "returncode": -1, "message": str}
 
 
@@ -19,50 +15,43 @@ def _failure(message: str) -> dict:
     return {"stdout": "", "stderr": message, "returncode": -1, "message": message}
 
 
-@dataclass
-class CommandRunner(ToolProvider):
+# --- Specialized Command Sets ---
+# We define Literals separately so each Agent sees only its relevant commands
+DevCommand = Literal[
+    "python", "python3", "gcc", "g++", "javac", "npm", "node", "jest", "vitest"
+]
+
+AdminCommand = Literal[
+    "ls",
+    "grep",
+    "df",
+    "du",
+    "chmod",
+    "chown",
+    "curl",
+    "wget",
+    "tail",
+    "cat",
+    "mkdir",
+    "rm",
+    "ps",
+    "top",
+    "netstat",
+    "ss",
+]
+
+# --- Base Logic ---
+
+
+class BaseCommandRunner(ToolProvider):
     """
-    Provides capabilities to execute a restricted set of compilers,
-    interpreters, and test runners within the jailed environment.
+    Base class providing the core execution logic for command-line tools.
+    Not intended to be used as a tool itself.
     """
 
-    @tool(
-        modifies_state=True,
-        tests=[
-            # Test: Invalid timeout (too low)
-            Case(
-                {"binary": "python3", "args": ["--version"], "timeout_seconds": 0},
-                {**REJECTED, "message": str},
-            ),
-            # Test: Jailbreak attempt (path traversal)
-            Case(
-                {"binary": "python3", "args": ["--version"], "path": "../outside"},
-                raises=Exception,
-            ),
-            # Test: Basic successful execution
-            Case(
-                {"binary": "python3", "args": ["-c", "print('hi')"]},
-                {
-                    "stdout": "hi\n",
-                    "stderr": str,
-                    "returncode": 0,
-                    "message": str,
-                },
-            ),
-        ],
-    )
-    def run_program(
-        self,
-        binary: Command,
-        args: list[str],
-        path: str = ".",
-        timeout_seconds: int = 60,
+    def _execute_command(
+        self, binary: str, args: List[str], path: str, timeout_seconds: int
     ) -> CommandOut:
-        """Executes a specific binary to compile, test, or run scripts.
-        Choose 'binary' from the allowed list. Pass flags and file paths as a list in 'args'.
-        Set working directory via 'path' and execution time via 'timeout_seconds' (1-300s). Shell operators (;, &&, |, >, <) are NOT supported.
-        """
-
         # 1. Validate path boundaries
         self.jailed_path(path)
 
@@ -78,13 +67,7 @@ class CommandRunner(ToolProvider):
 
         # 4. Execution
         try:
-            # We construct the command by quoting the binary and each argument.
-            # This ensures that arguments containing spaces or special characters
-            # are handled safely by the underlying run_command.
-            import shlex
-
             safe_command = shlex.join([binary] + args)
-
             result = self.run_command(
                 safe_command, cwd=path, timeout_seconds=timeout_seconds
             )
@@ -98,5 +81,67 @@ class CommandRunner(ToolProvider):
             if exit_code == 0
             else f"Command failed with exit code {exit_code}."
         )
-
         return {**result, "message": status_message}
+
+
+# --- Specialized Tool Implementations ---
+
+
+@dataclass
+class DevCommandRunner(BaseCommandRunner):
+    """
+    Provides capabilities to execute development tools (compilers, interpreters)
+    within the jailed environment.
+    """
+
+    @tool(
+        modifies_state=True,
+        tests=[
+            Case(
+                {"binary": "python3", "args": ["-c", "print('hi')"]},
+                {"stdout": "hi\n", "stderr": str, "returncode": 0, "message": str},
+            ),
+        ],
+    )
+    def run_program(
+        self,
+        binary: DevCommand,
+        args: List[str],
+        path: str = ".",
+        timeout_seconds: int = 60,
+    ) -> CommandOut:
+        """Executes a development binary to compile, test, or run scripts.
+        Choose 'binary' from the dev-allowed list. Pass flags as a list in 'args'.
+        Set working directory via 'path' and execution time via 'timeout_seconds' (1-300s).
+        """
+        return self._execute_command(binary, args, path, timeout_seconds)
+
+
+@dataclass
+class SysAdminRunner(BaseCommandRunner):
+    """
+    Provides capabilities to execute system administration tools
+    within the jailed environment.
+    """
+
+    @tool(
+        modifies_state=True,
+        tests=[
+            Case(
+                {"binary": "ls", "args": ["-la"], "path": "."},
+                {"stdout": str, "stderr": str, "returncode": 0, "message": str},
+            ),
+        ],
+    )
+    def run_program(
+        self,
+        binary: AdminCommand,
+        args: List[str],
+        path: str = ".",
+        timeout_seconds: int = 60,
+    ) -> CommandOut:
+        """Executes a system administration binary.
+        Choose 'binary' from the admin-allowed list. Pass flags as a list in 'args'.
+        Set working directory via 'path' and execution time via 'timeout_seconds' (1-300s).
+        """
+        return self._execute_command(binary, args, path, timeout_seconds)
