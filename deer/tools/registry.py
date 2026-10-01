@@ -26,6 +26,9 @@ class ToolRegistry:
         if not tool.name or not tool.name.strip():
             raise ValueError("Tool name cannot be empty.")
 
+        if tool.name in self._tools:
+            raise ValueError(f"Tool with name '{tool.name}' is already registered.")
+
         self._tools[tool.name] = tool
 
     def _register_collection(self, provider: Any) -> None:

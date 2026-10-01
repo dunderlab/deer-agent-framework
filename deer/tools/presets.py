@@ -1,12 +1,14 @@
 from deer.tools.builtin import (
     FileManager,
     GitManager,
-    SearchManager,
+    CodeSearcher,
     HTTPClient,
-    RuntimeManager,
-    StructuredDataInspector,
-    SystemInspector,
-    PythonEditor,
+    CommandRunner,
+    ProcessManager,
+    SQLiteManager,
+    CSVManager,
+    SystemObserver,
+    PythonStructEditor,
     JSONEditor,
     XMLEditor,
     YAMLEditor,
@@ -20,12 +22,13 @@ class Preset:
     CODE_REPAIR = {
         FileManager,
         GitManager,
-        SearchManager,
-        RuntimeManager,
+        CodeSearcher,
+        CommandRunner,
+        ProcessManager,
     }
 
     CODE_EDITOR = {
-        PythonEditor,
+        PythonStructEditor,
         JSONEditor,
         XMLEditor,
         YAMLEditor,
@@ -33,33 +36,37 @@ class Preset:
     }
 
     DATA_ANALYST = {
-        StructuredDataInspector,
+        SQLiteManager,
+        CSVManager,
         FileManager,
-        SearchManager,
+        CodeSearcher,
     }
 
     SYSTEM_ADMIN = {
-        SystemInspector,
-        RuntimeManager,
+        SystemObserver,
+        CommandRunner,
+        ProcessManager,
         FileManager,
-        SearchManager,
+        CodeSearcher,
     }
 
     WEB_AUTONOMOUS = {
         HTTPClient,
         FileManager,
-        SearchManager,
+        CodeSearcher,
     }
 
     ALL_TOOLS = {
         FileManager,
         GitManager,
-        SearchManager,
+        CodeSearcher,
         HTTPClient,
-        RuntimeManager,
-        StructuredDataInspector,
-        SystemInspector,
-        PythonEditor,
+        CommandRunner,
+        ProcessManager,
+        SQLiteManager,
+        CSVManager,
+        SystemObserver,
+        PythonStructEditor,
         JSONEditor,
         XMLEditor,
         YAMLEditor,
