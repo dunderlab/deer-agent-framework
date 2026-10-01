@@ -1,14 +1,9 @@
-from deer.tools import ToolProvider, tool
-from deer.tools.schemas import Return, Case
-
-
 from dataclasses import dataclass
 from pathlib import Path
 import shutil
 
-
-class FileManagerError(ValueError):
-    pass
+from deer.tools import ToolProvider, tool
+from deer.tools.schemas import Return, Case
 
 
 @dataclass
@@ -22,7 +17,9 @@ class FileManager(ToolProvider):
         ],
     )
     def new_file(self, path: str, content: str) -> Return(exists=bool):
-        """Writes literal content to a file at the specified path. OVERWRITES the file if it already exists. Automatically creates any missing parent directories. Returns existence confirmation."""
+        """Writes literal content to a file at the specified path. OVERWRITES the file if it already exists.
+        Automatically creates any missing parent directories. Returns existence confirmation.
+        """
         safe_path = self.jailed_path(path)
 
         safe_path.parent.mkdir(parents=True, exist_ok=True)
@@ -44,7 +41,8 @@ class FileManager(ToolProvider):
         ],
     )
     def read_file(self, path: str) -> Return(content=str):
-        """Reads the complete content of a file. Decodes as UTF-8 by default; falls back to raw string representation of bytes if decoding fails. Fails if the path is a directory or does not exist."""
+        """Reads the complete content of a file. Decodes as UTF-8 by default; falls back to raw string representation of bytes if decoding fails.
+        Fails if the path is a directory or does not exist."""
         safe_path = self.jailed_path(path)
 
         try:
@@ -57,9 +55,19 @@ class FileManager(ToolProvider):
             "content": content,
         }
 
-    @tool(modifies_state=True)
+    @tool(
+        modifies_state=True,
+        tests=[
+            Case(
+                {"path": "notes/a.txt"},
+                {"success": True},
+                files={"notes/a.txt": "hola"},
+            ),
+        ],
+    )
     def delete_file(self, path: str) -> Return(success=bool):
-        """Permanently deletes a file. Fails with a ValueError if the path points to a directory or does not exist. Does not affect parent directories. Returns success confirmation."""
+        """Permanently deletes a file. Fails with a ValueError if the path points to a directory or does not exist.
+        Does not affect parent directories. Returns success confirmation."""
         safe_path = self.jailed_path(path)
 
         if safe_path.is_file():
@@ -71,16 +79,37 @@ class FileManager(ToolProvider):
             "success": not safe_path.exists(),
         }
 
-    @tool(modifies_state=True)
-    def create_directory(self, path: str) -> Return(status=str):
-        """Idempotent operation: creates the directory and all necessary parent directories. If the directory already exists, it completes successfully without making changes."""
+    @tool(
+        modifies_state=True,
+        tests=[
+            Case(
+                {"path": "a"},
+                {"success": True},
+            ),
+        ],
+    )
+    def create_directory(self, path: str) -> Return(success=bool):
+        """Idempotent operation: creates the directory and all necessary parent directories.
+        If the directory already exists, it completes successfully without making changes.
+        """
         safe_path = self.jailed_path(path)
         safe_path.mkdir(parents=True, exist_ok=True)
-        return {"status": "success"}
+        return {"success": True}
 
-    @tool(modifies_state=True)
+    @tool(
+        modifies_state=True,
+        tests=[
+            Case(
+                {"path": "a"},
+                {"success": True},
+                dirs=["a"],
+            ),
+        ],
+    )
     def delete_directory(self, path: str) -> Return(success=bool):
-        """Recursively and IRREVERSIBLY deletes a directory and all its contents (files and subdirectories). Fails with a ValueError if the path points to a file or does not exist. Returns success confirmation."""
+        """Recursively and IRREVERSIBLY deletes a directory and all its contents (files and subdirectories).
+        Fails with a ValueError if the path points to a file or does not exist. Returns success confirmation.
+        """
         safe_path = self.jailed_path(path)
 
         if safe_path.is_dir():
@@ -96,11 +125,21 @@ class FileManager(ToolProvider):
                 "success": not safe_path.exists(),
             }
 
-    @tool(modifies_state=True)
+    @tool(
+        modifies_state=True,
+        tests=[
+            Case(
+                {"paths": ["a", "b", "c", "d"]},
+                {"num_deleted": 2, "num_errors": 2, "error_messages": list[str]},
+                files={"a": "a", "c": "c"},
+            ),
+        ],
+    )
     def bulk_delete(
         self, paths: list[str]
     ) -> Return(num_deleted=int, num_errors=int, error_messages=list[str]):
-        """Performs a bulk delete operation on a list of paths. Returns the number of successfully deleted files and any errors encountered."""
+        """Performs a bulk delete operation on a list of paths.
+        Returns the number of successfully deleted files and any errors encountered."""
         num_deleted = 0
         num_errors = 0
         error_messages = []
@@ -117,18 +156,59 @@ class FileManager(ToolProvider):
             "error_messages": error_messages,
         }
 
-    @tool()
+    @tool(
+        tests=[
+            Case(
+                {"path": "a"},
+                {
+                    "exists": True,
+                    "size_bytes": int,
+                    "is_dir": False,
+                    "is_file": True,
+                    "last_modified": float,
+                },
+                files={"a": "a"},
+            ),
+            Case(
+                {"path": "b"},
+                {
+                    "exists": False,
+                    "size_bytes": int,
+                    "is_dir": bool,
+                    "is_file": bool,
+                    "last_modified": float,
+                },
+            ),
+            Case(
+                {"path": "c"},
+                {
+                    "exists": True,
+                    "size_bytes": int,
+                    "is_dir": True,
+                    "is_file": False,
+                    "last_modified": float,
+                },
+                dirs=["c"],
+            ),
+        ],
+    )
     def get_file_info(self, path: str) -> Return(
         exists=bool,
         size_bytes=int,
         is_dir=bool,
         is_file=bool,
-        last_modified=float,
+        last_modified=float | int,
     ):
         """Retrieves system metadata for a path. Use this to verify existence and distinguish between files and directories before performing I/O operations."""
         safe_path = self.jailed_path(path)
         if not safe_path.exists():
-            return {"exists": False}
+            return {
+                "exists": False,
+                "size_bytes": 0,
+                "is_dir": False,
+                "is_file": False,
+                "last_modified": 0.0,
+            }
 
         stats = safe_path.stat()
         return {
@@ -139,9 +219,26 @@ class FileManager(ToolProvider):
             "last_modified": stats.st_mtime,
         }
 
-    @tool()
-    def directory_tree(self, path: str, max_depth: int) -> Return(tree=dict):
-        """Generates a structural map of the directory hierarchy. Useful for gaining spatial awareness of the project layout. Fails if the path is not a directory."""
+    @tool(
+        tests=[
+            Case(
+                {"path": "a", "max_depth": 99},
+                {
+                    "tree": "a/\n├── b/\n│   └── c/\n├── d/\n└── e/\n    └── f/\n        └── g/\n            └── h/\n                └── i/\n                    └── j/"
+                },
+                dirs=["a", "a/b/c", "a/d", "a/e/f/g/h/i/j"],
+            ),
+            Case(
+                {"path": "a", "max_depth": 2},
+                {"tree": "a/\n├── b/\n│   └── c/\n├── d/\n└── e/\n    └── f/"},
+                dirs=["a", "a/b/c", "a/d", "a/e/f/g/h/i/j"],
+            ),
+        ],
+    )
+    def directory_tree(self, path: str, max_depth: int) -> Return(tree=str):
+        """Generates a structural map of the directory hierarchy. Useful for gaining spatial awareness of the project layout.
+        Fails if the path is not a directory."""
+
         safe_path = self.jailed_path(path)
 
         if not safe_path.exists():
@@ -150,68 +247,89 @@ class FileManager(ToolProvider):
         if not safe_path.is_dir():
             raise ValueError(f"Path is not a directory: {path}")
 
-        def build_node(current_path: Path, depth: int = 0) -> dict:
-            relative_path = current_path.relative_to(self.jail)
+        lines = [f"{path}/"]
 
-            node = {
-                "name": current_path.name,
-                "path": str(relative_path),
-                "type": "directory" if current_path.is_dir() else "file",
-            }
-
-            if current_path.is_file():
-                node["size_bytes"] = current_path.stat().st_size
-                return node
-
+        def walk(current: Path, prefix: str, depth: int) -> None:
             if depth >= max_depth:
-                node["children"] = []
-                node["truncated"] = True
-                return node
+                return
 
             children = sorted(
-                current_path.iterdir(),
+                current.iterdir(),
                 key=lambda item: (not item.is_dir(), item.name.lower()),
             )
 
-            node["children"] = [build_node(child, depth + 1) for child in children]
-            return node
+            for i, child in enumerate(children):
+                is_last = i == len(children) - 1
+                connector = "└── " if is_last else "├── "
+                name = f"{child.name}/" if child.is_dir() else child.name
+                lines.append(f"{prefix}{connector}{name}")
 
-        return {
-            "tree": build_node(safe_path),
-        }
+                if child.is_dir():
+                    walk(child, prefix + ("    " if is_last else "│   "), depth + 1)
 
-    @tool(modifies_state=True)
+        walk(safe_path, "", 0)
+
+        return {"tree": "\n".join(lines)}
+
+    @tool(
+        modifies_state=True,
+        tests=[
+            Case(
+                {"path": "a.txt", "old_text": "a", "new_text": "b"},
+                {"success": False, "num_replacements": 2, "message": str},
+                files={"a.txt": "aa"},
+            ),
+            Case(
+                {
+                    "path": "a.txt",
+                    "old_text": "a",
+                    "new_text": "b",
+                    "replace_all": True,
+                },
+                {"success": True, "num_replacements": 2, "message": str},
+                files={"a.txt": "a-a"},
+            ),
+        ],
+    )
     def patch_file(
-        self, path: str, old_text: str, new_text: str
+        self, path: str, old_text: str, new_text: str, replace_all: bool = False
     ) -> Return(success=bool, num_replacements=int, message=str):
-        """Performs a surgical text replacement. ONLY SUCCEEDS IF EXACTLY ONE match for 'old_text' is found. This strict requirement prevents accidental corruption from ambiguous or missing search strings."""
+        """Performs a text replacement in a file. By default it ONLY SUCCEEDS IF EXACTLY ONE match for 'old_text' is found,
+        which prevents accidental corruption from ambiguous search strings. Set replace_all=True to replace every occurrence.
+        """
         safe_path = self.jailed_path(path)
-        with open(safe_path, "r") as f:
-            content = f.read()
 
-        num_replacements = content.count(old_text)
-
-        if num_replacements == 0:
+        if not old_text:
             return {
                 "success": False,
                 "num_replacements": 0,
-                "message": "Error: old_text not found in file.",
+                "message": "old_text must not be empty.",
             }
 
-        if num_replacements > 1:
+        content = safe_path.read_text()
+        num_matches = content.count(old_text)
+
+        if num_matches == 0:
             return {
                 "success": False,
-                "num_replacements": num_replacements,
-                "message": f"Ambiguity Error: {num_replacements} occurrences of old_text found. Please provide a more specific text block.",
+                "num_replacements": 0,
+                "message": "old_text not found in file.",
             }
 
-        patched_content = content.replace(old_text, new_text)
+        if num_matches > 1 and not replace_all:
+            return {
+                "success": False,
+                "num_replacements": num_matches,
+                "message": (
+                    f"{num_matches} matches found, nothing changed. "
+                    "Provide a more specific old_text or set replace_all=True."
+                ),
+            }
 
-        with open(safe_path, "w") as f:
-            f.write(patched_content)
+        safe_path.write_text(content.replace(old_text, new_text))
 
         return {
             "success": True,
-            "num_replacements": 1,
-            "message": "File patched successfully.",
+            "num_replacements": num_matches,
+            "message": f"Replaced {num_matches} occurrence(s).",
         }
