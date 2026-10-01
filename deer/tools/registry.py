@@ -114,7 +114,7 @@ class ToolRegistry:
             state_flag = "MODIFIES STATE" if tool.modifies_state else "READ ONLY"
 
             lines.append(
-                f"- {tool.name}({params_str}) -> {return_type} | {state_flag} | {tool.description}"
+                f"- {tool.name}({params_str}) -> {return_type} | {state_flag} | {tool.description.replace('\n', ' ')}"
             )
 
         return "\n".join(lines)
