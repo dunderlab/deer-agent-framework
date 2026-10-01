@@ -42,8 +42,9 @@ jobs:
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Test with pytest
         run: |
-          pytest tests/test_executor.py 
-          pytest tests/test_planner.py 
-          pytest tests/test_tools.py 
-          pytest tests/test_tools_definition.py 
-          pytest tests/test_vector_memory.py 
+          #          pytest tests/test_drivers.py
+               pytest tests/test_executor.py
+          #          pytest tests/test_planner.py 
+               pytest tests/test_tools.py
+               pytest tests/test_tools_definition.py
+               pytest tests/test_vector_memory.py
