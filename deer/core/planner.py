@@ -55,7 +55,7 @@ class Planner:
             "Respond exclusively with the JSON object. Do NOT wrap the response in markdown code blocks or add any introductory text."
         )
 
-    def build_conclusion_prompt(self, goal, trace_solution, trace_verification):
+    def build_conclusion_prompt(self, goal, trace_solution, trace_verification) -> str:
 
         if not trace_verification:
             verification = "VERIFICATION NO NEEDED"
