@@ -123,6 +123,12 @@ class DeterministicAgent:
             )
         ]
 
+    def format_bytes(self, size):
+        for unit in ["B", "KB", "MB", "GB"]:
+            if size < 1024:
+                return f"{size:.1f} {unit}"
+            size /= 1024
+
     def persist_state(self):
         context = {
             "agent_history": self.agent_history,
