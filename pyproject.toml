@@ -33,12 +33,12 @@ dependencies = [
     "ruamel.yaml>=0.19.1",
     "lxml>=6.1.1",
     "chromadb>=1.5.9",
+    "pandas>=3.0.3",
 ]
 
 [project.optional-dependencies]
 debug = [
     "matplotlib>=3.10.9",
-    "pandas>=3.0.3",
     "pytest>=9.0.3",
 ]
 
