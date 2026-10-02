@@ -80,8 +80,9 @@ class DeterministicAgent:
         # Pipeline Executer
         self.pipeline_executor = PipelineExecutor(tool_registry=self.tool_registry)
 
+        self.load_context = load_context
         if load_context:
-            self.load_context()
+            self.persist_state()
 
         else:
             # Agent History
@@ -122,7 +123,7 @@ class DeterministicAgent:
             )
         ]
 
-    def save_context(self):
+    def persist_state(self):
         context = {
             "agent_history": self.agent_history,
             "verificator_history": self.verificator_history,
@@ -130,11 +131,16 @@ class DeterministicAgent:
         with self.contex_file.open("wb") as f:
             pickle.dump(context, f)
 
-    def load_context(self):
+    def restore_state(self):
+        if not self.contex_file.exists():
+            return
+
         with self.contex_file.open("rb") as f:
             context = pickle.load(f)
-        for key in context:
-            setattr(self, key, context[key])
+            self.agent_history = context.get("agent_history", self.agent_history)
+            self.verificator_history = context.get(
+                "verificator_history", self.verificator_history
+            )
 
     def save_trace(self):
         obj = {
