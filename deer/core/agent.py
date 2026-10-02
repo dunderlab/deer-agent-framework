@@ -107,9 +107,6 @@ class DeterministicAgent:
         )
         logger.info(f"Authorized filesystem scope is restricted to: {working_dir}")
 
-    def set_registry_jail(self, dirpath):
-        self.tool_registry.set_jail(Path(dirpath))
-
     def clear_verificator_history(self):
         self.verificator_history = [
             ChatMessage(
