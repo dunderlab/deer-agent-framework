@@ -5,7 +5,9 @@ import subprocess
 
 from rich.console import Console
 from rich.markdown import Markdown
-from prompt_toolkit import prompt
+from rich.table import Table
+from rich.text import Text
+from prompt_toolkit import prompt, PromptSession
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.completion import Completer, WordCompleter
@@ -133,7 +135,7 @@ class AgentREPL:
             f"root: {self.agent.tool_registry.jail_path}  \n"
             f"{self.agent.driver}: {self.agent.driver.model_name}  \n"
         )
-        print("\n")
+        print("")
 
     def run_command(self, command):
         match command:
@@ -200,14 +202,33 @@ class AgentREPL:
     def repl(self):
         logger.setLevel(logging.CRITICAL)
         self.show_welcome()
+        self.pretty_print(f"----")
+
+        session = PromptSession(
+            erase_when_done=True,
+            history=self.prompt_history,
+            completer=self.completer,
+        )
+
+        def as_table(prompt, message):
+            table = Table.grid(expand=True)
+            table.add_column(width=len(prompt) + 1)
+            table.add_column()
+
+            table.add_row(
+                Text(prompt, style="bold cyan"),
+                Markdown(message),
+            )
+            return table
+
+        input_prompt = "&gt;&gt;&gt; "  # >>>
+        input_prompt_history = "USER |"
+        output_prompt_history = "DEER |"
 
         while True:
             try:
-                msg = prompt(
-                    HTML("<ansicyan><b>&gt;&gt;&gt; </b></ansicyan>"),
-                    history=self.prompt_history,
-                    completer=self.completer,
-                    # multiline=True,
+                msg = session.prompt(
+                    HTML(f"<ansicyan><b>{input_prompt}</b></ansicyan>")
                 )
                 self.save_prompt_history()
                 self.agent.save_context()
@@ -255,13 +276,29 @@ class AgentREPL:
                         spinner_style="dim",
                     ):
                         try:
-                            output = self.send(msg)
-                            self.pretty_print(f"    {output}")
+                            self.console.print(
+                                as_table(input_prompt_history, msg),
+                                Text("\n"),
+                                end="",
+                            )
 
-                            print("\n")
+                            # Call the LLM model
+                            output = self.send(msg)
+
+                            self.console.print(
+                                as_table(output_prompt_history, output),
+                                Text("\n"),
+                                Markdown("----"),
+                                end="",
+                            )
+
                         except KeyboardInterrupt:
-                            self.console.print("[dim]Command aborted by user[/]\n")
-                            # self.state_restore()
+                            self.console.print(
+                                "[dim]Command aborted by user[/]",
+                                Text("\n"),
+                                Markdown("----"),
+                                end="",
+                            )
                             continue
                         except EOFError:
                             break
