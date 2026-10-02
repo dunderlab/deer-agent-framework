@@ -1,20 +1,30 @@
-import os
 import pickle
 from collections import Counter
 from collections.abc import Iterable
 from typing import Any
+from pathlib import Path as Pathlib
 
 import matplotlib.colors as mcolors
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
 
-import pandas as pd
 
 NODE_WIDTH: int = 11
 MIN_CONTAINER_HEIGHT: int = 3
 MAX_CONTAINER_HEIGHT: int = 10
 ROW_GAP: int = 0
+
+
+def get_steps_from_trace_file(trace_filename):
+    trace_filename = Pathlib(trace_filename)
+
+    with trace_filename.open("rb") as f:
+        trace = pickle.load(f)
+        steps = []
+        for trace_ in trace["traces"]["solution"]:
+            steps.append([step.tool_name for step in trace_.steps])
+    return steps
 
 
 def scale_range(
@@ -559,7 +569,7 @@ def draw_sankey_on_axis(
 def plot_steps(
     figure: plt.Figure,
     planning_traces: list[list[str]],
-    validation_traces: list[list[str]],
+    # validation_traces: list[list[str]],
     color_map_name: str = "tab10",
     font_color: str = "#1F2937",
 ) -> None:
@@ -593,7 +603,7 @@ def plot_steps(
         planning_steps,
     )
 
-    planning_axis = figure.add_subplot(211)
+    planning_axis = figure.add_subplot(111)
 
     draw_sankey_on_axis(
         axis=planning_axis,
@@ -608,47 +618,47 @@ def plot_steps(
         font_color=font_color,
     )
 
-    validation_steps = [
-        f"STEP-{index}"
-        for index in range(
-            1,
-            1 + max(len(trace) for trace in validation_traces),
-        )
-    ]
+    # validation_steps = [
+    #     f"STEP-{index}"
+    #     for index in range(
+    #         1,
+    #         1 + max(len(trace) for trace in validation_traces),
+    #     )
+    # ]
 
-    validation_tools = ["Logic"] + list(
-        {tool for trace in validation_traces for tool in trace}
-    )
+    # validation_tools = ["Logic"] + list(
+    #     {tool for trace in validation_traces for tool in trace}
+    # )
 
-    validation_palette = {
-        tool_name: mcolors.to_hex(color_map(index))
-        for index, tool_name in enumerate(validation_tools)
-    }
+    # validation_palette = {
+    #     tool_name: mcolors.to_hex(color_map(index))
+    #     for index, tool_name in enumerate(validation_tools)
+    # }
 
-    (
-        validation_positions,
-        validation_heights,
-        validation_max_height,
-    ) = precompute_global_heights(
-        validation_traces,
-        validation_tools,
-        validation_steps,
-    )
+    # (
+    #     validation_positions,
+    #     validation_heights,
+    #     validation_max_height,
+    # ) = precompute_global_heights(
+    #     validation_traces,
+    #     validation_tools,
+    #     validation_steps,
+    # )
 
-    validation_axis = figure.add_subplot(212)
-
-    draw_sankey_on_axis(
-        axis=validation_axis,
-        trace_sequences=validation_traces,
-        tool_names=validation_tools,
-        step_columns=validation_steps,
-        color_palette=validation_palette,
-        chart_title="VALIDATION",
-        row_base_positions=validation_positions,
-        max_row_heights=validation_heights,
-        global_max_height=validation_max_height,
-        font_color=font_color,
-    )
+    # validation_axis = figure.add_subplot(212)
+    #
+    # draw_sankey_on_axis(
+    #     axis=validation_axis,
+    #     trace_sequences=validation_traces,
+    #     tool_names=validation_tools,
+    #     step_columns=validation_steps,
+    #     color_palette=validation_palette,
+    #     chart_title="VALIDATION",
+    #     row_base_positions=validation_positions,
+    #     max_row_heights=validation_heights,
+    #     global_max_height=validation_max_height,
+    #     font_color=font_color,
+    # )
 
 
 def filter_structures(
@@ -693,92 +703,92 @@ def filter_structures(
     ]
 
 
-def get_plot_data(
-    trace_files: list[str],
-    threshold: float = 0.95,
-) -> tuple[
-    list[list[str]],
-    list[list[str]],
-]:
-    """Load and preprocess Sankey trace data.
-
-    Parameters
-    ----------
-    trace_files : list[str]
-        Trace file names.
-    base_path : str
-        Directory path.
-    threshold : float, optional
-        Frequency filter threshold.
-
-    Returns
-    -------
-    tuple[list[list[str]], list[list[str]]]
-        Planning and validation traces.
-    """
-    traces: list[Any] = []
-
-    for trace_file in trace_files:
-
-        if not os.path.exists(trace_file):
-            raise FileNotFoundError(f"File not found: {trace_file}")
-
-        with open(trace_file, "rb") as file:
-            traces.append(pickle.load(file))
-
-    def normalize_tool_name(
-        tool_name: str,
-    ) -> str:
-        """Normalize tool names."""
-        return tool_name.replace("_", " ").capitalize()
-
-    planning_sequences: list[list[str]] = []
-    validation_sequences: list[list[str]] = []
-
-    for trace in traces:
-        planning_steps: list[str] = []
-        validation_steps: list[str] = []
-
-        planning_sequences.extend(
-            [
-                [step.tool_name for step in trace.steps]
-                for trace in trace["traces"]["solution"]
-            ]
-        )
-        validation_sequences.extend(
-            [
-                [step.tool_name for step in trace.steps]
-                for trace in trace["traces"]["verification"]
-            ]
-        )
-
-        # planning_sequences.append(planning_steps)
-        #
-        # validation_sequences.append(validation_steps)
-
-    # PSS: Replaced filter/lambda with clearer comprehensions.
-    planning_sequences = [
-        sequence for sequence in planning_sequences if len(sequence) > 2
-    ]
-
-    validation_sequences = [
-        sequence for sequence in validation_sequences if len(sequence) > 2
-    ]
-
-    planning_sequences = filter_structures(
-        planning_sequences,
-        threshold,
-    )
-
-    validation_sequences = filter_structures(
-        validation_sequences,
-        threshold,
-    )
-
-    return (
-        planning_sequences,
-        validation_sequences,
-    )
+# def get_plot_data(
+#     trace_files: list[str],
+#     threshold: float = 0.95,
+# ) -> tuple[
+#     list[list[str]],
+#     list[list[str]],
+# ]:
+#     """Load and preprocess Sankey trace data.
+#
+#     Parameters
+#     ----------
+#     trace_files : list[str]
+#         Trace file names.
+#     base_path : str
+#         Directory path.
+#     threshold : float, optional
+#         Frequency filter threshold.
+#
+#     Returns
+#     -------
+#     tuple[list[list[str]], list[list[str]]]
+#         Planning and validation traces.
+#     """
+#     traces: list[Any] = []
+#
+#     for trace_file in trace_files:
+#
+#         if not os.path.exists(trace_file):
+#             raise FileNotFoundError(f"File not found: {trace_file}")
+#
+#         with open(trace_file, "rb") as file:
+#             traces.append(pickle.load(file))
+#
+#     def normalize_tool_name(
+#         tool_name: str,
+#     ) -> str:
+#         """Normalize tool names."""
+#         return tool_name.replace("_", " ").capitalize()
+#
+#     planning_sequences: list[list[str]] = []
+#     validation_sequences: list[list[str]] = []
+#
+#     for trace in traces:
+#         planning_steps: list[str] = []
+#         validation_steps: list[str] = []
+#
+#         planning_sequences.extend(
+#             [
+#                 [step.tool_name for step in trace.steps]
+#                 for trace in trace["traces"]["solution"]
+#             ]
+#         )
+#         validation_sequences.extend(
+#             [
+#                 [step.tool_name for step in trace.steps]
+#                 for trace in trace["traces"]["verification"]
+#             ]
+#         )
+#
+#         # planning_sequences.append(planning_steps)
+#         #
+#         # validation_sequences.append(validation_steps)
+#
+#     # PSS: Replaced filter/lambda with clearer comprehensions.
+#     planning_sequences = [
+#         sequence for sequence in planning_sequences if len(sequence) > 2
+#     ]
+#
+#     validation_sequences = [
+#         sequence for sequence in validation_sequences if len(sequence) > 2
+#     ]
+#
+#     planning_sequences = filter_structures(
+#         planning_sequences,
+#         threshold,
+#     )
+#
+#     validation_sequences = filter_structures(
+#         validation_sequences,
+#         threshold,
+#     )
+#
+#     return (
+#         planning_sequences,
+#         validation_sequences,
+#     )
 
 
 def count_trace_frequencies(
@@ -827,10 +837,7 @@ def count_trace_frequencies(
 
 def draw_trace_frequency_bars(
     figure: Any,
-    trace_datasets: tuple[
-        Iterable[Iterable[Any]],
-        Iterable[Iterable[Any]],
-    ],
+    trace_datasets: Iterable[Iterable[Any]],
 ) -> None:
     """Draw bar charts for planning and validation trace frequencies.
 
@@ -850,17 +857,14 @@ def draw_trace_frequency_bars(
     -------
     None
     """
-    if len(trace_datasets) != 2:
-        msg = "trace_datasets must contain exactly " "two datasets."
-        raise ValueError(msg)
 
-    planning_trace_sequences, validation_trace_sequences = trace_datasets
+    planning_trace_sequences = trace_datasets
 
     # PSS: Renamed subplot variables and functions
     # to preserve Sankey/trace visualization context.
 
     # Plot planning trace frequencies.
-    planning_axis = figure.add_subplot(121)
+    planning_axis = figure.add_subplot(111)
     hide_axis_spines(planning_axis)
 
     plt.grid(
@@ -883,150 +887,128 @@ def draw_trace_frequency_bars(
     plt.title("Planning trace frequencies")
     plt.ylabel("Percentage (%)")
 
-    # Plot validation trace frequencies.
-    validation_axis = figure.add_subplot(122)
-    hide_axis_spines(validation_axis)
 
-    plt.grid(
-        True,
-        zorder=-1,
-    )
+#
+# def get_execution_metrics(trace_file_paths: list[str]) -> dict[str, list[int]]:
+#     """Extract execution metrics from trace files.
+#
+#     Parameters
+#     ----------
+#     trace_file_paths : list[str]
+#         List of file paths containing serialized trace data.
+#
+#     Returns
+#     -------
+#     dict[str, list[int]]
+#         Dictionary containing:
+#         - attempts: Number of attempts per task.
+#         - solutions: Number of solution steps per task.
+#         - verifications: Number of verification steps per task.
+#     """
+#     execution_metrics = {
+#         "attempts": [],
+#         "solutions": [],
+#         "verifications": [],
+#     }
+#
+#     processed_tracks = 0
+#
+#     for trace_file_path in trace_file_paths:
+#         with open(trace_file_path, "rb") as file:
+#             trace_data = pickle.load(file)
+#
+#         if not trace_data["trace"]:
+#             print(f"Empty trace found: {trace_file_path}")
+#             continue
+#
+#         processed_tracks += 1
+#
+#         execution_summary = trace_data["trace"][0]["execution_summary"]
+#
+#         solution_count = 0
+#         verification_count = 0
+#
+#         for attempt_id in execution_summary:
+#             attempt_data = execution_summary[attempt_id]
+#
+#             solution_count += len(
+#                 [
+#                     step_name
+#                     for step_name in attempt_data.keys()
+#                     if step_name.startswith("Solution")
+#                 ]
+#             )
+#
+#             verification_count += len(
+#                 [
+#                     step_name
+#                     for step_name in attempt_data.keys()
+#                     if step_name.startswith("Verification")
+#                 ]
+#             )
+#
+#         execution_metrics["attempts"].append(len(execution_summary))
+#         execution_metrics["solutions"].append(solution_count)
+#         execution_metrics["verifications"].append(verification_count)
+#
+#     return execution_metrics
 
-    (
-        validation_trace_labels,
-        validation_trace_percentages,
-    ) = count_trace_frequencies(validation_trace_sequences)
-
-    plt.bar(
-        validation_trace_labels,
-        validation_trace_percentages,
-        zorder=99,
-        color="C1",
-    )
-
-    plt.title("Validation trace frequencies")
-
-
-def get_execution_metrics(trace_file_paths: list[str]) -> dict[str, list[int]]:
-    """Extract execution metrics from trace files.
-
-    Parameters
-    ----------
-    trace_file_paths : list[str]
-        List of file paths containing serialized trace data.
-
-    Returns
-    -------
-    dict[str, list[int]]
-        Dictionary containing:
-        - attempts: Number of attempts per task.
-        - solutions: Number of solution steps per task.
-        - verifications: Number of verification steps per task.
-    """
-    execution_metrics = {
-        "attempts": [],
-        "solutions": [],
-        "verifications": [],
-    }
-
-    processed_tracks = 0
-
-    for trace_file_path in trace_file_paths:
-        with open(trace_file_path, "rb") as file:
-            trace_data = pickle.load(file)
-
-        if not trace_data["trace"]:
-            print(f"Empty trace found: {trace_file_path}")
-            continue
-
-        processed_tracks += 1
-
-        execution_summary = trace_data["trace"][0]["execution_summary"]
-
-        solution_count = 0
-        verification_count = 0
-
-        for attempt_id in execution_summary:
-            attempt_data = execution_summary[attempt_id]
-
-            solution_count += len(
-                [
-                    step_name
-                    for step_name in attempt_data.keys()
-                    if step_name.startswith("Solution")
-                ]
-            )
-
-            verification_count += len(
-                [
-                    step_name
-                    for step_name in attempt_data.keys()
-                    if step_name.startswith("Verification")
-                ]
-            )
-
-        execution_metrics["attempts"].append(len(execution_summary))
-        execution_metrics["solutions"].append(solution_count)
-        execution_metrics["verifications"].append(verification_count)
-
-    return execution_metrics
-
-
-def plot_execution_profile(figure, execution_metrics: dict[str, list[int]]) -> None:
-    """Plot execution complexity and retry metrics.
-
-    Parameters
-    ----------
-    execution_metrics : dict[str, list[int]]
-        Dictionary containing attempts, solutions, and verifications.
-
-    Returns
-    -------
-    None
-    """
-    metrics_dataframe = pd.DataFrame(execution_metrics)
-
-    primary_axis = figure.add_subplot(111)
-
-    # PSS: Renamed variables for clarity and improved readability.
-    metrics_dataframe[["solutions", "verifications"]].plot(
-        kind="bar",
-        stacked=True,
-        ax=primary_axis,
-        color=["#3498db", "#9b59b6"],
-        zorder=10,
-    )
-
-    max_steps = (
-        metrics_dataframe["solutions"] + metrics_dataframe["verifications"]
-    ).max()
-
-    primary_axis.set_ylabel("Number of Steps")
-    primary_axis.set_yticks(range(1, max_steps + 1))
-    primary_axis.grid(True, axis="y", zorder=0)
-
-    secondary_axis = primary_axis.twinx()
-
-    secondary_axis.plot(
-        metrics_dataframe.index,
-        metrics_dataframe["attempts"],
-        color="#e74c3c",
-        marker="o",
-        linewidth=2,
-        label="Global Attempts",
-        zorder=10,
-    )
-
-    secondary_axis.set_ylabel("Global Attempts")
-
-    max_attempts = metrics_dataframe["attempts"].max() + 1
-
-    secondary_axis.set_yticks(range(1, max_attempts))
-    secondary_axis.set_ylim(0, max_attempts)
-
-    primary_axis.set_xticklabels(
-        [f"Task {task_index + 1}" for task_index in range(metrics_dataframe.shape[0])]
-    )
-
-    plt.title("Execution Profile: Complexity vs Retries")
-    # plt.tight_layout()
+#
+# def plot_execution_profile(figure, execution_metrics: dict[str, list[int]]) -> None:
+#     """Plot execution complexity and retry metrics.
+#
+#     Parameters
+#     ----------
+#     execution_metrics : dict[str, list[int]]
+#         Dictionary containing attempts, solutions, and verifications.
+#
+#     Returns
+#     -------
+#     None
+#     """
+#     metrics_dataframe = pd.DataFrame(execution_metrics)
+#
+#     primary_axis = figure.add_subplot(111)
+#
+#     # PSS: Renamed variables for clarity and improved readability.
+#     metrics_dataframe[["solutions", "verifications"]].plot(
+#         kind="bar",
+#         stacked=True,
+#         ax=primary_axis,
+#         color=["#3498db", "#9b59b6"],
+#         zorder=10,
+#     )
+#
+#     max_steps = (
+#         metrics_dataframe["solutions"] + metrics_dataframe["verifications"]
+#     ).max()
+#
+#     primary_axis.set_ylabel("Number of Steps")
+#     primary_axis.set_yticks(range(1, max_steps + 1))
+#     primary_axis.grid(True, axis="y", zorder=0)
+#
+#     secondary_axis = primary_axis.twinx()
+#
+#     secondary_axis.plot(
+#         metrics_dataframe.index,
+#         metrics_dataframe["attempts"],
+#         color="#e74c3c",
+#         marker="o",
+#         linewidth=2,
+#         label="Global Attempts",
+#         zorder=10,
+#     )
+#
+#     secondary_axis.set_ylabel("Global Attempts")
+#
+#     max_attempts = metrics_dataframe["attempts"].max() + 1
+#
+#     secondary_axis.set_yticks(range(1, max_attempts))
+#     secondary_axis.set_ylim(0, max_attempts)
+#
+#     primary_axis.set_xticklabels(
+#         [f"Task {task_index + 1}" for task_index in range(metrics_dataframe.shape[0])]
+#     )
+#
+#     plt.title("Execution Profile: Complexity vs Retries")
+#     # plt.tight_layout()
