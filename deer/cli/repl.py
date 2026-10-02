@@ -1,20 +1,16 @@
-import json
 import sys
-import logging
-
-from deer.core import DeterministicAgent
 import pickle
+import logging
+import subprocess
+
+from rich.console import Console
+from rich.markdown import Markdown
 from prompt_toolkit import prompt
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.history import InMemoryHistory
-from prompt_toolkit.completion import WordCompleter
-from rich.console import Console
-from rich.markdown import Markdown
-import subprocess
-
 from prompt_toolkit.completion import Completer, WordCompleter
 
-
+from deer.core import DeterministicAgent
 from deer import __version__
 
 logger = logging.getLogger("DEER")
