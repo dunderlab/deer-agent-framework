@@ -60,7 +60,7 @@ def get_driver_from_parser():
 
     try:
         drivers_parser.silent = True
-        args = drivers_parser.parse_args()
+        args, _ = drivers_parser.parse_known_args()
         drivers_parser.silent = False
     except:
         drivers_parser.silent = False
@@ -96,7 +96,7 @@ def get_path_from_parser():
 
     try:
         path_parser.silent = True
-        args = path_parser.parse_args()
+        args, _ = path_parser.parse_known_args()
         path_parser.silent = False
     except:
         path_parser.silent = False
