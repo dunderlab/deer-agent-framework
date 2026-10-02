@@ -222,11 +222,20 @@ class DeterministicAgent:
             trace_verification = self.run_verification(goal)
             self.save_trace_verification(trace_verification)
 
+        if (
+            not trace_solution.steps
+            and not self.enable_verification
+            and trace_solution.response
+        ):
+            # Return a response without validation when the request does not have steps
+            return trace_solution.response
+
         # Conclusion
+        # The request has steps and validation is requested
         conclusion = self.generate_conclusion(goal, trace_solution, trace_verification)
 
         if conclusion.goal_achieved:
-            # self.clear_verificator_history()
+            # The conclusion finds that the goal has been achieved
             return conclusion.user_message
         else:
             if iteration >= self.max_attempts:
@@ -267,7 +276,7 @@ class DeterministicAgent:
         goal: str,
         trace_solution: ExecutionTrace,
         trace_verification: ExecutionTrace,
-    ) -> str:
+    ) -> AgentConclusion:
 
         messages = [
             ChatMessage(
