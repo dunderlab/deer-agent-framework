@@ -25,6 +25,7 @@ COMMANDS = {
     "/exit": "Terminate the session",
     "/rollback": "Revert the system to the last stable state",
     "/trace": "Display the detailed execution trace and variable resolution of the last plan.",
+    "/context": "Displays context memory usage information.",
     "/history": "Display the history of messages and commands",
     "/vhistory": "Display the history of verifier messages and commands",
 }
@@ -154,7 +155,6 @@ class AgentREPL:
                 print("\n")
 
             case "/rollback":
-                # self.state_restore()
                 self.pretty_print(
                     "**Rollback executed.** System reverted to the last stable state."
                 )
@@ -165,22 +165,33 @@ class AgentREPL:
                 for i, step in enumerate(trace):
                     self.console.print(f"[bold yellow]Trace {i+1}:[/bold yellow]")
                     print(f"{step}")
-                    # self.pretty_print(str(step))
                     print("\n")
 
             case "/history":
                 for i, chat in enumerate(self.agent.agent_history[1:]):
                     self.console.print(f"[bold yellow]Chat {i+1}:[/bold yellow]")
                     print(f"{chat}")
-                    # self.pretty_print(str(chat))
                     print("\n")
 
             case "/vhistory":
                 for i, chat in enumerate(self.agent.verificator_history[1:]):
                     self.console.print(f"[bold yellow]Chat {i+1}:[/bold yellow]")
                     print(f"{chat}")
-                    # self.pretty_print(str(chat))
                     print("\n")
+
+            case "/context":
+                bytes = sum(len(str(item)) for item in self.agent.agent_history)
+                for unit in ["B", "KB", "MB", "GB", "TB"]:
+                    if bytes < 1024.0:
+                        size = f"{bytes:.1f} {unit}"
+                        break
+                    bytes /= 1024.0
+
+                self.pretty_print(
+                    f"  * **History:** {len(self.agent.agent_history)} messages\n"
+                    f"  * **Context size:** ~{size}"
+                )
+                print("\n")
 
     def repl(self):
         logger.setLevel(logging.CRITICAL)
