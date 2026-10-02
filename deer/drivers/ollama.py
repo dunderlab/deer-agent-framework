@@ -1,8 +1,8 @@
 import json
-from typing import TypeVar, Type, Optional, Union, Generator
-from pydantic import BaseModel
+from typing import Generator, TypeVar
 from .base import LLMDriver, logger
 from deer.models import ChatMessage
+from pydantic import BaseModel
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -26,8 +26,10 @@ class OllamaDriver(LLMDriver):
         return "Ollama"
 
     def generate(
-        self, messages: list[ChatMessage], response_model: Optional[Type[T]] = None
-    ) -> Union[str, T]:
+        self,
+        messages: list[ChatMessage],
+        response_model: type[T] | None = None,
+    ) -> str | T:
         """
         Generates a response from Ollama.
         If response_model is provided, it forces the model to follow the schema.
@@ -72,7 +74,8 @@ class OllamaDriver(LLMDriver):
             )
 
     def generate_stream(
-        self, messages: list[dict[str, str]]
+        self,
+        messages: list[ChatMessage],
     ) -> Generator[str, None, None]:
         """
         Implementation of streaming for Ollama.

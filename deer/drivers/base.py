@@ -90,8 +90,10 @@ class LLMDriver(ABC):
 
     @abstractmethod
     def generate(
-        self, messages: list[ChatMessage], response_model: Optional[Type[T]] = None
-    ) -> Union[str, T]:
+        self,
+        messages: list[ChatMessage],
+        response_model: type[T] | None = None,
+    ) -> str | T:
         pass
 
     @abstractmethod
@@ -104,7 +106,7 @@ class LLMDriver(ABC):
         """
         pass
 
-    def extract_json(self, text: str) -> dict:
+    def extract_json(self, text: str) -> str:
         text = text.strip()
         text = re.sub(r"^```(?:json)?\s*", "", text)
         text = re.sub(r"^json\s*", "", text)
