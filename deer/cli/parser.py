@@ -2,7 +2,7 @@ import argparse
 import os
 from pathlib import Path
 
-from deer.utils.console import error
+from deer.utils.console import ConsoleColor
 
 backends = {
     "gemini",
@@ -67,14 +67,14 @@ def get_driver_from_parser():
         return False
 
     if args.backend not in backends:
-        error(
+        ConsoleColor.on_error(
             f"Unsupported backend '{args.backend}'. "
             f"Supported backends are: {', '.join(backends)}."
         )
         return False
 
     if not args.model:
-        error("A model identifier must be provided.")
+        ConsoleColor.on_error("A model identifier must be provided.")
         return False
 
     match args.backend:
