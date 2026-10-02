@@ -23,9 +23,9 @@ COMMANDS = {
     "/exit": "Terminate the session",
     "/rollback": "Revert the system to the last stable state",
     "/trace": "Display the detailed execution trace and variable resolution of the last plan.",
-    "/context": "Displays context memory usage information.",
     "/history": "Display the history of messages and commands",
     "/vhistory": "Display the history of verifier messages and commands",
+    "/infocontext": "Displays context memory usage information.",
     "/loadcontext": "Restore a saved session context",
     "/savecontext": "Save the current session context",
 }
@@ -140,6 +140,11 @@ class AgentREPL:
     def run_command(self, command):
         match command:
             case "/exit":
+                self.agent.persist_state()
+                self.console.print(
+                    "[dim]Context state persisted to disk.[/dim]",
+                    Markdown("----"),
+                )
                 sys.exit(0)
 
             case "/clear":
@@ -148,38 +153,34 @@ class AgentREPL:
                 self.agent.clear_agent_history()
                 self.agent.clear_traces()
                 self.pretty_print(f">**Agent Profile**  \n*{self.agent.description}*")
-                print("\n")
+                print("")
 
             case "/tools":
                 self.pretty_print(self.agent.tool_registry.describe())
-                print("\n")
+                print("")
 
             case "/rollback":
-                self.pretty_print(
-                    "**Rollback executed.** System reverted to the last stable state."
+                self.console.print(
+                    "[dim][bold]Rollback executed.[/bold] System reverted to the last stable state.[/dim]",
                 )
-                print("\n")
 
             case "/trace":
                 trace = self.agent.traces["solution"]
                 for i, step in enumerate(trace):
                     self.console.print(f"[bold yellow]Trace {i+1}:[/bold yellow]")
-                    print(f"{step}")
-                    print("\n")
+                    print(f"{step}\n")
 
             case "/history":
                 for i, chat in enumerate(self.agent.agent_history[1:]):
                     self.console.print(f"[bold yellow]Chat {i+1}:[/bold yellow]")
-                    print(f"{chat}")
-                    print("\n")
+                    print(f"{chat}\n")
 
             case "/vhistory":
                 for i, chat in enumerate(self.agent.verificator_history[1:]):
                     self.console.print(f"[bold yellow]Chat {i+1}:[/bold yellow]")
-                    print(f"{chat}")
-                    print("\n")
+                    print(f"{chat}\n")
 
-            case "/context":
+            case "/infocontext":
                 bytes = sum(len(str(item)) for item in self.agent.agent_history)
                 for unit in ["B", "KB", "MB", "GB", "TB"]:
                     if bytes < 1024.0:
@@ -191,13 +192,32 @@ class AgentREPL:
                     f"  * **History:** {len(self.agent.agent_history)} messages\n"
                     f"  * **Context size:** ~{size}"
                 )
-                print("\n")
+                print("")
 
             case "/savecontext":
-                self.agent.save_context()
+                try:
+                    self.agent.persist_state()
+                    self.console.print("[dim]Context state persisted to disk.[/dim]")
+                except Exception as e:
+                    self.console.print(
+                        f"[bold red]Context persistence error:[/bold red] {e}"
+                    )
 
             case "/loadcontext":
-                self.agent.load_context()
+                try:
+                    self.agent.restore_state()
+                    self.console.print(
+                        "[dim]Context recovered. Session state synchronized.[/dim]"
+                    )
+                except Exception as e:
+                    self.console.print(
+                        f"[bold red]Context restoration error:[/bold red] {e}"
+                    )
+
+        self.console.print(
+            Markdown("----"),
+            end="",
+        )
 
     def repl(self):
         logger.setLevel(logging.CRITICAL)
@@ -210,13 +230,13 @@ class AgentREPL:
             completer=self.completer,
         )
 
-        def as_table(prompt, message):
+        def as_table(prompt, message="", color="cyan"):
             table = Table.grid(expand=True)
             table.add_column(width=len(prompt) + 1)
             table.add_column()
 
             table.add_row(
-                Text(prompt, style="bold cyan"),
+                Text(prompt, style=f"bold {color}"),
                 Markdown(message),
             )
             return table
@@ -231,7 +251,10 @@ class AgentREPL:
                     HTML(f"<ansicyan><b>{input_prompt}</b></ansicyan>")
                 )
                 self.save_prompt_history()
-                self.agent.save_context()
+
+                if self.agent.load_context:
+                    self.agent.persist_state()
+
             except KeyboardInterrupt:
                 continue
             except EOFError:
@@ -243,6 +266,11 @@ class AgentREPL:
 
             match msg:
                 case command if command in COMMANDS:
+                    self.console.print(
+                        as_table(f"[{command}]", color="cyan"),
+                        Text("\n"),
+                        end="",
+                    )
                     self.run_command(command)
 
                 case command if command.startswith("!"):
@@ -283,10 +311,10 @@ class AgentREPL:
                             )
 
                             # Call the LLM model
-                            output = self.send(msg)
+                            response = self.agent.run(msg)
 
                             self.console.print(
-                                as_table(output_prompt_history, output),
+                                as_table(output_prompt_history, response),
                                 Text("\n"),
                                 Markdown("----"),
                                 end="",
@@ -302,15 +330,3 @@ class AgentREPL:
                             continue
                         except EOFError:
                             break
-
-    def send(self, message, print_chat: bool = False):
-
-        if print_chat:
-            print(f">>> {message}")
-
-        response = self.agent.run(message)
-
-        if print_chat:
-            print(f"    {response}")
-
-        return response
