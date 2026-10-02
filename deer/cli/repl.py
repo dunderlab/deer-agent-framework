@@ -295,6 +295,12 @@ class AgentREPL:
                     # Remove the '!' from the start to get only the command
                     cmd_to_run = command[1:].strip()
 
+                    self.console.print(
+                        as_table(f"[{cmd_to_run}]", color="cyan"),
+                        Text("\n"),
+                        end="",
+                    )
+
                     try:
                         # Execute the command
                         result = subprocess.run(
@@ -304,11 +310,24 @@ class AgentREPL:
                             text=True,
                             check=True,
                         )
-                        print(result.stdout)
+                        self.console.print(
+                            Text(result.stdout),
+                            Markdown("----"),
+                            sep="",
+                        )
+
                     except subprocess.CalledProcessError as e:
-                        print(f"Error executing command: {e.stderr}")
+                        self.console.print(
+                            f"[dim]Error executing command: {e.stderr}[/dim]",
+                            Markdown("----"),
+                            sep="",
+                        )
                     except Exception as e:
-                        print(f"An unexpected error occurred: {e}")
+                        self.console.print(
+                            f"[dim]An unexpected error occurred: {e}[/dim]",
+                            Markdown("----"),
+                            sep="",
+                        )
 
                 case _:
                     if msg.startswith("/"):
