@@ -19,7 +19,7 @@ registry = ToolRegistry(
 )
 working_dir = get_path_from_parser() or Path.cwd()
 
-agent = DeterministicAgent(
+PythonArchitectAgent = DeterministicAgent(
     description="AI specialist in Python architecture, runtime module resolution, and dependency management.",
     identity=(
         "You are an elite AI Agent operating as a Principal Python Architect and Core Ecosystem Specialist. "
@@ -37,7 +37,7 @@ agent = DeterministicAgent(
 
 
 def main():
-    repl = AgentREPL(agent)
+    repl = AgentREPL(PythonArchitectAgent)
     repl.repl()
 
 

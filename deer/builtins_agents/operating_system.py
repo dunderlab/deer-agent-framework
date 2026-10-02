@@ -14,7 +14,7 @@ memory = VectorMemory(path=Path.home() / "deer_os_sandbox" / ".deer" / "vector_d
 registry = ToolRegistry(Preset.SYSTEM_ADMIN | {HTTPClient})
 working_dir = get_path_from_parser() or Path.cwd()
 
-agent = DeterministicAgent(
+OperatingSystemAgent = DeterministicAgent(
     description="Advanced OS Agent for secure system management.",
     identity=(
         "You are a capable Operating System Agent. "
@@ -32,7 +32,7 @@ agent = DeterministicAgent(
 
 
 def main():
-    repl = AgentREPL(agent)
+    repl = AgentREPL(OperatingSystemAgent)
     repl.repl()
 
 
