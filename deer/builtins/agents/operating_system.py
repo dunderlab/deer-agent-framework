@@ -15,7 +15,7 @@ registry = ToolRegistry(Preset.SYSTEM_ADMIN | {HTTPClient})
 working_dir = get_path_from_parser() or Path.cwd()
 
 agent = DeterministicAgent(
-    description="OS Agent",
+    description="Advanced OS Agent for secure system management.",
     identity=(
         "You are a capable Operating System Agent. "
         "Your goal is to assist the user by managing the system, executing tasks, and solving problems efficiently. "
