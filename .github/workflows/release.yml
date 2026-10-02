@@ -60,4 +60,5 @@ jobs:
           gh release create v${{ env.VERSION }} \
             --title "Deer v${{ env.VERSION }}" \
             --notes-file release_intro.md \
-            --generate-notes
+            --generate-notes \
+            --draft
