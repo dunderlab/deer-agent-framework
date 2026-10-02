@@ -26,7 +26,7 @@ class ChatMessage(BaseModel):
     content: str = Field(..., description="The actual text content of the message.")
 
     def __str__(self) -> str:
-        return f"Role: {self.role.value}\n" f"Content: {self.content}"
+        return f"Role: {self.role.value}\n" f"Content: {self.content.strip()}"
 
 
 class ToolStep(BaseModel):
@@ -87,7 +87,7 @@ class StepTrace(BaseModel):
 
     def __str__(self):
         if self.error:
-            line = f"Error: {self.error}\n"
+            line = f"\nError: {self.error}"
         else:
             line = ""
         return (
@@ -95,7 +95,7 @@ class StepTrace(BaseModel):
             f"Resolved args: {self.resolved_args}\n"
             f"Output: {self.output}\n"
             f"Status: {self.status}\n"
-            f"Execution time: {self.execution_time}\n"
+            f"Execution time: {self.execution_time}"
             f"{line}"
         )
 
