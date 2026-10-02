@@ -1,5 +1,5 @@
 from rich.text import Text
-from deer.utils.console import console, error, info
+from deer.utils.console import ConsoleColor
 from deer.builtins_agents import agents
 import importlib.util
 import sys
@@ -11,30 +11,30 @@ logger = logging.getLogger(f"DEER.{__name__}")
 
 
 def title():
-    console.print()
-    console.print(
+    ConsoleColor.console.print()
+    ConsoleColor.console.print(
         Text(
             "DEER",
             style="bold cyan",
         )
     )
-    console.print(
+    ConsoleColor.console.print(
         "Deterministic Executable Engine for Runtime Agents",
         style="dim",
     )
-    console.print()
+    ConsoleColor.console.print()
 
 
 def agents_list():
-    console.print()
-    console.print("[bold]Available agents[/bold]")
+    ConsoleColor.console.print()
+    ConsoleColor.console.print("[bold]Available agents[/bold]")
     for name in agents:
-        console.print(f"  • [green]{name}[/green]")
-    console.print()
+        ConsoleColor.console.print(f"  • [green]{name}[/green]")
+    ConsoleColor.console.print()
 
 
 def example():
-    console.print(f"[dim]Example:[/dim] deer {list(agents.keys())[0]}")
+    ConsoleColor.console.print(f"[dim]Example:[/dim] deer {list(agents.keys())[0]}")
 
 
 def run_agent_in_process(agent_path, backend=None, model=None):
@@ -65,15 +65,15 @@ def main():
     if selected_agent := args.agent:
 
         if selected_agent in agents:
-            info(f"Launching agent '{selected_agent}'")
+            ConsoleColor.on_info(f"Launching agent '{selected_agent}'")
             run_agent_in_process(agents[selected_agent], args.backend, args.model)
             sys.exit(0)
 
-        error(f"Unknown agent '{selected_agent}'")
+        ConsoleColor.on_error(f"Unknown agent '{selected_agent}'")
         agents_list()
         sys.exit(1)
 
-    error("No agent selected")
+    ConsoleColor.on_error("No agent selected")
     example()
     agents_list()
 
