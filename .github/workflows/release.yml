@@ -61,4 +61,3 @@ jobs:
             --title "Deer v${{ env.VERSION }}" \
             --notes-file release_intro.md \
             --generate-notes
-            --draft
