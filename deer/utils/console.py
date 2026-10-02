@@ -1,32 +1,34 @@
 from rich.console import Console
 
-console = Console()
 
+class ConsoleColor:
+    console = Console()
 
-def info(message: str):
-    console.print(f"[bold cyan]INFO[/bold cyan]  {message}")
+    @classmethod
+    def on_info(cls, message: str):
+        cls.console.print(f"[bold cyan]INFO[/bold cyan]  {message}")
 
+    @classmethod
+    def on_success(cls, message: str):
+        # Verde para confirmaciones y tareas completadas
+        cls.console.print(f"[bold green]SUCCESS[/bold green] {message}")
 
-def success(message: str):
-    # Verde para confirmaciones y tareas completadas
-    console.print(f"[bold green]SUCCESS[/bold green] {message}")
+    @classmethod
+    def on_warning(cls, message: str):
+        # Amarillo para alertas que no detienen la ejecución
+        cls.console.print(f"[bold yellow]WARNING[/bold yellow] {message}")
 
+    @classmethod
+    def on_error(cls, message: str):
+        # Rojo para fallos críticos
+        cls.console.print(f"[bold red]ERROR[/bold red] {message}")
 
-def warning(message: str):
-    # Amarillo para alertas que no detienen la ejecución
-    console.print(f"[bold yellow]WARNING[/bold yellow] {message}")
+    @classmethod
+    def on_debug(cls, message: str):
+        # Magenta o Gris para información técnica de desarrollo
+        cls.console.print(f"[bold magenta]DEBUG[/bold magenta] {message}")
 
-
-def error(message: str):
-    # Rojo para fallos críticos
-    console.print(f"[bold red]ERROR[/bold red] {message}")
-
-
-def debug(message: str):
-    # Magenta o Gris para información técnica de desarrollo
-    console.print(f"[bold magenta]DEBUG[/bold magenta] {message}")
-
-
-def system(message: str):
-    # Azul para mensajes internos del núcleo o del framework
-    console.print(f"[bold blue]SYSTEM[/bold blue] {message}")
+    @classmethod
+    def on_system(cls, message: str):
+        # Azul para mensajes internos del núcleo o del framework
+        cls.console.print(f"[bold blue]SYSTEM[/bold blue] {message}")
