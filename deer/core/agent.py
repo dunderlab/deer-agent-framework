@@ -107,6 +107,9 @@ class DeterministicAgent:
         )
         logger.info(f"Authorized filesystem scope is restricted to: {working_dir}")
 
+    def set_registry_jail(self, dirpath):
+        self.tool_registry.set_jail(Path(dirpath))
+
     def clear_verificator_history(self):
         self.verificator_history = [
             ChatMessage(
@@ -164,7 +167,7 @@ class DeterministicAgent:
         with open(filename, "wb") as f:
             pickle.dump(obj, f)
 
-        logger.info(f"Trace generated in {filename}")
+        return filename
 
     def clear_working_dir(self, ignore=None):
         for item in self.working_dir.iterdir():
