@@ -7,7 +7,7 @@ import logging
 
 from .parser import drivers_parser
 
-logger = logging.getLogger("DEER")
+logger = logging.getLogger(f"DEER.{__name__}")
 
 
 def title():

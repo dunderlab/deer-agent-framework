@@ -6,7 +6,7 @@ import logging
 from typing import Any, Optional, Union
 from pathlib import Path
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(f"DEER.{__name__}")
 
 
 class VectorMemory:

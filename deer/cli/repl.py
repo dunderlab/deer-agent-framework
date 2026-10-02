@@ -13,7 +13,7 @@ from prompt_toolkit.completion import Completer, WordCompleter
 from deer.core import DeterministicAgent
 from deer import __version__
 
-logger = logging.getLogger("DEER")
+logger = logging.getLogger(f"DEER.{__name__}")
 
 COMMANDS = {
     "/tools": "Show tools and capabilities",

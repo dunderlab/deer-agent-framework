@@ -7,7 +7,7 @@ import logging
 from deer.tools.registry import ToolRegistry
 from deer.models import ExecutionPlan
 
-logger = logging.getLogger("DEER")
+logger = logging.getLogger(f"DEER.{__name__}")
 
 
 class Rules:

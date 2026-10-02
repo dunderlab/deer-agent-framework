@@ -4,7 +4,7 @@ from typing import Any, Dict
 from deer.tools import ToolRegistry
 from deer.models import ExecutionPlan, ExecutionTrace, StepTrace
 
-logger = logging.getLogger("DEER-LLM")
+logger = logging.getLogger(f"DEER.{__name__}")
 
 
 class PipelineExecutor:

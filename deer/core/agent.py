@@ -17,7 +17,7 @@ from .validator import PlanValidator
 
 import pickle
 
-logger = logging.getLogger("DEER")
+logger = logging.getLogger(f"DEER.{__name__}")
 
 
 class DeterministicAgent:

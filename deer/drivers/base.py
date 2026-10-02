@@ -10,7 +10,7 @@ from deer.models import ChatMessage
 from pydantic import BaseModel
 
 T = TypeVar("T", bound=BaseModel)
-logger = logging.getLogger("DEER-LLM")
+logger = logging.getLogger(f"DEER.{__name__}")
 
 
 class LLMDriver(ABC):
