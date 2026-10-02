@@ -28,6 +28,8 @@ COMMANDS = {
     "/context": "Displays context memory usage information.",
     "/history": "Display the history of messages and commands",
     "/vhistory": "Display the history of verifier messages and commands",
+    "/loadcontext": "Restore a saved session context",
+    "/savecontext": "Save the current session context",
 }
 
 WELCOME_MESSAGE = """
@@ -106,7 +108,7 @@ class AgentREPL:
             self.prompt_history = pickle.load(f)
         return
 
-    def save_history(self):
+    def save_prompt_history(self):
         history_file = self.agent.agent_dir / "prompt_history"
         with open(history_file, "wb") as f:
             pickle.dump(self.prompt_history, f)
@@ -193,6 +195,12 @@ class AgentREPL:
                 )
                 print("\n")
 
+            case "/savecontext":
+                self.agent.save_context()
+
+            case "/loadcontext":
+                self.agent.load_context()
+
     def repl(self):
         logger.setLevel(logging.CRITICAL)
         self.show_welcome()
@@ -205,7 +213,8 @@ class AgentREPL:
                     completer=self.completer,
                     # multiline=True,
                 )
-                self.save_history()
+                self.save_prompt_history()
+                self.agent.save_context()
             except KeyboardInterrupt:
                 continue
             except EOFError:

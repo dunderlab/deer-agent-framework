@@ -32,6 +32,7 @@ class DeterministicAgent:
         vector_memory: Optional[VectorMemory] = None,
         max_attempts: int = 3,
         enable_verification: bool = True,
+        load_context: bool = False,
     ):
 
         # Context
@@ -41,6 +42,7 @@ class DeterministicAgent:
         self.agent_dir = (working_dir / ".deer").resolve()
         self.working_dir = working_dir.resolve()
         self.enable_verification = enable_verification
+        self.contex_file = self.agent_dir / "context"
 
         # LLMDriver
         self.driver = driver
@@ -78,13 +80,17 @@ class DeterministicAgent:
         # Pipeline Executer
         self.pipeline_executor = PipelineExecutor(tool_registry=self.tool_registry)
 
-        # Agent History
-        self.agent_history: list[ChatMessage] = []
-        self.clear_agent_history()
+        if load_context:
+            self.load_context()
 
-        # Validator History
-        self.verificator_history: list[ChatMessage] = []
-        self.clear_verificator_history()
+        else:
+            # Agent History
+            self.agent_history: list[ChatMessage] = []
+            self.clear_agent_history()
+
+            # Validator History
+            self.verificator_history: list[ChatMessage] = []
+            self.clear_verificator_history()
 
         # Traces
         self.traces: dict[Literal["solution", "verification"], list[Any]] = {}
@@ -115,6 +121,20 @@ class DeterministicAgent:
                 content=self.planner.build_system_prompt(),
             )
         ]
+
+    def save_context(self):
+        context = {
+            "agent_history": self.agent_history,
+            "verificator_history": self.verificator_history,
+        }
+        with self.contex_file.open("wb") as f:
+            pickle.dump(context, f)
+
+    def load_context(self):
+        with self.contex_file.open("rb") as f:
+            context = pickle.load(f)
+        for key in context:
+            setattr(self, key, context[key])
 
     def save_trace(self):
         obj = {
