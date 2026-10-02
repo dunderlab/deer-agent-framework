@@ -5,19 +5,19 @@ on:
     branches:
       - main
     paths:
-      - 'pyproject.toml' # Solo se ejecuta si este archivo cambia
+      - 'pyproject.toml' # Only runs if this file changes
 
 jobs:
   release:
     runs-on: ubuntu-latest
-    permissions: # IMPORTANTE: Permite que el workflow escriba el tag y la release
+    permissions: # IMPORTANT: Allows the workflow to write the tag and the release
       contents: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Necesario para manejar tags correctamente
+          fetch-depth: 0 # Required to handle tags correctly
 
       - name: Extract version from pyproject.toml
         id: get_version
@@ -42,8 +42,23 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Usa la CLI 'gh' (que ya viene instalada en GitHub Actions)
-          # --generate-notes crea automáticamente la lista de cambios basada en los commits
+          # 1. Create a temporary file with your professional message
+          cat <<EOF > release_intro.md
+          # DEER: Deterministic Executable Engine for Runtime Agents
+
+          ### **Stop building "Vibe-based" Agents. Start Engineering Deterministic Systems.**
+
+          **DEER** is a professional-grade framework designed to transform LLMs from probabilistic text-generators into
+          **Deterministic Autonomous Engineers**. While other frameworks rely on massive, fragile system prompts and hope for the
+          best, DEER subordinates the LLM to a rigid, code-defined execution pipeline where every action is typed, validated, and
+          physically verified.
+          
+          ---
+          EOF
+          
+          # 2. Use --notes-file to load that message and --generate-notes to append the changelog below
           gh release create v${{ env.VERSION }} \
             --title "Deer v${{ env.VERSION }}" \
+            --notes-file release_intro.md \
             --generate-notes
+            --draft
