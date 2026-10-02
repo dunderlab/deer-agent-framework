@@ -24,7 +24,8 @@ COMMANDS = {
     "/rollback": "Revert the system to the last stable state",
     "/trace": "Display the detailed execution trace and variable resolution of the last plan.",
     "/history": "Display the history of messages and commands",
-    "/vhistory": "Display the history of verifier messages and commands",
+    "/clearhistory": "Purge all session history and reset memory state.",
+    # "/vhistory": "Display the history of verifier messages and commands",
     "/infocontext": "Displays context memory usage information.",
     "/loadcontext": "Restore a saved session context",
     "/savecontext": "Save the current session context",
@@ -118,6 +119,15 @@ class AgentREPL:
     def pretty_print(self, out: str):
         self.console.print(Markdown(out))
 
+    def show_identity(self):
+        self.pretty_print(
+            f">**Agent Profile**  \n"
+            f"*{self.agent.description}*  \n"
+            f"root: {self.agent.tool_registry.jail_path}  \n"
+            f"{self.agent.driver}: {self.agent.driver.model_name}  \n"
+        )
+        print("")
+
     def show_welcome(self):
         commands_formated = ""
         for command in COMMANDS:
@@ -129,39 +139,49 @@ class AgentREPL:
         self.pretty_print(
             WELCOME_MESSAGE.format(version=__version__, commands=commands_formated)
         )
-        self.pretty_print(
-            f">**Agent Profile**  \n"
-            f"*{self.agent.description}*  \n"
-            f"root: {self.agent.tool_registry.jail_path}  \n"
-            f"{self.agent.driver}: {self.agent.driver.model_name}  \n"
-        )
-        print("")
+        self.show_identity()
 
     def run_command(self, command):
         match command:
             case "/exit":
                 self.agent.persist_state()
                 self.console.print(
-                    "[dim]Context state persisted to disk.[/dim]",
+                    "[dim]Context state persisted to disk.[/dim]\n",
                     Markdown("----"),
                 )
                 sys.exit(0)
 
             case "/clear":
+                self.console.clear()
+                self.show_identity()
+                self.console.print(
+                    "[dim]Console buffer cleared. Session state persists. Use /clearhistory for a full purge.[/dim]\n",
+                )
+
+            case "/clearhistory":
                 self.clear_history()
                 self.console.clear()
                 self.agent.clear_agent_history()
                 self.agent.clear_traces()
-                self.pretty_print(f">**Agent Profile**  \n*{self.agent.description}*")
-                print("")
+                self.agent.persist_state()
+                self.show_identity()
+                self.console.print(
+                    "[dim]Session history purged. Memory state reset.[/dim]\n",
+                )
 
             case "/tools":
-                self.pretty_print(self.agent.tool_registry.describe())
-                print("")
+                tools_description = self.agent.tool_registry.describe()
+                self.console.print(
+                    Markdown(tools_description),
+                    "\n",
+                    f"[dim]Tool registry: {len(self.agent.tool_registry._tools)} modules active.[/dim]\n",
+                    f"[dim]Registry description payload: {self.agent.format_bytes(len(tools_description))}[/dim]\n",
+                    sep="",
+                )
 
             case "/rollback":
                 self.console.print(
-                    "[dim][bold]Rollback executed.[/bold] System reverted to the last stable state.[/dim]",
+                    "[dim][bold]Rollback executed.[/bold] System reverted to the last stable state.[/dim]\n",
                 )
 
             case "/trace":
@@ -174,44 +194,41 @@ class AgentREPL:
                 for i, chat in enumerate(self.agent.agent_history[1:]):
                     self.console.print(f"[bold yellow]Chat {i+1}:[/bold yellow]")
                     print(f"{chat}\n")
+                self.console.print(
+                    f"[dim]Session history payload: {self.agent.format_bytes(len(str(self.agent.agent_history)))}[/dim]\n",
+                )
 
-            case "/vhistory":
-                for i, chat in enumerate(self.agent.verificator_history[1:]):
-                    self.console.print(f"[bold yellow]Chat {i+1}:[/bold yellow]")
-                    print(f"{chat}\n")
+            # case "/vhistory":
+            #     for i, chat in enumerate(self.agent.verificator_history[1:]):
+            #         self.console.print(f"[bold yellow]Chat {i+1}:[/bold yellow]")
+            #         print(f"{chat}\n")
 
             case "/infocontext":
                 bytes = sum(len(str(item)) for item in self.agent.agent_history)
-                for unit in ["B", "KB", "MB", "GB", "TB"]:
-                    if bytes < 1024.0:
-                        size = f"{bytes:.1f} {unit}"
-                        break
-                    bytes /= 1024.0
-
-                self.pretty_print(
-                    f"  * **History:** {len(self.agent.agent_history)} messages\n"
-                    f"  * **Context size:** ~{size}"
+                self.console.print(
+                    f"[dim][bold]History:[/bold] {len(self.agent.agent_history)} messages[/dim]\n",
+                    f"[dim][bold]Context size:[/bold] ~{self.agent.format_bytes(bytes)}[/dim]\n",
+                    sep="",
                 )
-                print("")
 
             case "/savecontext":
                 try:
                     self.agent.persist_state()
-                    self.console.print("[dim]Context state persisted to disk.[/dim]")
+                    self.console.print("[dim]Context state persisted to disk.[/dim]\n")
                 except Exception as e:
                     self.console.print(
-                        f"[bold red]Context persistence error:[/bold red] {e}"
+                        f"[bold red]Context persistence error:[/bold red] {e}\n"
                     )
 
             case "/loadcontext":
                 try:
                     self.agent.restore_state()
                     self.console.print(
-                        "[dim]Context recovered. Session state synchronized.[/dim]"
+                        "[dim]Context recovered. Session state synchronized.[/dim]\n"
                     )
                 except Exception as e:
                     self.console.print(
-                        f"[bold red]Context restoration error:[/bold red] {e}"
+                        f"[bold red]Context restoration error:[/bold red] {e}\n"
                     )
 
         self.console.print(
@@ -228,6 +245,7 @@ class AgentREPL:
             erase_when_done=True,
             history=self.prompt_history,
             completer=self.completer,
+            mouse_support=True,
         )
 
         def as_table(prompt, message="", color="cyan"):
@@ -322,10 +340,9 @@ class AgentREPL:
 
                         except KeyboardInterrupt:
                             self.console.print(
-                                "[dim]Command aborted by user[/]",
-                                Text("\n"),
+                                "[dim]Command aborted by user[/dim]\n",
                                 Markdown("----"),
-                                end="",
+                                sep="",
                             )
                             continue
                         except EOFError:
