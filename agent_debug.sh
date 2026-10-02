@@ -9,7 +9,7 @@ AGENT="operating_system.py"
 
 # 2. Build the full command to be executed in the new window
 # Combine environment activation, PYTHONPATH, and script execution
-CMD="source $VENV_PATH && export PYTHONPATH=\$PYTHONPATH:$PROJECT_DIR && python $PROJECT_DIR/deer/builtins/agents/$AGENT --path $WORKING_DIR"
+CMD="source $VENV_PATH && export PYTHONPATH=\$PYTHONPATH:$PROJECT_DIR && python $PROJECT_DIR/deer/builtins_agents/$AGENT --path $WORKING_DIR"
 
 # 3. Execute osascript correctly to open the window and launch the command
 osascript -e "tell application \"Terminal\" to do script \"$CMD\""
