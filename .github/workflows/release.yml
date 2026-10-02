@@ -1,0 +1,49 @@
+name: Auto Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'pyproject.toml' # Solo se ejecuta si este archivo cambia
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions: # IMPORTANTE: Permite que el workflow escriba el tag y la release
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Necesario para manejar tags correctamente
+
+      - name: Extract version from pyproject.toml
+        id: get_version
+        run: |
+          # Busca la línea que dice 'version = "X.Y.Z"' y extrae el valor entre comillas
+          VERSION=$(grep 'version =' pyproject.toml | cut -d '"' -f 2)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Version found: $VERSION"
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create and push Tag
+        run: |
+          # Crea el tag vX.Y.Z y lo sube al repo
+          git tag v${{ env.VERSION }}
+          git push origin v${{ env.VERSION }}
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Usa la CLI 'gh' (que ya viene instalada en GitHub Actions)
+          # --generate-notes crea automáticamente la lista de cambios basada en los commits
+          gh release create v${{ env.VERSION }} \
+            --title "Deer v${{ env.VERSION }}" \
+            --generate-notes
