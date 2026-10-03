@@ -156,7 +156,13 @@ class GitManager(ToolProvider):
         """Shows line-by-line differences in the working tree that have NOT been staged yet.
         Essential for reviewing edits before adding them."""
         return self.git(
-            path, ["diff", "--no-pager", "--", self.mormalize_target(path, target)]
+            path,
+            [
+                "--no-pager",
+                "diff",
+                "--",
+                self.mormalize_target(path, target),
+            ],
         )
 
     @tool()
@@ -166,8 +172,8 @@ class GitManager(ToolProvider):
         return self.git(
             path,
             [
-                "diff",
                 "--no-pager",
+                "diff",
                 "--cached",
                 "--",
                 self.mormalize_target(path, target),
