@@ -229,6 +229,9 @@ class PythonStructEditor(ToolProvider):
     ) -> Return(success=bool, message=str):
         """Adds a top-level function or updates an existing one if the name matches. 'function_code' must be a valid Python function definition."""
         safe_path = self.jailed_path(path)
+        if not safe_path.exists():
+            return {"success": False, "message": f"File not found at path: {path}"}
+
         try:
             new_fn_module = cst.parse_module(function_code.strip())
             new_fn_node = next(
@@ -240,9 +243,7 @@ class PythonStructEditor(ToolProvider):
                     "message": "No valid function definition found in provided code.",
                 }
 
-            content = (
-                safe_path.read_text(encoding="utf-8") if safe_path.exists() else ""
-            )
+            content = safe_path.read_text(encoding="utf-8")
             module_cst = cst.parse_module(content)
 
             transformer = FunctionTransformer(new_fn_node)
@@ -293,6 +294,9 @@ class PythonStructEditor(ToolProvider):
     ) -> Return(success=bool, message=str):
         """Adds a method to a specific class or updates it if the name matches. 'method_code' must be a valid Python function definition."""
         safe_path = self.jailed_path(path)
+        if not safe_path.exists():
+            return {"success": False, "message": f"File not found at path: {path}"}
+
         try:
             new_fn_module = cst.parse_module(method_code.strip())
             new_method_node = next(
@@ -343,6 +347,9 @@ class PythonStructEditor(ToolProvider):
     ) -> Return(success=bool, message=str):
         """Adds a top-level class or updates an existing one. 'class_code' must be a valid Python class definition."""
         safe_path = self.jailed_path(path)
+        if not safe_path.exists():
+            return {"success": False, "message": f"File not found at path: {path}"}
+
         try:
             new_cl_module = cst.parse_module(class_code.strip())
             new_class_node = next(
@@ -351,9 +358,7 @@ class PythonStructEditor(ToolProvider):
             if not new_class_node:
                 return {"success": False, "message": "No valid class definition found."}
 
-            content = (
-                safe_path.read_text(encoding="utf-8") if safe_path.exists() else ""
-            )
+            content = safe_path.read_text(encoding="utf-8")
             module_cst = cst.parse_module(content)
 
             transformer = ClassTransformer(new_class_node)
@@ -396,15 +401,16 @@ class PythonStructEditor(ToolProvider):
     ) -> Return(success=bool, message=str):
         """Inserts a unique import statement at the top of the file. Avoids duplicates and preserves order."""
         safe_path = self.jailed_path(path)
+        if not safe_path.exists():
+            return {"success": False, "message": f"File not found at path: {path}"}
+
         try:
             new_import_module = cst.parse_module(import_code.strip())
             if not new_import_module.body:
                 return {"success": False, "message": "Invalid import code."}
             new_import_node = new_import_module.body[0]
 
-            content = (
-                safe_path.read_text(encoding="utf-8") if safe_path.exists() else ""
-            )
+            content = safe_path.read_text(encoding="utf-8")
             module_cst = cst.parse_module(content)
 
             transformer = ImportTransformer(new_import_node)
