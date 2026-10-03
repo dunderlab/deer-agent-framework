@@ -126,14 +126,23 @@ class GitManager(ToolProvider):
     def git_diff(self, path: str, target: str) -> CommandOut:
         """Shows line-by-line differences in the working tree that have NOT been staged yet.
         Essential for reviewing edits before adding them."""
-        return self.git(path, ["diff", "--", self.mormalize_target(path, target)])
+        return self.git(
+            path, ["diff", "--no-pager", "--", self.mormalize_target(path, target)]
+        )
 
     @tool()
     def git_staged_diff(self, path: str, target: str) -> CommandOut:
         """Shows line-by-line differences for changes already in the staging area.
         Use this as a final verification before committing."""
         return self.git(
-            path, ["diff", "--cached", "--", self.mormalize_target(path, target)]
+            path,
+            [
+                "diff",
+                "--no-pager",
+                "--cached",
+                "--",
+                self.mormalize_target(path, target),
+            ],
         )
 
     @tool()
