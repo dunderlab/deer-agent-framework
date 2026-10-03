@@ -72,6 +72,7 @@ class GitManager(ToolProvider):
 
     def mormalize_target(self, path, target):
         normalized_target = target.strip()
+        path = self.sanitize_path(path)
         if path and target.startswith(path.strip() + "/"):
             normalized_target = target[len(path) + 1 :]
         return normalized_target
