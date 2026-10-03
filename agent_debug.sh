@@ -4,8 +4,9 @@
 PROJECT_DIR=$(pwd)
 VENV_PATH="$PROJECT_DIR/.venv/bin/activate"
 WORKING_DIR="$PROJECT_DIR/sandbox"
-AGENT="operating_system.py"
+#AGENT="operating_system.py"
 #AGENT="python_architect.py"
+AGENT="deer_introspection.py"
 
 # 2. Build the full command to be executed in the new window
 # Combine environment activation, PYTHONPATH, and script execution
