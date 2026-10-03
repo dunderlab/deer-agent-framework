@@ -28,16 +28,16 @@ class VectorMemory:
         )
 
     def add_document(
-        self, doc_id: str, text: str, metadata: Optional[dict[str, Any]] = None
+        self, id: str, doc: str, metadata: Optional[dict[str, Any]] = None
     ) -> None:
         """
         Add a document to the vector collection.
 
         Parameters
         ----------
-        doc_id : str
+        id : str
             Unique identifier for the document.
-        text : str
+        doc : str
             The content of the document to be embedded and stored.
         metadata : dict, optional
             Additional metadata associated with the document.
@@ -47,7 +47,7 @@ class VectorMemory:
         if "hit_count" not in meta:
             meta["hit_count"] = 0
 
-        self.collection.add(documents=[text], metadatas=[meta], ids=[doc_id])
+        self.collection.add(documents=[doc], metadatas=[meta], ids=[id])
 
     def query(self, query_text: str, n_results: int = 3) -> list[dict[str, Any]]:
         """
@@ -327,3 +327,14 @@ class VectorMemory:
             )
 
         return len(ids_to_delete)
+
+    def load_json(self, json_path: Path):
+
+        if not json_path.exists():
+            raise ValueError("bla bla")
+
+        with json_path.open("r", encoding="utf-8") as f:
+            memories = json.load(f)
+
+        for memory in memories:
+            self.add_document(**memory)
