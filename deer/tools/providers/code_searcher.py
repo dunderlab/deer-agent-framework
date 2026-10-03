@@ -45,9 +45,21 @@ class CodeSearcher(BaseCommandRunner):
         absolute_lines = []
         for line in raw_output.splitlines():
             if ":" in line:
-                relative_path, separator, rest = line.partition(":")
-                absolute_path = os.path.abspath(os.path.join(path, relative_path))
-                absolute_lines.append(f"{absolute_path}{separator}{rest}")
+                # 1. Separamos la ruta relativa que dio rg del resto de la línea
+                relative_to_cwd, separator, rest = line.partition(":")
+
+                # 2. Construimos la ruta absoluta REAL en el sistema de archivos del host
+                # path = directorio donde se ejecutó el comando
+                # relative_to_cwd = ruta que devolvió rg
+                full_system_path = os.path.join(path, relative_to_cwd)
+
+                # 3. AQUÍ ESTÁ LA MAGIA: Convertimos la ruta absoluta del host
+                # en una ruta relativa a self.jail.
+                # Esto elimina la parte de '/Users/yeison/...' y deja solo 'astropy/modeling/...'
+                jail_relative_path = os.path.relpath(full_system_path, self.jail)
+
+                # 4. Reconstruimos la línea para el agente
+                absolute_lines.append(f"{jail_relative_path}{separator}{rest}")
             else:
                 absolute_lines.append(line)
 
