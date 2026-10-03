@@ -64,6 +64,9 @@ class ToolProvider:
         2. If 'path' is absolute, it's checked for containment.
         3. All '..' and symlinks are resolved before validation.
         """
+        if isinstance(path, str):
+            path = path.strip()
+
         path = Path(path)
 
         # Handle point 2: If relative, interpret it as inside the jail.
