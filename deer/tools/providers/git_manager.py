@@ -39,15 +39,16 @@ class GitManager(ToolProvider):
         except Exception as e:
             return _failure(f"Environment error: {e}")
 
-        try:
-            # Ejecutamos rev-parse para confirmar que hay un .git en algún nivel superior
-            check_repo = self.run_command(
-                "git rev-parse --is-inside-work-tree", cwd=str(path)
-            )
-            if check_repo["returncode"] != 0:
-                return _failure(f"The path '{path}' is not inside a git repository.")
-        except Exception as e:
-            return _failure(f"Error verifying git repository: {e}")
+        if not 'clone' in args:
+            try:
+                # Ejecutamos rev-parse para confirmar que hay un .git en algún nivel superior
+                check_repo = self.run_command(
+                    "git rev-parse --is-inside-work-tree", cwd=str(path)
+                )
+                if check_repo["returncode"] != 0:
+                    return _failure(f"The path '{path}' is not inside a git repository.")
+            except Exception as e:
+                return _failure(f"Error verifying git repository: {e}")
 
         # 4. Execution
         try:
