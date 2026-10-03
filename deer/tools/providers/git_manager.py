@@ -55,6 +55,12 @@ class GitManager(ToolProvider):
         )
         return {**result, "message": status_message}
 
+    def mormalize_target(self, path, target):
+        normalized_target = target
+        if path and target.startswith(path + "/"):
+            normalized_target = target[len(path) + 1 :]
+        return normalized_target
+
     @property
     def commands(self):
         return ["git"]
@@ -112,13 +118,15 @@ class GitManager(ToolProvider):
     def git_diff(self, path: str, target: str) -> CommandOut:
         """Shows line-by-line differences in the working tree that have NOT been staged yet.
         Essential for reviewing edits before adding them."""
-        return self.git(path, ["diff", "--", target])
+        return self.git(path, ["diff", "--", self.mormalize_target(path, target)])
 
     @tool()
     def git_staged_diff(self, path: str, target: str) -> CommandOut:
         """Shows line-by-line differences for changes already in the staging area.
         Use this as a final verification before committing."""
-        return self.git(path, ["diff", "--cached", "--", target])
+        return self.git(
+            path, ["diff", "--cached", "--", self.mormalize_target(path, target)]
+        )
 
     @tool()
     def git_show(self, path: str, revision: str) -> CommandOut:
@@ -130,7 +138,8 @@ class GitManager(ToolProvider):
     def git_add(self, path: str, target: str) -> CommandOut:
         """Moves changes from the working tree to the staging area.
         This is a mandatory prerequisite for 'git_commit'."""
-        return self.git(path, ["add", "--", target])
+
+        return self.git(path, ["add", "--", self.mormalize_target(path, target)])
 
     @tool(modifies_state=True)
     def git_commit(self, path: str, message: str) -> CommandOut:
@@ -142,4 +151,4 @@ class GitManager(ToolProvider):
     def git_restore(self, path: str, target: str) -> CommandOut:
         """Reverts unstaged modifications in the working tree.
         IRREVERSIBLE for uncommitted data; use only to discard unwanted edits."""
-        return self.git(path, ["restore", "--", target])
+        return self.git(path, ["restore", "--", self.mormalize_target(path, target)])
