@@ -38,7 +38,7 @@ class CodeSearcher(BaseCommandRunner):
     ) -> CommandOut:
         result = super()._execute_command(binary, args, path, timeout_seconds)
 
-        raw_output = result.stdout
+        raw_output = result.get("stdout")
         if not raw_output:
             return result
 
@@ -51,7 +51,7 @@ class CodeSearcher(BaseCommandRunner):
             else:
                 absolute_lines.append(line)
 
-        result.stdout = "\n".join(absolute_lines)
+        result["stdout"] = "\n".join(absolute_lines)
         return result
 
     @tool(
