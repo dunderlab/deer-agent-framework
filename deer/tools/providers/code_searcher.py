@@ -1,5 +1,6 @@
 import os
 from dataclasses import dataclass
+from pathlib import Path
 from typing import List
 
 from deer.tools import tool
@@ -36,8 +37,11 @@ class CodeSearcher(BaseCommandRunner):
     def _execute_command(
         self, binary: str, args: List[str], path: str, timeout_seconds: int = 60
     ) -> CommandOut:
-        path = self.jailed_path(path)
-        result = super()._execute_command(binary, args, path, timeout_seconds)
+        # 1. Resolvemos el path de ejecución a una ruta absoluta real y limpia
+        abs_cwd = Path(self.jailed_path(path)).resolve()
+
+        # Ejecutamos el comando pasando el path como string
+        result = super()._execute_command(binary, args, str(abs_cwd), timeout_seconds)
 
         raw_output = result.get("stdout")
         if not raw_output:
@@ -45,26 +49,27 @@ class CodeSearcher(BaseCommandRunner):
 
         absolute_lines = []
         for line in raw_output.splitlines():
+
+            # 1. Identificamos la ruta, esté o no acompañada de línea/columna
             if ":" in line:
-                # 1. Separamos la ruta relativa que dio rg del resto de la línea
                 relative_to_cwd, separator, rest = line.partition(":")
-
-                # 2. Construimos la ruta absoluta REAL en el sistema de archivos del host
-                # path = directorio donde se ejecutó el comando
-                # relative_to_cwd = ruta que devolvió rg
-                full_system_path = os.path.join(path, relative_to_cwd)
-
-                # 3. AQUÍ ESTÁ LA MAGIA: Convertimos la ruta absoluta del host
-                # en una ruta relativa a self.jail.
-                # Esto elimina la parte de '/Users/yeison/...' y deja solo 'astropy/modeling/...'
-                jail_relative_path = os.path.relpath(full_system_path, self.jail)
-
-                # 4. Reconstruimos la línea para el agente
-                absolute_lines.append(f"{jail_relative_path}{separator}{rest}")
             else:
+                relative_to_cwd, separator, rest = line, "", ""
+
+            # 2. Normalizamos la ruta SIEMPRE (ya sea un archivo solo o una línea de match)
+            try:
+                full_system_path = (abs_cwd / relative_to_cwd).resolve()
+                jail_root = Path(self.jail).resolve()
+                jail_relative_path = full_system_path.relative_to(jail_root)
+
+                # Reconstruimos la línea manteniendo el separador y el resto si existían
+                absolute_lines.append(f"{jail_relative_path}{separator}{rest}")
+            except ValueError:
+                # Si la ruta escapa del jail, devolvemos la línea original
                 absolute_lines.append(line)
 
-        result["stdout"] = "\n".join(absolute_lines)
+        # result["stdout"] = "\n".join(absolute_lines)
+        result["stdout"] = "\n".join(absolute_lines) + ("\n" if absolute_lines else "")
         return result
 
     @tool(
@@ -77,7 +82,8 @@ class CodeSearcher(BaseCommandRunner):
         ]
     )
     def search_text_literal(self, path: str, query: str) -> CommandOut:
-        """Finds literal fixed-string matches in all files under 'path'. Returns file paths, line numbers, and content."""
+        """Finds literal fixed-string matches in all files under 'path'. Returns file paths, line numbers, and content.
+        Returns paths relative to the root directory. Use exactly as returned."""
         return self._execute_command(
             "rg",
             [
@@ -101,7 +107,8 @@ class CodeSearcher(BaseCommandRunner):
         ]
     )
     def search_text_regex(self, path: str, pattern: str) -> CommandOut:
-        """Finds text using PCRE2 regex patterns in all files under 'path'. Returns file paths, line numbers, and content."""
+        """Finds text using PCRE2 regex patterns in all files under 'path'. Returns file paths, line numbers, and content.
+        Returns paths relative to the root directory. Use exactly as returned."""
         return self._execute_command(
             "rg",
             [
@@ -124,7 +131,8 @@ class CodeSearcher(BaseCommandRunner):
         ]
     )
     def search_text_insensitive(self, path: str, query: str) -> CommandOut:
-        """Finds literal text matches ignoring case in all files under 'path'. Returns file paths, line numbers, and content."""
+        """Finds literal text matches ignoring case in all files under 'path'. Returns file paths, line numbers, and content.
+        Returns paths relative to the root directory. Use exactly as returned."""
         return self._execute_command(
             "rg",
             [
@@ -149,7 +157,8 @@ class CodeSearcher(BaseCommandRunner):
         ]
     )
     def search_regex_insensitive(self, path: str, pattern: str) -> CommandOut:
-        """Finds regex matches ignoring case in all files under 'path'. Returns file paths, line numbers, and content."""
+        """Finds regex matches ignoring case in all files under 'path'. Returns file paths, line numbers, and content.
+        Returns paths relative to the root directory. Use exactly as returned."""
         return self._execute_command(
             "rg",
             [
@@ -173,7 +182,8 @@ class CodeSearcher(BaseCommandRunner):
         ]
     )
     def find_files_by_glob(self, path: str, pattern: str) -> CommandOut:
-        """Locates files matching a glob pattern (e.g., '*.py', '**/tests/*') under 'path'."""
+        """Locates files matching a glob pattern (e.g., '*.py', '**/tests/*') under 'path'.
+        Returns paths relative to the root directory. Use exactly as returned."""
         return self._execute_command(
             "rg",
             [
@@ -195,7 +205,8 @@ class CodeSearcher(BaseCommandRunner):
         ]
     )
     def find_files_by_name(self, path: str, pattern: str) -> CommandOut:
-        """Finds files whose names contain the specified substring under 'path'."""
+        """Finds files whose names contain the specified substring under 'path'.
+        Returns paths relative to the root directory. Use exactly as returned."""
         return self._execute_command(
             "rg",
             [
@@ -213,7 +224,8 @@ class CodeSearcher(BaseCommandRunner):
         ]
     )
     def list_all_files(self, path: str) -> CommandOut:
-        """Recursively lists all files under the specified 'path'."""
+        """Recursively lists all files under the specified 'path'.
+        Returns paths relative to the root directory. Use exactly as returned."""
         return self._execute_command(
             "rg",
             [
@@ -233,7 +245,8 @@ class CodeSearcher(BaseCommandRunner):
         ]
     )
     def find_files_by_extension(self, path: str, extension: str) -> CommandOut:
-        """Lists files matching a specific extension (e.g., 'py', 'json') under 'path'."""
+        """Lists files matching a specific extension (e.g., 'py', 'json') under 'path'.
+        Returns paths relative to the root directory. Use exactly as returned."""
         ext = extension.lstrip(".")
         return self._execute_command(
             "rg",
@@ -256,7 +269,8 @@ class CodeSearcher(BaseCommandRunner):
         ]
     )
     def search_text_in_glob(self, path: str, query: str, glob: str) -> CommandOut:
-        """Finds literal text matches only within files that match the specified glob pattern under 'path'."""
+        """Finds literal text matches only within files that match the specified glob pattern under 'path'.
+        Returns paths relative to the root directory. Use exactly as returned."""
         return self._execute_command(
             "rg",
             [
@@ -275,12 +289,30 @@ class CodeSearcher(BaseCommandRunner):
     @tool(
         tests=[
             Case(
-                {"path": ".", "query": "world"}, {**EXPECTED_SUCCESS}, files=_TEST_FILES
+                {"path": ".", "query": "world"},
+                {**EXPECTED_SUCCESS},
+                files=_TEST_FILES,
+            ),
+            Case(
+                {
+                    "path": "src",
+                    "query": "hello world",
+                },
+                {
+                    "stdout": "src/main.py\n",
+                    "stderr": "",
+                    "returncode": 0,
+                    "message": "Command completed successfully.",
+                },
+                files={
+                    "src/main.py": "def hello():\n    print('hello world')",
+                },
             ),
         ]
     )
     def find_files_containing(self, path: str, query: str) -> CommandOut:
-        """Lists names of files that contain at least one literal match of the 'query' under 'path'."""
+        """Lists names of files that contain at least one literal match of the 'query' under 'path'.
+        Returns paths relative to the root directory. Use exactly as returned."""
         return self._execute_command(
             "rg",
             [
@@ -303,7 +335,8 @@ class CodeSearcher(BaseCommandRunner):
         ]
     )
     def find_files_not_containing(self, path: str, query: str) -> CommandOut:
-        """Lists names of files that do NOT contain the specified literal 'query' under 'path'."""
+        """Lists names of files that do NOT contain the specified literal 'query' under 'path'.
+        Returns paths relative to the root directory. Use exactly as returned."""
         return self._execute_command(
             "rg",
             [
@@ -323,7 +356,8 @@ class CodeSearcher(BaseCommandRunner):
         ]
     )
     def count_text_occurrences(self, path: str, query: str) -> CommandOut:
-        """Returns a count of literal matches of 'query' per file under 'path'."""
+        """Returns a count of literal matches of 'query' per file under 'path'.
+        Returns paths relative to the root directory. Use exactly as returned."""
         return self._execute_command(
             "rg",
             [

@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass
 import shlex
 from typing import List
@@ -23,7 +24,6 @@ class GitManager(ToolProvider):
     # def git(self, path: str, *args: str | int) -> CommandOut:
     def git(self, path: str, args: List[str], timeout_seconds: int = 60) -> CommandOut:
         binary = "git"
-
         path = path.strip()
 
         # 1. Validate path boundaries
@@ -69,6 +69,38 @@ class GitManager(ToolProvider):
             else f"Command failed with exit code {exit_code}."
         )
         return {**result, "message": status_message}
+
+    def _normalize_target(self, path: str, target: str) -> str:
+        """
+        Intelligently normalizes the target.
+        If target is a Git reference (hash, branch) or a special token ('.'),
+        it returns it as is. If it's a path, it makes it relative to the repo root.
+        """
+        target = target.strip()
+
+        # 1. Special Token: The root of the repository
+        if target == ".":
+            return "."
+
+        # 2. Git Reference: Commit hashes (hex strings of 7 to 40 chars)
+        # We check if it looks like a hash to avoid passing it through the jail validator
+        if re.match(r"^[0-9a-f]{7,40}$", target):
+            return target
+
+        # 3. Path Normalization: Only for actual file/folder paths
+        try:
+            abs_path = self.jailed_path(path)
+            abs_target = self.jailed_path(target)
+
+            # Only return a relative path if the target actually resides within the repo folder
+            if abs_target.is_relative_to(abs_path):
+                return str(abs_target.relative_to(abs_path))
+        except Exception:
+            # If resolution fails, we assume it's a branch name or tag (e.g., 'main', 'v1.0')
+            pass
+
+        # Fallback: return as is (assumed to be a branch, tag, or non-path reference)
+        return target
 
     @property
     def commands(self):
