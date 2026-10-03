@@ -6,10 +6,9 @@ build-backend = "setuptools.build_meta"
 name = "deer-agent-framework"
 version = "0.2.4"
 description = "DEER - Deterministic Executable Engine for Runtime-agents"
-authors = [{ name = "Yeison" }]
+authors = [{ name = "Yeison Cardona" }]
 license = { text = "BSD-2-Clause" }
 classifiers = [
-    "Development Status :: 3 - Alpha",
     "Environment :: Console",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
@@ -36,8 +35,6 @@ dependencies = [
 
 [project.optional-dependencies]
 debug = [
-    #    "matplotlib>=3.10.9",
-    #    "pandas>=3.0.3",
     "pytest>=9.0.3",
 ]
 
