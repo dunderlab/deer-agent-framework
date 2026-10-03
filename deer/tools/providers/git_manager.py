@@ -149,7 +149,9 @@ class GitManager(ToolProvider):
         """Retrieves a condensed history of recent commits.
         Useful for tracking project evolution or identifying specific revisions for inspection.
         """
-        return self.git(path, ["log", "--oneline", "--decorate", f"-n {max_count}"])
+        return self.git(
+            path, ["--no-pager", "log", "--oneline", "--decorate", f"-n {max_count}"]
+        )
 
     @tool()
     def git_diff(self, path: str, target: str) -> CommandOut:
@@ -184,7 +186,7 @@ class GitManager(ToolProvider):
     def git_show(self, path: str, revision: str) -> CommandOut:
         """Provides a detailed view of a specific commit, including metadata and the full patch.
         Use this to audit past changes."""
-        return self.git(path, ["show", "--stat", "--patch", revision])
+        return self.git(path, ["--no-pager", "show", "--stat", "--patch", revision])
 
     @tool(modifies_state=True)
     def git_add(self, path: str, target: str) -> CommandOut:
