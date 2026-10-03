@@ -14,10 +14,11 @@ class Planner:
     It transforms the user goal, context, and tool registry into a structured ExecutionPlan.
     """
 
-    def __init__(self, driver, tool_registry: ToolRegistry, max_attempts=3):
+    def __init__(self, identity, driver, tool_registry: ToolRegistry, max_attempts=3):
         self.driver = driver
         self.tool_registry = tool_registry
         self.max_attempts = max_attempts
+        self.identity = identity
 
     def build_system_prompt(self, state_filter="BOTH") -> str:
         """
@@ -27,7 +28,7 @@ class Planner:
         tools_menu = self.tool_registry.describe(state_filter=state_filter)
 
         return (
-            "You are the DEER Deterministic Planner. Your goal is to design a rigid execution pipeline.\n\n"
+            f"{self.identity}\n\n"
             "REQUIRED STRUCTURE:\n"
             "{\n"
             '  "goal": "string",\n'
@@ -62,7 +63,7 @@ class Planner:
         else:
             verification = f"VERIFICATION TRACE:\n{trace_verification.model_dump_json(indent=2)}\n\n"
         return (
-            "You are the DEER Technical Auditor. Your goal is to synthesize the execution results into a final verdict.\n\n"
+            f"{self.identity}\n\n"
             f"USER GOAL: {goal}\n\n"
             f"ACTION TRACE:\n{trace_solution.model_dump_json(indent=2)}\n\n"
             f"{verification}"
