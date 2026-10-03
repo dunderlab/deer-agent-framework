@@ -65,7 +65,7 @@ class ToolProvider:
         3. All '..' and symlinks are resolved before validation.
         """
         if isinstance(path, str):
-            path = path.strip()
+            path = self.sanitize_path(path)
 
         path = Path(path)
 
@@ -160,6 +160,29 @@ class ToolProvider:
                 f"The command '{cmd_str}' is not available on the system. "
                 f"Please ensure it is installed and configured in your PATH."
             )
+
+    def sanitize_path(self, path: str | Path) -> str:
+        """
+        Limpia las rutas de entrada para evitar errores comunes de I/O.
+
+        Elimina:
+        - Saltos de línea (\n, \r) que suelen venir de outputs de comandos.
+        - Comillas simples o dobles que el agente podría incluir por error.
+        - Espacios en blanco accidentales al inicio o final.
+        """
+        if isinstance(path, Path):
+            return path
+
+        if not path:
+            return path
+
+        # Eliminamos comillas y espacios en blanco
+        sanitized = path.strip().strip('"').strip("'")
+
+        # Eliminamos cualquier salto de línea residual que haya quedado dentro
+        sanitized = sanitized.replace("\n", "").replace("\r", "")
+
+        return sanitized
 
 
 class Tool(ABC):

@@ -36,6 +36,7 @@ class CodeSearcher(BaseCommandRunner):
     def _execute_command(
         self, binary: str, args: List[str], path: str, timeout_seconds: int = 60
     ) -> CommandOut:
+        path = self.sanitize_path(path)
         result = super()._execute_command(binary, args, path, timeout_seconds)
 
         raw_output = result.get("stdout")
