@@ -166,17 +166,6 @@ class DeterministicAgent:
 
         return filename
 
-    def clear_working_dir(self, ignore=None):
-        for item in self.working_dir.iterdir():
-            if ignore and item in ignore:
-                continue
-
-            full_path = self.working_dir / item
-            if full_path.is_dir():
-                shutil.rmtree(full_path)
-            else:
-                full_path.unlink()
-
     def _execute_phase(
         self, goal: str, history: list[ChatMessage], update_history_attr: str
     ) -> tuple[ExecutionTrace, list[ChatMessage]]:
