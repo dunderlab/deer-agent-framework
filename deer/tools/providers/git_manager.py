@@ -93,6 +93,14 @@ class GitManager(ToolProvider):
         """
         return self.git(path, ["clone", repository_url, repository_name])
 
+    @tool(modifies_state=True)
+    def git_checkout(self, path: str, target: str) -> CommandOut:
+        """Switches the repository to a specific branch, commit hash, or tag.
+        Use this to move the HEAD to a specific version of the project before analysis or fixing.
+        """
+        # We use the same git helper. 'target' can be a branch name or a commit hash.
+        return self.git(path, ["checkout", self.mormalize_target(path, target)])
+
     @tool()
     def git_status(self, path: str) -> CommandOut:
         """Provides a concise summary of working tree changes.
