@@ -42,7 +42,7 @@ dependencies = [
 
 [project.optional-dependencies]
 debug = [
-    "pytest>=9.0.3",
+    "pytest>=9.0.0",
 ]
 
 [tool.setuptools.packages.find]
