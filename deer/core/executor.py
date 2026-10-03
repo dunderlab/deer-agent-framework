@@ -39,7 +39,12 @@ class PipelineExecutor:
                 start_time = time.perf_counter()
                 try:
                     result = tool.run(params=resolved_args)
-                    status = "SUCCESS"
+
+                    if result.get("returncode", 0):
+                        status = "FAILED"
+                    else:
+                        status = "SUCCESS"
+
                     error_msg = None
                 except Exception as e:
                     result = None
