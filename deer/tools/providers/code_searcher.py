@@ -1,4 +1,6 @@
+import os
 from dataclasses import dataclass
+from typing import List
 
 from deer.tools import tool
 from deer.tools.schemas import CommandOut, Case
@@ -30,6 +32,27 @@ class CodeSearcher(BaseCommandRunner):
     @property
     def allowed_commands(self):
         return ["rg"]
+
+    def _execute_command(
+        self, binary: str, args: List[str], path: str, timeout_seconds: int = 60
+    ) -> CommandOut:
+        result = super()._execute_command(binary, args, path, timeout_seconds)
+
+        raw_output = result.stdout
+        if not raw_output:
+            return result
+
+        absolute_lines = []
+        for line in raw_output.splitlines():
+            if ":" in line:
+                relative_path, separator, rest = line.partition(":")
+                absolute_path = os.path.abspath(os.path.join(path, relative_path))
+                absolute_lines.append(f"{absolute_path}{separator}{rest}")
+            else:
+                absolute_lines.append(line)
+
+        result.stdout = "\n".join(absolute_lines)
+        return result
 
     @tool(
         tests=[
