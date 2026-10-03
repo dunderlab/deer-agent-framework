@@ -21,7 +21,7 @@ def driver():
 
 
 def test_planer(tool_registry, driver):
-    planner = Planner(identity="", dirver=driver, tool_registry=tool_registry)
+    planner = Planner(identity="", driver=driver, tool_registry=tool_registry)
     validator = PlanValidator(tool_registry=tool_registry)
 
     history = [
