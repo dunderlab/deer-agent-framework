@@ -23,7 +23,7 @@ class BaseCommandRunner(ToolProvider):
         self, binary: str, args: List[str], path: str, timeout_seconds: int = 60
     ) -> CommandOut:
         # 1. Validate path boundaries
-        self.jailed_path(path)
+        path = self.jailed_path(path)
 
         # 2. Validate timeout constraints
         if not 1 <= timeout_seconds <= MAX_TIMEOUT:

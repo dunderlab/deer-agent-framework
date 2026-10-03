@@ -1,3 +1,4 @@
+import os
 from abc import ABC, abstractmethod
 from typing import Any, Type
 from dataclasses import dataclass, field
@@ -65,7 +66,14 @@ class ToolProvider:
         3. All '..' and symlinks are resolved before validation.
         """
         if isinstance(path, str):
-            path = self.sanitize_path(path)
+            path = self._sanitize_path(path)
+
+        # Si el agente incluyó el nombre del jail en el path (ej: 'astropy/modeling/...')
+        # lo quitamos para evitar rutas redundantes como 'astropy/astropy/...'
+        if isinstance(path, str):
+            jail_name = os.path.basename(self.jail)
+            if path.startswith(jail_name + os.sep) or path.startswith(jail_name + "/"):
+                path = path[len(jail_name) + 1 :]
 
         path = Path(path)
 
@@ -161,28 +169,23 @@ class ToolProvider:
                 f"Please ensure it is installed and configured in your PATH."
             )
 
-    def sanitize_path(self, path: str | Path) -> str:
-        """
-        Limpia las rutas de entrada para evitar errores comunes de I/O.
+    def _sanitize_path(self, path: str | Path) -> str:
 
-        Elimina:
-        - Saltos de línea (\n, \r) que suelen venir de outputs de comandos.
-        - Comillas simples o dobles que el agente podría incluir por error.
-        - Espacios en blanco accidentales al inicio o final.
-        """
         if isinstance(path, Path):
             return path
 
         if not path:
             return path
 
-        # Eliminamos comillas y espacios en blanco
         sanitized = path.strip().strip('"').strip("'")
-
-        # Eliminamos cualquier salto de línea residual que haya quedado dentro
         sanitized = sanitized.replace("\n", "").replace("\r", "")
-
         return sanitized
+
+    def _normalize_target(self, path, target):
+        abs_path = self.jailed_path(path)
+        abs_target = self.jailed_path(target)
+
+        return str(abs_target.relative_to(abs_path))
 
 
 class Tool(ABC):
