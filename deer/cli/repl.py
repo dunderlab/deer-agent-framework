@@ -7,7 +7,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 from rich.table import Table
 from rich.text import Text
-from prompt_toolkit import prompt, PromptSession
+from prompt_toolkit import PromptSession
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.completion import Completer, WordCompleter
@@ -23,6 +23,7 @@ COMMANDS = {
     "/exit": "Terminate the session",
     "/rollback": "Revert the system to the last stable state",
     "/trace": "Display the detailed execution trace and variable resolution of the last plan.",
+    "/savetrace": "Saves the current execution trace to a file for later analysis.",
     "/history": "Display the history of messages and commands",
     "/clearhistory": "Purge all session history and reset memory state.",
     # "/vhistory": "Display the history of verifier messages and commands",
@@ -210,6 +211,15 @@ class AgentREPL:
                     f"[dim][bold]Context size:[/bold] ~{self.agent.format_bytes(bytes)}[/dim]\n",
                     sep="",
                 )
+
+            case "/savetrace":
+                try:
+                    filename = self.agent.save_trace()
+                    self.console.print(f"[dim]Trace saved in {filename}[/dim]\n")
+                except Exception as e:
+                    self.console.print(
+                        f"[bold red]Error saving trace:[/bold red] {e}\n"
+                    )
 
             case "/savecontext":
                 try:
