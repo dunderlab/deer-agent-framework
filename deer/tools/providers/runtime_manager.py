@@ -1,6 +1,6 @@
 import shlex
 from dataclasses import dataclass
-from typing import Literal, TypeVar, Generic, List, Dict, Any
+from typing import Literal, TypeVar, Generic, List, Dict, Any, get_args
 
 from deer.tools import ToolProvider, tool
 from deer.tools.schemas import Case, CommandOut
@@ -18,7 +18,15 @@ def _failure(message: str) -> dict:
 # --- Specialized Command Sets ---
 # We define Literals separately so each Agent sees only its relevant commands
 DevCommand = Literal[
-    "python", "python3", "gcc", "g++", "javac", "npm", "node", "jest", "vitest"
+    "python",
+    "python3",
+    "gcc",
+    "g++",
+    "javac",
+    "npm",
+    "node",
+    "jest",
+    "vitest",
 ]
 
 AdminCommand = Literal[
@@ -94,12 +102,25 @@ class DevCommandRunner(BaseCommandRunner):
     within the jailed environment.
     """
 
+    @property
+    def allowed_commands(self):
+        return list(get_args(DevCommand))
+
     @tool(
         modifies_state=True,
         tests=[
             Case(
                 {"binary": "python3", "args": ["-c", "print('hi')"]},
                 {"stdout": "hi\n", "stderr": str, "returncode": 0, "message": str},
+            ),
+            Case(
+                {"binary": "git", "args": ["status"]},
+                {
+                    "stdout": str,
+                    "stderr": "Command 'git status' is not allowed.",
+                    "returncode": -1,
+                    "message": "Command failed with exit code -1.",
+                },
             ),
         ],
     )
@@ -123,6 +144,10 @@ class SysAdminRunner(BaseCommandRunner):
     Provides capabilities to execute system administration tools
     within the jailed environment.
     """
+
+    @property
+    def allowed_commands(self):
+        return list(get_args(AdminCommand))
 
     @tool(
         modifies_state=True,
