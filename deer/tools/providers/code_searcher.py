@@ -1,8 +1,8 @@
-import shlex
 from dataclasses import dataclass
 
-from deer.tools import ToolProvider, tool
+from deer.tools import tool
 from deer.tools.schemas import CommandOut, Case
+from .base.base_command_runner import BaseCommandRunner
 
 # Constants moved outside to prevent NameError
 EXPECTED_SUCCESS = {
@@ -14,7 +14,7 @@ EXPECTED_SUCCESS = {
 
 
 @dataclass
-class CodeSearcher(ToolProvider):
+class CodeSearcher(BaseCommandRunner):
     """
     Advanced codebase search tool based on ripgrep (rg).
     Used for finding text patterns, locating files, and analyzing project structure.
@@ -27,10 +27,9 @@ class CodeSearcher(ToolProvider):
         "config.json": '{"version": "1.0", "env": "dev"}',
     }
 
-    def _rg(self, path: str, *args: str) -> CommandOut:
-        """Internal helper to execute ripgrep commands."""
-        quoted_args = " ".join(shlex.quote(arg) for arg in args)
-        return self.run_command(f"rg {quoted_args}", cwd=path)
+    @property
+    def allowed_commands(self):
+        return ["rg"]
 
     @tool(
         tests=[
@@ -43,14 +42,17 @@ class CodeSearcher(ToolProvider):
     )
     def search_text_literal(self, path: str, query: str) -> CommandOut:
         """Finds literal fixed-string matches in all files under 'path'. Returns file paths, line numbers, and content."""
-        return self._rg(
+        return self._execute_command(
+            "rg",
+            [
+                "--fixed-strings",
+                "--line-number",
+                "--column",
+                "--no-heading",
+                query,
+                ".",
+            ],
             path,
-            "--fixed-strings",
-            "--line-number",
-            "--column",
-            "--no-heading",
-            query,
-            ".",
         )
 
     @tool(
@@ -64,7 +66,17 @@ class CodeSearcher(ToolProvider):
     )
     def search_text_regex(self, path: str, pattern: str) -> CommandOut:
         """Finds text using PCRE2 regex patterns in all files under 'path'. Returns file paths, line numbers, and content."""
-        return self._rg(path, "--line-number", "--column", "--no-heading", pattern, ".")
+        return self._execute_command(
+            "rg",
+            [
+                "--line-number",
+                "--column",
+                "--no-heading",
+                pattern,
+                ".",
+            ],
+            path,
+        )
 
     @tool(
         tests=[
@@ -77,15 +89,18 @@ class CodeSearcher(ToolProvider):
     )
     def search_text_insensitive(self, path: str, query: str) -> CommandOut:
         """Finds literal text matches ignoring case in all files under 'path'. Returns file paths, line numbers, and content."""
-        return self._rg(
+        return self._execute_command(
+            "rg",
+            [
+                "--fixed-strings",
+                "--ignore-case",
+                "--line-number",
+                "--column",
+                "--no-heading",
+                query,
+                ".",
+            ],
             path,
-            "--fixed-strings",
-            "--ignore-case",
-            "--line-number",
-            "--column",
-            "--no-heading",
-            query,
-            ".",
         )
 
     @tool(
@@ -99,14 +114,17 @@ class CodeSearcher(ToolProvider):
     )
     def search_regex_insensitive(self, path: str, pattern: str) -> CommandOut:
         """Finds regex matches ignoring case in all files under 'path'. Returns file paths, line numbers, and content."""
-        return self._rg(
+        return self._execute_command(
+            "rg",
+            [
+                "--ignore-case",
+                "--line-number",
+                "--column",
+                "--no-heading",
+                pattern,
+                ".",
+            ],
             path,
-            "--ignore-case",
-            "--line-number",
-            "--column",
-            "--no-heading",
-            pattern,
-            ".",
         )
 
     @tool(
@@ -120,7 +138,16 @@ class CodeSearcher(ToolProvider):
     )
     def find_files_by_glob(self, path: str, pattern: str) -> CommandOut:
         """Locates files matching a glob pattern (e.g., '*.py', '**/tests/*') under 'path'."""
-        return self._rg(path, "--files", "-g", pattern, ".")
+        return self._execute_command(
+            "rg",
+            [
+                "--files",
+                "-g",
+                pattern,
+                ".",
+            ],
+            path,
+        )
 
     @tool(
         tests=[
@@ -133,7 +160,16 @@ class CodeSearcher(ToolProvider):
     )
     def find_files_by_name(self, path: str, pattern: str) -> CommandOut:
         """Finds files whose names contain the specified substring under 'path'."""
-        return self._rg(path, "--files", "-g", f"*{pattern}*", ".")
+        return self._execute_command(
+            "rg",
+            [
+                "--files",
+                "-g",
+                f"*{pattern}*",
+                ".",
+            ],
+            path,
+        )
 
     @tool(
         tests=[
@@ -142,7 +178,14 @@ class CodeSearcher(ToolProvider):
     )
     def list_all_files(self, path: str) -> CommandOut:
         """Recursively lists all files under the specified 'path'."""
-        return self._rg(path, "--files", ".")
+        return self._execute_command(
+            "rg",
+            [
+                "--files",
+                ".",
+            ],
+            path,
+        )
 
     @tool(
         tests=[
@@ -156,7 +199,16 @@ class CodeSearcher(ToolProvider):
     def find_files_by_extension(self, path: str, extension: str) -> CommandOut:
         """Lists files matching a specific extension (e.g., 'py', 'json') under 'path'."""
         ext = extension.lstrip(".")
-        return self._rg(path, "--files", "-g", f"*.{ext}", ".")
+        return self._execute_command(
+            "rg",
+            [
+                "--files",
+                "-g",
+                f"*.{ext}",
+                ".",
+            ],
+            path,
+        )
 
     @tool(
         tests=[
@@ -169,16 +221,19 @@ class CodeSearcher(ToolProvider):
     )
     def search_text_in_glob(self, path: str, query: str, glob: str) -> CommandOut:
         """Finds literal text matches only within files that match the specified glob pattern under 'path'."""
-        return self._rg(
+        return self._execute_command(
+            "rg",
+            [
+                "--fixed-strings",
+                "--line-number",
+                "--column",
+                "--no-heading",
+                "-g",
+                glob,
+                query,
+                ".",
+            ],
             path,
-            "--fixed-strings",
-            "--line-number",
-            "--column",
-            "--no-heading",
-            "-g",
-            glob,
-            query,
-            ".",
         )
 
     @tool(
@@ -190,7 +245,16 @@ class CodeSearcher(ToolProvider):
     )
     def find_files_containing(self, path: str, query: str) -> CommandOut:
         """Lists names of files that contain at least one literal match of the 'query' under 'path'."""
-        return self._rg(path, "--fixed-strings", "--files-with-matches", query, ".")
+        return self._execute_command(
+            "rg",
+            [
+                "--fixed-strings",
+                "--files-with-matches",
+                query,
+                ".",
+            ],
+            path,
+        )
 
     @tool(
         tests=[
@@ -204,7 +268,16 @@ class CodeSearcher(ToolProvider):
     )
     def find_files_not_containing(self, path: str, query: str) -> CommandOut:
         """Lists names of files that do NOT contain the specified literal 'query' under 'path'."""
-        return self._rg(path, "--fixed-strings", "--files-without-match", query, ".")
+        return self._execute_command(
+            "rg",
+            [
+                "--fixed-strings",
+                "--files-without-match",
+                query,
+                ".",
+            ],
+            path,
+        )
 
     @tool(
         tests=[
@@ -215,4 +288,13 @@ class CodeSearcher(ToolProvider):
     )
     def count_text_occurrences(self, path: str, query: str) -> CommandOut:
         """Returns a count of literal matches of 'query' per file under 'path'."""
-        return self._rg(path, "--fixed-strings", "--count-matches", query, ".")
+        return self._execute_command(
+            "rg",
+            [
+                "--fixed-strings",
+                "--count-matches",
+                query,
+                ".",
+            ],
+            path,
+        )
