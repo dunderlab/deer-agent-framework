@@ -27,7 +27,7 @@ class GitManager(ToolProvider):
         path = path.strip()
 
         # 1. Validate path boundaries
-        self.jailed_path(path)
+        path = self.jailed_path(path)
 
         # 2. Validate timeout constraints
         if not 1 <= timeout_seconds <= MAX_TIMEOUT:
@@ -69,13 +69,6 @@ class GitManager(ToolProvider):
             else f"Command failed with exit code {exit_code}."
         )
         return {**result, "message": status_message}
-
-    def mormalize_target(self, path, target):
-        normalized_target = target.strip()
-        path = self.sanitize_path(path)
-        if path and target.startswith(path.strip() + "/"):
-            normalized_target = target[len(path) + 1 :]
-        return normalized_target
 
     @property
     def commands(self):
@@ -132,7 +125,7 @@ class GitManager(ToolProvider):
         Use this to move the HEAD to a specific version of the project before analysis or fixing.
         """
         # We use the same git helper. 'target' can be a branch name or a commit hash.
-        return self.git(path, ["checkout", self.mormalize_target(path, target)])
+        return self.git(path, ["checkout", self._normalize_target(path, target)])
 
     @tool()
     def git_status(self, path: str) -> CommandOut:
@@ -167,7 +160,7 @@ class GitManager(ToolProvider):
                 "--no-pager",
                 "diff",
                 "--",
-                self.mormalize_target(path, target),
+                self._normalize_target(path, target),
             ],
         )
 
@@ -182,7 +175,7 @@ class GitManager(ToolProvider):
                 "diff",
                 "--cached",
                 "--",
-                self.mormalize_target(path, target),
+                self._normalize_target(path, target),
             ],
         )
 
@@ -197,7 +190,7 @@ class GitManager(ToolProvider):
         """Moves changes from the working tree to the staging area.
         This is a mandatory prerequisite for 'git_commit'."""
 
-        return self.git(path, ["add", "--", self.mormalize_target(path, target)])
+        return self.git(path, ["add", "--", self._normalize_target(path, target)])
 
     @tool(modifies_state=True)
     def git_commit(self, path: str, message: str) -> CommandOut:
@@ -209,4 +202,4 @@ class GitManager(ToolProvider):
     def git_restore(self, path: str, target: str) -> CommandOut:
         """Reverts unstaged modifications in the working tree.
         IRREVERSIBLE for uncommitted data; use only to discard unwanted edits."""
-        return self.git(path, ["restore", "--", self.mormalize_target(path, target)])
+        return self.git(path, ["restore", "--", self._normalize_target(path, target)])
