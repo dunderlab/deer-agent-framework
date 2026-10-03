@@ -4,13 +4,12 @@ from deer.tools import ToolRegistry
 from deer.tools.presets import Preset
 from deer.tools.providers import HTTPClient, SystemObserver
 from deer.drivers import OllamaDriver
-from deer.memory import VectorMemory
 
 from pathlib import Path
 
+
 # Infrastructure
 driver = get_driver_from_parser() or OllamaDriver(model_name="gemma4:31b-cloud")
-memory = VectorMemory(path=Path.cwd() / ".deer" / "vector_db")
 registry = ToolRegistry(
     Preset.CODE_REPAIR
     | Preset.CODE_EDITOR
@@ -30,7 +29,6 @@ PythonArchitectAgent = DeterministicAgent(
     ),
     driver=driver,
     tool_registry=registry,
-    vector_memory=memory,
     working_dir=working_dir,
     max_attempts=3,
 )
