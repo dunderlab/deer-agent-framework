@@ -24,6 +24,8 @@ class GitManager(ToolProvider):
     def git(self, path: str, args: List[str], timeout_seconds: int = 60) -> CommandOut:
         binary = "git"
 
+        path = path.strip()
+
         # 1. Validate path boundaries
         self.jailed_path(path)
 
@@ -82,7 +84,22 @@ class GitManager(ToolProvider):
                 },
                 dirs=["a"],
                 expected_paths=["a/deer/"],
-            )
+            ),
+            Case(
+                {
+                    "path": "a\n",
+                    "repository_url": "https://github.com/dunderlab/deer-agent-framework.git\n",
+                    "repository_name": "deer",
+                },
+                {
+                    "stdout": str,
+                    "stderr": str,
+                    "returncode": 0,
+                    "message": str,
+                },
+                dirs=["a"],
+                expected_paths=["a/deer/"],
+            ),
         ],
     )
     def git_clone(
@@ -91,7 +108,9 @@ class GitManager(ToolProvider):
         """Clones a remote Git repository into a specified folder name.
         Use this as the first step to initialize a project in the jail before performing any other git or file operations.
         """
-        return self.git(path, ["clone", repository_url, repository_name])
+        return self.git(
+            path, ["clone", repository_url.strip(), repository_name.strip()]
+        )
 
     @tool(modifies_state=True)
     def git_checkout(self, path: str, target: str) -> CommandOut:
