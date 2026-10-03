@@ -3,7 +3,7 @@ import shlex
 from typing import List
 
 from deer.tools import ToolProvider, tool
-from deer.tools.schemas import CommandOut
+from deer.tools.schemas import CommandOut, Case
 
 # NOTE: Intentionally untested. Every tool is a thin wrapper over git, with no own logic.
 
@@ -58,6 +58,34 @@ class GitManager(ToolProvider):
     @property
     def commands(self):
         return ["git"]
+
+    @tool(
+        modifies_state=True,
+        tests=[
+            Case(
+                {
+                    "path": "a",
+                    "repository_url": "https://github.com/dunderlab/deer-agent-framework.git",
+                    "repository_name": "deer",
+                },
+                {
+                    "stdout": str,
+                    "stderr": str,
+                    "returncode": 0,
+                    "message": str,
+                },
+                dirs=["a"],
+                expected_paths=["a/deer/"],
+            )
+        ],
+    )
+    def git_clone(
+        self, path: str, repository_url: str, repository_name: str
+    ) -> CommandOut:
+        """Clones a remote Git repository into a specified folder name.
+        Use this as the first step to initialize a project in the jail before performing any other git or file operations.
+        """
+        return self.git(path, ["clone", repository_url, repository_name])
 
     @tool()
     def git_status(self, path: str) -> CommandOut:
