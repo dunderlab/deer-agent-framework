@@ -69,6 +69,7 @@ class DeterministicAgent:
 
         # Planner
         self.planner = Planner(
+            identity=self.identity,
             driver=self.driver,
             tool_registry=self.tool_registry,
             max_attempts=max_attempts,
