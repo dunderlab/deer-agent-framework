@@ -39,14 +39,16 @@ class GitManager(ToolProvider):
         except Exception as e:
             return _failure(f"Environment error: {e}")
 
-        if not 'clone' in args:
+        if not "clone" in args:
             try:
                 # Ejecutamos rev-parse para confirmar que hay un .git en algún nivel superior
                 check_repo = self.run_command(
                     "git rev-parse --is-inside-work-tree", cwd=str(path)
                 )
                 if check_repo["returncode"] != 0:
-                    return _failure(f"The path '{path}' is not inside a git repository.")
+                    return _failure(
+                        f"The path '{path}' is not inside a git repository."
+                    )
             except Exception as e:
                 return _failure(f"Error verifying git repository: {e}")
 
@@ -69,8 +71,8 @@ class GitManager(ToolProvider):
         return {**result, "message": status_message}
 
     def mormalize_target(self, path, target):
-        normalized_target = target
-        if path and target.startswith(path + "/"):
+        normalized_target = target.strip()
+        if path and target.startswith(path.strip() + "/"):
             normalized_target = target[len(path) + 1 :]
         return normalized_target
 
