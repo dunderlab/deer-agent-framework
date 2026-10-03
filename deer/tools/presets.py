@@ -77,6 +77,7 @@ class Preset:
         DependencyAnalyzer,
         CodeSearcher,
         GitManager,
+        FileManager,
     }
 
     # For safely modifying configuration files without touching source code.
