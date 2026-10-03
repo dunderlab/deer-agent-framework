@@ -1,0 +1,102 @@
+[
+  {
+    "id": "store_operational_hours_en",
+    "doc": "Customer support operational hours: Monday to Friday from 09:00 to 18:00. Saturdays from 10:00 to 14:00. Sundays and national holidays: Closed. The average response time during business hours is 2 hours.",
+    "metadata": {
+      "category": "operational",
+      "type": "hours",
+      "priority": "high",
+      "lang": "en"
+    }
+  },
+  {
+    "id": "store_operational_hours_es",
+    "doc": "Horario de atención al cliente: Lunes a Viernes de 09:00 a 18:00. Sábados de 10:00 a 14:00. Domingos y feriados nacionales: Cerrado. El tiempo de respuesta promedio en horario laboral es de 2 horas.",
+    "metadata": {
+      "category": "operational",
+      "type": "hours",
+      "priority": "high",
+      "lang": "es"
+    }
+  },
+  {
+    "id": "contact_channels_en",
+    "doc": "Official contact channels: Email: support@fictionalstore.com. Phone: +1-800-FICT-SHOP. Physical Address: 123 Innovation Ave, Tech District. Social Media: @FictionalStore on Instagram and X.",
+    "metadata": {
+      "category": "operational",
+      "type": "contact",
+      "priority": "high",
+      "lang": "en"
+    }
+  },
+  {
+    "id": "contact_channels_es",
+    "doc": "Canales oficiales de contacto: Email: soporte@tiendaficticia.com. Teléfono: +1-800-FICT-SHOP. Dirección física: Av. Innovación 123, Distrito Tecnológico. Redes sociales: @TiendaFicticia en Instagram y X.",
+    "metadata": {
+      "category": "operational",
+      "type": "contact",
+      "priority": "high",
+      "lang": "es"
+    }
+  },
+  {
+    "id": "shipping_policy_en",
+    "doc": "Shipping policies: Standard Shipping: 3 to 5 business days. Express Shipping: 24 to 48 hours. Shipping Cost: Free on orders over $50 USD. For orders under $50 USD, a shipping fee of $5.99 USD applies. Coverage: National and international shipping available.",
+    "metadata": {
+      "category": "policy",
+      "type": "shipping",
+      "priority": "medium",
+      "lang": "en"
+    }
+  },
+  {
+    "id": "shipping_policy_es",
+    "doc": "Políticas de envío: Envío Estándar: 3 a 5 días hábiles. Envío Express: 24 a 48 horas. Costo de envío: Gratis en compras superiores a $50 USD. Para compras inferiores a $50 USD, se aplica un cargo de envío de $5.99 USD. Cobertura: Envíos nacionales e internacionales disponibles.",
+    "metadata": {
+      "category": "policy",
+      "type": "shipping",
+      "priority": "medium",
+      "lang": "es"
+    }
+  },
+  {
+    "id": "return_refund_policy_en",
+    "doc": "Returns and refunds policy: Return window: 30 calendar days from the date of order receipt. Conditions: The product must be unused, in its original packaging, and with tags attached. Process: Customers must initiate the request via email including the order number. Refunds are processed within 5 to 10 business days.",
+    "metadata": {
+      "category": "policy",
+      "type": "returns",
+      "priority": "medium",
+      "lang": "en"
+    }
+  },
+  {
+    "id": "return_refund_policy_es",
+    "doc": "Política de devoluciones y reembolsos: Plazo de devolución: 30 días naturales a partir de la fecha de recepción del pedido. Condiciones: El producto debe estar sin usar, en su empaque original y con las etiquetas adjuntas. Proceso: El cliente debe iniciar la solicitud vía email incluyendo el número de orden. Los reembolsos se procesan en un plazo de 5 a 10 días hábiles.",
+    "metadata": {
+      "category": "policy",
+      "type": "returns",
+      "priority": "medium",
+      "lang": "es"
+    }
+  },
+  {
+    "id": "payment_methods_en",
+    "doc": "Accepted payment methods: Credit and Debit Cards (Visa, Mastercard, American Express). Digital Wallets: PayPal, Apple Pay, Google Pay. Bank Transfers: Available for corporate purchases only. Cash and checks are not accepted.",
+    "metadata": {
+      "category": "operational",
+      "type": "payments",
+      "priority": "medium",
+      "lang": "en"
+    }
+  },
+  {
+    "id": "payment_methods_es",
+    "doc": "Métodos de pago aceptados: Tarjetas de Crédito y Débito (Visa, Mastercard, American Express). Billeteras Digitales: PayPal, Apple Pay, Google Pay. Transferencias Bancarias: Disponibles solo para compras corporativas. No se acepta efectivo ni cheques.",
+    "metadata": {
+      "category": "operational",
+      "type": "payments",
+      "priority": "medium",
+      "lang": "es"
+    }
+  }
+]
