@@ -1,8 +1,9 @@
-import os
 from typing import TypeVar
-from deer.models import ChatMessage
+import os
+
 from pydantic import BaseModel
 
+from deer.models import ChatMessage
 from .base import OpenAIStandardDriver
 
 T = TypeVar("T", bound=BaseModel)

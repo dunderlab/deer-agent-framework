@@ -1,6 +1,9 @@
 import logging
 import time
+import re
+
 from typing import Any, Dict
+
 from deer.tools import ToolRegistry
 from deer.models import ExecutionPlan, ExecutionTrace, StepTrace
 
@@ -101,7 +104,6 @@ class PipelineExecutor:
         Parses a reference like '{{read_conf.content}}' and fetches the value.
         """
         # Extract the content between {{ and }}
-        import re
 
         match = re.search(r"\{\{(.*?)\}\}", value)
         if not match:

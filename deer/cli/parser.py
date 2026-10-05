@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 
 from deer.utils.console import ConsoleColor
+from deer.drivers import GeminiDriver, OllamaDriver, OpenAIDriver, AzureOpenAIDriver
 
 backends = {
     "gemini",
@@ -57,8 +58,6 @@ path_parser.add_argument(
 
 
 def get_driver_from_parser():
-
-    from deer.drivers import GeminiDriver, OllamaDriver, OpenAIDriver, AzureOpenAIDriver
 
     try:
         drivers_parser.silent = True

@@ -1,8 +1,10 @@
-import json
 from typing import Generator, TypeVar
+import json
+
+from pydantic import BaseModel
+
 from .base import LLMDriver, logger
 from deer.models import ChatMessage
-from pydantic import BaseModel
 
 T = TypeVar("T", bound=BaseModel)
 

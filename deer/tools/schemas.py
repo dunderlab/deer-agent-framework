@@ -23,12 +23,15 @@ class Case:
     raises: type[Exception] | None = None
 
 
-def Return(**fields: Any) -> type[BaseModel]:
-    return create_model(
-        f"InlineModel_{next(_counter)}",
-        **{name: (field_type, ...) for name, field_type in fields.items()},
-        __config__=ConfigDict(arbitrary_types_allowed=True),
-    )
+class ReturnModel:
+
+    def __call__(self, **fields: Any) -> type[BaseModel]:
+        return create_model(
+            f"InlineModel_{next(_counter)}",
+            **{name: (field_type, ...) for name, field_type in fields.items()},
+            __config__=ConfigDict(arbitrary_types_allowed=True),
+        )
 
 
+Return = ReturnModel()
 CommandOut = Return(stdout=str, stderr=str, returncode=int, message=str)

@@ -1,8 +1,9 @@
+from typing import Any, get_origin, get_args, Union, Dict, Iterable, Literal
+from pydantic import BaseModel
+
 from .base import Tool
 from .decorators import MethodTool, get_tool_metadata, is_tool_method
 from .schemas import Return
-from typing import Any, get_origin, get_args, Union, Dict, Iterable, Literal
-from pydantic import BaseModel
 
 
 class ToolRegistry:

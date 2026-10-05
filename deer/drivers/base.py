@@ -1,13 +1,14 @@
-import json
-import logging
-import re
+from typing import TypeVar, Type, Optional, Union, Generator, Any
+from abc import ABC, abstractmethod
 import urllib.error
 import urllib.request
-from abc import ABC, abstractmethod
-from typing import TypeVar, Type, Optional, Union, Generator, Any
-from deer.models import ChatMessage
+import logging
+import json
+import re
 
 from pydantic import BaseModel
+
+from deer.models import ChatMessage
 
 T = TypeVar("T", bound=BaseModel)
 logger = logging.getLogger(f"DEER.{__name__}")
@@ -137,7 +138,6 @@ class OpenAIStandardDriver(ABC):
     def headers(self) -> dict:
         return {"Content-Type": "application/json"}
 
-
     def generate(
         self, messages: list[ChatMessage], response_model: Optional[Type[T]] = None
     ) -> Union[str, T]:
@@ -172,4 +172,3 @@ class OpenAIStandardDriver(ABC):
         except Exception as e:
             logger.error("Structured output failed: %s", e)
             raise RuntimeError(f"Model failed the strict contract: {e}") from e
-

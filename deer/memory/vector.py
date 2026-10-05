@@ -1,10 +1,11 @@
-import chromadb
-from chromadb.utils import embedding_functions
-import json
-import os
-import logging
 from typing import Any, Optional, Union
 from pathlib import Path
+import logging
+import json
+import os
+
+import chromadb
+from chromadb.utils import embedding_functions
 
 logger = logging.getLogger(f"DEER.{__name__}")
 
@@ -85,9 +86,9 @@ class VectorMemory:
 
         # 3. Return structured results
         final_results = []
-        for i in range(len(ids)):
+        for i, id_ in enumerate(ids):
             final_results.append(
-                {"id": ids[i], "text": documents[i], "metadata": metadatas[i]}
+                {"id": id_, "text": documents[i], "metadata": metadatas[i]}
             )
         return final_results
 
@@ -151,7 +152,7 @@ class VectorMemory:
 
         audit_list = []
 
-        for i in range(len(ids)):
+        for i, id_ in enumerate(ids):
             # A. Estimated space calculation
             text_bytes = len(docs[i].encode("utf-8")) if docs[i] else 0
             meta_bytes = len(json.dumps(metas[i]).encode("utf-8")) if metas[i] else 0
@@ -165,7 +166,7 @@ class VectorMemory:
 
             audit_list.append(
                 {
-                    "id": ids[i],
+                    "id": id_,
                     "hit_count": hit_count,
                     "size_bytes": total_bytes,
                     "size_human": self.format_bytes(total_bytes),
@@ -252,10 +253,10 @@ class VectorMemory:
 
         # 2. Filter IDs that have hit_count = 0
         ids_to_delete = []
-        for i in range(len(ids)):
+        for i, id_ in enumerate(ids):
             count = metas[i].get("hit_count", 0) if metas[i] else 0
             if count == 0:
-                ids_to_delete.append(ids[i])
+                ids_to_delete.append(id_)
 
         # 3. Execute bulk deletion
         if ids_to_delete:

@@ -1,5 +1,6 @@
-from deer.core import DeterministicAgent
 import shutil
+
+from deer.core import DeterministicAgent
 
 
 class AgentRunner:

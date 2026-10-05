@@ -1,9 +1,11 @@
+import importlib.util
+import logging
+import sys
+
 from rich.text import Text
+
 from deer.utils.console import ConsoleColor
 from deer.builtins_agents import agents
-import importlib.util
-import sys
-import logging
 
 from .parser import drivers_parser
 
@@ -55,7 +57,7 @@ def run_agent_in_process(agent_path, backend=None, model=None):
         return agent_module.main()
     else:
         logger.error("Agent does not have a 'main' function to run.")
-        exit(0)
+        sys.exit(0)
 
 
 def main():

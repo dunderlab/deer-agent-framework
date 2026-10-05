@@ -1,6 +1,7 @@
-from deer.core import DeterministicAgent
 from pathlib import Path
 import os
+
+from deer.core import DeterministicAgent
 
 __version__ = "0.2"
 

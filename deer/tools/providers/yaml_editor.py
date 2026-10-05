@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from typing import Any, Optional
-from ruamel.yaml import YAML
 import io
+
+from ruamel.yaml import YAML
 
 from deer.tools import ToolProvider, tool
 from deer.tools.schemas import Return, Case

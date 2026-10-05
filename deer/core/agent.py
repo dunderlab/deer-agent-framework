@@ -1,7 +1,8 @@
-import logging
 from typing import Optional, Literal, Any
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+import logging
+import pickle
 
 from deer.models import ExecutionTrace, AgentConclusion, Role, ChatMessage
 from deer.tools import ToolRegistry, ToolProvider
@@ -12,9 +13,6 @@ from deer.drivers import LLMDriver
 from .planner import Planner
 from .executor import PipelineExecutor
 from .validator import PlanValidator
-
-
-import pickle
 
 logger = logging.getLogger(f"DEER.{__name__}")
 

@@ -1,6 +1,7 @@
-from typing import List, Dict, Any, Optional
-from pydantic import BaseModel, Field
 from enum import Enum
+from typing import List, Dict, Any, Optional
+
+from pydantic import BaseModel, Field
 
 
 class Role(str, Enum):

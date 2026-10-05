@@ -133,7 +133,7 @@ class AgentREPL:
 
     def show_welcome(self):
         commands_formated = ""
-        for command in COMMANDS:
+        for command in COMMANDS.items():
             commands_formated += (
                 f"- {('`'+command+'`').ljust(12, ' ')} → {COMMANDS[command]}\n "
             )

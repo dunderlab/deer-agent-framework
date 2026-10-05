@@ -1,6 +1,7 @@
-import libcst as cst
 from dataclasses import dataclass
 from typing import List, Dict, Any
+
+import libcst as cst
 
 from deer.tools import ToolProvider, tool
 from deer.tools.schemas import Return, Case

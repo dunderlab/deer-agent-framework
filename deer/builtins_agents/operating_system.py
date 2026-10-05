@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from deer import DeterministicAgent
 from deer.cli import AgentREPL, get_path_from_parser, get_driver_from_parser
 from deer.tools import ToolRegistry
@@ -5,7 +7,6 @@ from deer.tools.presets import Preset
 from deer.tools.providers import HTTPClient
 from deer.drivers import OllamaDriver
 
-from pathlib import Path
 
 # Infrastructure
 driver = get_driver_from_parser() or OllamaDriver(model_name="gemma4:31b-cloud")

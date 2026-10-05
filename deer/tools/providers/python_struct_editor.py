@@ -1,9 +1,10 @@
-import libcst as cst
-from dataclasses import dataclass
 from typing import Optional, List, Dict, Any, Literal
+from dataclasses import dataclass
 
-from deer.tools import ToolProvider, tool
+import libcst as cst
+
 from deer.tools.schemas import Return, Case
+from deer.tools import ToolProvider, tool
 
 # Common files for all tests
 _TEST_FILES = {
