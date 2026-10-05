@@ -135,10 +135,10 @@ class FileManager(ToolProvider):
         if safe_path == self.jail:
             self.jail.mkdir(parents=True, exist_ok=True)
             return {"success": True}
-        else:
-            return {
-                "success": not safe_path.exists(),
-            }
+
+        return {
+            "success": not safe_path.exists(),
+        }
 
     @tool(
         modifies_state=True,

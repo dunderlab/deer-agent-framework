@@ -82,9 +82,7 @@ class LLMDriver(ABC):
         try:
             # We do NOT use 'with' here in the same way because we want to yield from the response
             with urllib.request.urlopen(req, timeout=30) as response:
-                for line in response:
-                    yield line
-                response.close()
+                yield from response
 
         except Exception as e:
             logger.error("Streaming request error:  %s", e)

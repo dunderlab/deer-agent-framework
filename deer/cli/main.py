@@ -55,9 +55,9 @@ def run_agent_in_process(agent_path, backend=None, model=None):
     spec.loader.exec_module(agent_module)
     if hasattr(agent_module, "main"):
         return agent_module.main()
-    else:
-        logger.error("Agent does not have a 'main' function to run.")
-        sys.exit(0)
+
+    logger.error("Agent does not have a 'main' function to run.")
+    sys.exit(0)
 
 
 def main():

@@ -19,8 +19,7 @@ class NoExitArgumentParser(argparse.ArgumentParser):
     def error(self, message):
         if getattr(self, "silent", False):
             raise ValueError(message)
-        else:
-            return super().error(message)
+        return super().error(message)
 
 
 drivers_parser = NoExitArgumentParser(description="DEER Agent Framework CLI")
@@ -105,5 +104,5 @@ def get_path_from_parser():
 
     if not args.path:
         return False
-    else:
-        return Path(args.path).resolve()
+
+    return Path(args.path).resolve()

@@ -376,9 +376,11 @@ class YAMLEditor(ToolProvider):
 
             if isinstance(target, dict) or hasattr(target, "keys"):
                 return {"keys": list(target.keys()), "message": "Success"}
-            elif isinstance(target, list):
+
+            if isinstance(target, list):
                 return {"keys": list(range(len(target))), "message": "Success"}
-            else:
-                return {"keys": [], "message": "Target is not a collection."}
+
+            return {"keys": [], "message": "Target is not a collection."}
+
         except Exception as e:
             return {"keys": [], "message": f"Error: {str(e)}"}

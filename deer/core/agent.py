@@ -259,9 +259,9 @@ class DeterministicAgent:
         if conclusion.goal_achieved:
             # The conclusion finds that the goal has been achieved
             return conclusion.user_message
-        else:
-            if iteration >= self.max_attempts:
-                return "I couldn't find a reliable way to solve this request after several attempts. Please try rephrasing your goal."
+
+        if iteration >= self.max_attempts:
+            return "I couldn't find a reliable way to solve this request after several attempts. Please try rephrasing your goal."
 
         if conclusion.needs_resolution:
             self.agent_history.append(

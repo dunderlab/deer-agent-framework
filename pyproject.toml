@@ -57,6 +57,14 @@ disable = [
     "R0801",
     "W0718",
     "W0212",
+    "R0902", # Too many instance attributes (11/7) (too-many-instance-attributes)
+    "R0903", # Too few public methods (1/2) (too-few-public-methods)
+    "R0911", # Too many return statements (7/6) (too-many-return-statements)
+    "R0912", # Too many branches (16/12) (too-many-branches)
+    "R0913", # Too many arguments (9/5) (too-many-arguments)
+    "R0914", # Too many local variables (16/15) (too-many-locals)
+    "R0915", # Too many statements (52/50) (too-many-statements)
+    "R0917", # Too many positional arguments (9/5) (too-many-positional-arguments)
     "C0103", # Constant name "OperatingSystemAgent" doesn't conform to UPPER_CASE naming style (invalid-name)
     "C0301", # Line too long (110/100) (line-too-long)
     "C0302", # Too many lines in module (1014/1000) (too-many-lines)

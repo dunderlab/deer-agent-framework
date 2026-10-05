@@ -5,7 +5,7 @@ from typing import Any
 from pathlib import Path as Pathlib
 
 import matplotlib.colors as mcolors
-import matplotlib.patches as patches
+from matplotlib import patches
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
 
