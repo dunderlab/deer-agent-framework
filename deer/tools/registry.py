@@ -1,5 +1,3 @@
-from tkinter.constants import NO
-
 from .base import Tool
 from .decorators import MethodTool, get_tool_metadata, is_tool_method
 from .schemas import Return
@@ -8,12 +6,16 @@ from pydantic import BaseModel
 
 
 class ToolRegistry:
-    def __init__(self, tools=None) -> None:
-        self._tools: Dict[str, Tool] = {}
+    def __init__(self, tools=None, jail_path=None) -> None:
+        self.tools: Dict[str, Tool] = {}
         self._providers: list = []
 
         if tools:
             self.register(*[tool() for tool in tools])
+
+        if jail_path:
+            self.jail_path = jail_path
+            self.set_jail(jail_path)
 
     def register(self, *provider_tools: list):
         for tool in provider_tools:
@@ -26,10 +28,10 @@ class ToolRegistry:
         if not tool.name or not tool.name.strip():
             raise ValueError("Tool name cannot be empty.")
 
-        if tool.name in self._tools:
+        if tool.name in self.tools:
             raise ValueError(f"Tool with name '{tool.name}' is already registered.")
 
-        self._tools[tool.name] = tool
+        self.tools[tool.name] = tool
 
     def _register_collection(self, provider: Any) -> None:
         self._providers.append(provider)
@@ -37,9 +39,9 @@ class ToolRegistry:
 
             if attr_name == "jail":
                 continue
-            try:
-                attr = getattr(provider, attr_name)
-            except Exception:
+
+            attr = getattr(provider, attr_name, None)
+            if attr is None:
                 continue
 
             if not is_tool_method(attr):
@@ -64,19 +66,19 @@ class ToolRegistry:
         if not name or not name.strip():
             raise KeyError("Tool name cannot be empty.")
 
-        if name not in self._tools:
+        if name not in self.tools:
             raise KeyError(f"Tool not found: {name}")
 
-        return self._tools[name]
+        return self.tools[name]
 
     def has(self, name: str | None) -> bool:
         if not name:
             return False
 
-        return name in self._tools
+        return name in self.tools
 
     def list_tools(self) -> Iterable[str]:
-        return self._tools.keys()
+        return self.tools.keys()
 
     def providers(self):
         return self._providers
@@ -90,12 +92,12 @@ class ToolRegistry:
         self, state_filter: Literal["READ_ONLY", "MODIFIES_STATE", "BOTH"] = "BOTH"
     ) -> str:
 
-        if not self._tools:
+        if not self.tools:
             return "- No tools are available."
 
         lines = []
 
-        for tool in self._tools.values():
+        for tool in self.tools.values():
 
             if state_filter == "READ_ONLY" and tool.modifies_state:
                 continue  # Skip tools that modify state

@@ -28,14 +28,14 @@ class VectorMemory:
         )
 
     def add_document(
-        self, id: str, doc: str, metadata: Optional[dict[str, Any]] = None
+        self, doc_id: str, doc: str, metadata: Optional[dict[str, Any]] = None
     ) -> None:
         """
         Add a document to the vector collection.
 
         Parameters
         ----------
-        id : str
+        doc_id : str
             Unique identifier for the document.
         doc : str
             The content of the document to be embedded and stored.
@@ -47,7 +47,7 @@ class VectorMemory:
         if "hit_count" not in meta:
             meta["hit_count"] = 0
 
-        self.collection.add(documents=[doc], metadatas=[meta], ids=[id])
+        self.collection.add(documents=[doc], metadatas=[meta], ids=[doc_id])
 
     def query(self, query_text: str, n_results: int = 3) -> list[dict[str, Any]]:
         """
@@ -261,7 +261,8 @@ class VectorMemory:
         if ids_to_delete:
             self.collection.delete(ids=ids_to_delete)
             logger.info(
-                f"Cleanup completed. Deleted {len(ids_to_delete)} documents with no queries."
+                "Cleanup completed. Deleted %i documents with no queries.",
+                len(ids_to_delete),
             )
         else:
             logger.info("No documents with zero queries were found.")
@@ -291,12 +292,14 @@ class VectorMemory:
 
         if current_estimated_total <= target_bytes:
             logger.info(
-                f"Database data size is already below target ({current_estimated_total} <= {target_bytes})."
+                "Database data size is already below target (%i <= %i).",
+                current_estimated_total,
+                target_bytes,
             )
             return 0
 
         bytes_to_free = current_estimated_total - target_bytes
-        logger.info(f"Estimated data to free: {self.format_bytes(bytes_to_free)}")
+        logger.info("Estimated data to free: %s", self.format_bytes(bytes_to_free))
 
         least_popular_first = audit_list[::-1]
         ids_to_delete = []
@@ -311,7 +314,8 @@ class VectorMemory:
         if ids_to_delete:
             self.collection.delete(ids=ids_to_delete)
             logger.info(
-                f"Aggressive cleanup completed. Deleted {len(ids_to_delete)} documents."
+                "Aggressive cleanup completed. Deleted %i documents.",
+                len(ids_to_delete),
             )
 
         return len(ids_to_delete)
@@ -319,7 +323,9 @@ class VectorMemory:
     def load_json(self, json_path: Path):
 
         if not json_path.exists():
-            raise ValueError("bla bla")
+            raise FileNotFoundError(
+                f"The file does not exist at the following path: {json_path}"
+            )
 
         with json_path.open("r", encoding="utf-8") as f:
             memories = json.load(f)

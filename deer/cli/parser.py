@@ -13,6 +13,8 @@ backends = {
 
 
 class NoExitArgumentParser(argparse.ArgumentParser):
+    silent = False
+
     def error(self, message):
         if getattr(self, "silent", False):
             raise ValueError(message)
@@ -62,7 +64,7 @@ def get_driver_from_parser():
         drivers_parser.silent = True
         args, _ = drivers_parser.parse_known_args()
         drivers_parser.silent = False
-    except:
+    except Exception:
         drivers_parser.silent = False
         return False
 
@@ -98,7 +100,7 @@ def get_path_from_parser():
         path_parser.silent = True
         args, _ = path_parser.parse_known_args()
         path_parser.silent = False
-    except:
+    except Exception:
         path_parser.silent = False
         return False
 

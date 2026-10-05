@@ -29,11 +29,8 @@ class FileManager(ToolProvider):
         Automatically creates any missing parent directories. Returns existence confirmation.
         """
         safe_path = self.jailed_path(path)
-
         safe_path.parent.mkdir(parents=True, exist_ok=True)
-
-        with open(safe_path, "w") as f:
-            f.write(content)
+        safe_path.write_text(content, encoding="utf-8")
 
         return {
             "exists": safe_path.exists(),
@@ -325,7 +322,7 @@ class FileManager(ToolProvider):
                 "message": "old_text must not be empty.",
             }
 
-        content = safe_path.read_text()
+        content = safe_path.read_text(encoding="utf-8")
         num_matches = content.count(old_text)
 
         if num_matches == 0:
@@ -345,7 +342,7 @@ class FileManager(ToolProvider):
                 ),
             }
 
-        safe_path.write_text(content.replace(old_text, new_text))
+        safe_path.write_text(content.replace(old_text, new_text), encoding="utf-8")
 
         return {
             "success": True,

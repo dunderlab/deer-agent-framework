@@ -1,6 +1,11 @@
 import os
+from typing import TypeVar
+from deer.models import ChatMessage
+from pydantic import BaseModel
 
 from .base import OpenAIStandardDriver
+
+T = TypeVar("T", bound=BaseModel)
 
 
 class OpenAIDriver(OpenAIStandardDriver):
@@ -24,8 +29,9 @@ class OpenAIDriver(OpenAIStandardDriver):
     def __repr__(self) -> str:
         return "OpenAI"
 
-    def generate(self, prompt):
-        return ""
-
-    def generate_stream(self, prompt):
+    def generate(
+        self,
+        messages: list[ChatMessage],
+        response_model: type[T] | None = None,
+    ) -> str | T:
         return ""

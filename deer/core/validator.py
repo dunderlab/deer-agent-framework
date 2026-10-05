@@ -21,14 +21,16 @@ class Rules:
         checkers = inspect.getmembers(self, predicate=inspect.ismethod)
         for name, method in checkers:
             if name.startswith("check_"):
-                logger.debug(f"Validating rule: {name}")
+                logger.debug("Validating rule: %s", name)
                 method(self.plan)
 
     def check_unique_step_ids(self, plan: ExecutionPlan) -> None:
         seen: Set[str] = set()
         for s in plan.steps:
             if s.step_id in seen:
-                raise ValueError(f"Duplicate step IDs detected: {s.step_id}")
+                raise ValueError(
+                    f"Duplicate step IDs detected: {s.step_id}",
+                )
             seen.add(s.step_id)
 
     def check_tools_registered(self, plan: ExecutionPlan) -> None:
@@ -51,8 +53,7 @@ class Rules:
             missing = expected_params - provided_params
             if missing:
                 raise ValueError(
-                    f"Step '{s.step_id}' is missing required params for tool "
-                    f"'{s.tool_name}': {', '.join(sorted(missing))}"
+                    f"Step '{s.step_id}' is missing required params for tool '{s.tool_name}': {', '.join(sorted(missing))}"
                 )
 
             unknown = provided_params - expected_params
@@ -74,7 +75,7 @@ class Rules:
 
         for s in plan.steps:
             # 1. Check references in the arguments of the current step
-            for arg_name, arg_value in s.arguments.items():
+            for _, arg_value in s.arguments.items():
                 if isinstance(arg_value, str) and "{{" in arg_value:
                     # Extract the reference (e.g., 'read_conf.content' from '{{read_conf.content}}')
                     match = re.search(r"\{\{(.*?)\}\}", arg_value)

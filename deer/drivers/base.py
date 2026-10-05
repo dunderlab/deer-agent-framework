@@ -52,8 +52,8 @@ class LLMDriver(ABC):
             with urllib.request.urlopen(req, timeout=30) as response:
                 return json.loads(response.read().decode("utf-8"))
         except Exception as e:
-            logger.error(f"Request error: {e}")
-            raise RuntimeError(f"API request failed: {e}")
+            logger.error("Request error: %s", e)
+            raise RuntimeError(f"API request failed: {e}") from e
 
     def _send_streaming_request(self, payload: dict) -> Generator[bytes, None, None]:
         """
@@ -85,8 +85,8 @@ class LLMDriver(ABC):
                 yield line
             response.close()
         except Exception as e:
-            logger.error(f"Streaming request error: {e}")
-            raise RuntimeError(f"Streaming connection failed: {e}")
+            logger.error("Streaming request error:  %s", e)
+            raise RuntimeError(f"Streaming connection failed:  {e}") from e
 
     @abstractmethod
     def generate(
@@ -104,7 +104,7 @@ class LLMDriver(ABC):
         Streaming generation.
         Yields tokens as they are received from the API.
         """
-        pass
+        yield None
 
     def extract_json(self, text: str) -> str:
         text = text.strip()
@@ -117,10 +117,26 @@ class LLMDriver(ABC):
         except json.JSONDecodeError as e:
             raise RuntimeError(
                 f"Failed to parse JSON from response: {e}, response: {text}"
-            )
+            ) from e
 
 
-class OpenAIStandardDriver(LLMDriver):
+class OpenAIStandardDriver(ABC):
+
+    def __init__(
+        self, model_name: str, temperature: float = 0.0, top_p: float = 1.0
+    ) -> None:
+        self.model_name = model_name
+        self.temperature = temperature
+        self.top_p = top_p
+
+    @property
+    def url(self) -> str:
+        raise NotImplementedError()
+
+    @property
+    def headers(self) -> dict:
+        return {"Content-Type": "application/json"}
+
 
     def generate(
         self, messages: list[ChatMessage], response_model: Optional[Type[T]] = None
@@ -154,5 +170,6 @@ class OpenAIStandardDriver(LLMDriver):
 
             return content
         except Exception as e:
-            logger.error(f"Structured output failed: {e}")
-            raise RuntimeError(f"Model failed the strict contract: {e}")
+            logger.error("Structured output failed: %s", e)
+            raise RuntimeError(f"Model failed the strict contract: {e}") from e
+

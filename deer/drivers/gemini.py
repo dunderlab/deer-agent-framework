@@ -1,6 +1,6 @@
 import os
-from typing import TypeVar
-
+from typing import Generator, TypeVar
+from deer.models import ChatMessage
 from pydantic import BaseModel
 
 from .base import LLMDriver
@@ -25,8 +25,15 @@ class GeminiDriver(LLMDriver):
     def __repr__(self) -> str:
         return "Gemini"
 
-    def generate(self, prompt):
+    def generate(
+        self,
+        messages: list[ChatMessage],
+        response_model: type[T] | None = None,
+    ) -> str | T:
         return ""
 
-    def generate_stream(self, prompt):
-        return ""
+    def generate_stream(
+        self,
+        messages: list[ChatMessage],
+    ) -> Generator[str, None, None]:
+        pass

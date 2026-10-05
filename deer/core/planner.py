@@ -130,7 +130,7 @@ class Planner:
                 raise
                 # raise RuntimeError(f"Planning failed after {iteration} attempts: {e}")
 
-            logger.warning(f"Planning attempt {iteration} failed: {e}. Retrying...")
+            logger.warning("Planning attempt %i failed: %s. Retrying...", iteration, e)
 
             # Añadimos el error a la historia local
             local_history.append(

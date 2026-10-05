@@ -22,7 +22,7 @@ class PipelineExecutor:
         """
         Executes the plan and returns a full ExecutionTrace.
         """
-        logger.info(f"Executing pipeline for goal: {plan.goal}")
+        logger.info("Executing pipeline for goal: %s", plan.goal)
         self.execution_context = {}
 
         trace = ExecutionTrace(goal=plan.goal, response=plan.response)
@@ -80,7 +80,7 @@ class PipelineExecutor:
 
         except Exception as e:
             trace.overall_status = "CRASHED"
-            logger.error(f"Critical Executor Crash: {e}")
+            logger.error("Critical Executor Crash: %s", e)
             return trace
 
     def _resolve_arguments(self, args: Dict[str, Any]) -> Dict[str, Any]:

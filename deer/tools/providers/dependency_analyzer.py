@@ -1,7 +1,6 @@
 import libcst as cst
 from dataclasses import dataclass
-from typing import List, Dict, Any, Optional, Set
-from pathlib import Path
+from typing import List, Dict, Any
 
 from deer.tools import ToolProvider, tool
 from deer.tools.schemas import Return, Case
@@ -99,7 +98,7 @@ class DependencyAnalyzer(ToolProvider):
                 visitor = ReferenceVisitor(identifier)
                 module.visit(visitor)
 
-                for occ in visitor.occurrences:
+                for _ in visitor.occurrences:
                     # We add the file and a placeholder for position (CST positions can be complex)
                     all_refs.append(
                         {
@@ -151,7 +150,7 @@ class DependencyAnalyzer(ToolProvider):
             defs = def_visitor.definitions
 
             # 2. Find all name usages
-            ref_visitor = ReferenceVisitor("")  # dummy name
+            # ref_visitor = ReferenceVisitor("")  # dummy name
 
             # Custom override to collect ALL names
             class AllNameVisitor(cst.CSTVisitor):
@@ -172,7 +171,7 @@ class DependencyAnalyzer(ToolProvider):
             for d in defs:
                 # Count occurrences of the name in the whole file
                 # If it only appears in its own definition, it's potentially unused
-                count = 0
+                # count = 0
                 # Re-scan the module for this specific name
                 v = ReferenceVisitor(d)
                 module.visit(v)

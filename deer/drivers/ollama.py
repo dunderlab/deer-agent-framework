@@ -34,7 +34,7 @@ class OllamaDriver(LLMDriver):
         Generates a response from Ollama.
         If response_model is provided, it forces the model to follow the schema.
         """
-        logger.debug(f"Generating response with Ollama model {self.model_name}")
+        logger.debug("Generating response with Ollama model %s", self.model_name)
 
         # Base payload for /api/chat
         payload = {
@@ -68,10 +68,10 @@ class OllamaDriver(LLMDriver):
             return content
 
         except (KeyError, RuntimeError) as e:
-            logger.error(f"Ollama structured output failed: {e}")
+            logger.error("Ollama structured output failed: %s", e)
             raise RuntimeError(
                 f"Ollama failed to follow the deterministic contract: {e}"
-            )
+            ) from e
 
     def generate_stream(
         self,
@@ -102,5 +102,5 @@ class OllamaDriver(LLMDriver):
                     yield chunk["message"]["content"]
 
         except Exception as e:
-            logger.error(f"Ollama streaming failed: {e}")
+            logger.error("Ollama streaming failed: %s", e)
             yield f"\n[ERROR]: Stream interrupted: {e}"

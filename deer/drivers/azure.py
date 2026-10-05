@@ -1,7 +1,11 @@
 import os
-from typing import Optional
+from typing import Generator, TypeVar
+from deer.models import ChatMessage
+from pydantic import BaseModel
 
 from .base import OpenAIStandardDriver
+
+T = TypeVar("T", bound=BaseModel)
 
 
 class AzureOpenAIDriver(OpenAIStandardDriver):
@@ -33,8 +37,15 @@ class AzureOpenAIDriver(OpenAIStandardDriver):
     def __repr__(self) -> str:
         return "AzureOpenAI"
 
-    def generate(self, prompt):
+    def generate(
+        self,
+        messages: list[ChatMessage],
+        response_model: type[T] | None = None,
+    ) -> str | T:
         return ""
 
-    def generate_stream(self, prompt):
-        return ""
+    def generate_stream(
+        self,
+        messages: list[ChatMessage],
+    ) -> Generator[str, None, None]:
+        pass

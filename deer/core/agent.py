@@ -1,5 +1,4 @@
 import logging
-import shutil
 from typing import Optional, Literal, Any
 from pathlib import Path
 from datetime import datetime
@@ -98,15 +97,17 @@ class DeterministicAgent:
         self.traces: dict[Literal["solution", "verification"], list[Any]] = {}
         self.clear_traces()
 
-        logger.info(f"DEER - Deterministic Executable Engine for Runtime-agents")
+        logger.info("DEER - Deterministic Executable Engine for Runtime-agents")
         logger.info(
-            f"Initialized DeterministicAgent with '{self.driver.model_name}' model"
+            "Initialized DeterministicAgent with '%s' model", self.driver.model_name
         )
-        logger.info(f"Identity: {self.identity}")
+        logger.info("Identity: %s", self.identity)
         logger.info(
-            f"Available tools:\n{self.tool_registry.describe(state_filter='BOTH')}"
+            "Available tools:\n%s", self.tool_registry.describe(state_filter="BOTH")
         )
-        logger.info(f"Authorized filesystem scope is restricted to: {working_dir}")
+        logger.info(
+            "Authorized filesystem scope is restricted to: %s", str(working_dir)
+        )
 
     def clear_verificator_history(self):
         self.verificator_history = [

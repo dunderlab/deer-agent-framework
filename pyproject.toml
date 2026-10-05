@@ -55,6 +55,8 @@ deer = "deer.cli.main:main"
 [tool.pylint."MESSAGES CONTROL"]
 disable = [
     "R0801",
+    "W0718",
+    "W0212",
 ]
 
 [tool.pylint.MAIN]

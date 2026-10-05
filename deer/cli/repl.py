@@ -89,8 +89,10 @@ class AgentREPL:
 
         self.prompt_history: InMemoryHistory
         self.load_prompt_history()
-
         self.console = Console()
+
+        self.history = []
+        self.trace = []
 
     @property
     def completer(self):
@@ -175,7 +177,7 @@ class AgentREPL:
                 self.console.print(
                     Markdown(tools_description),
                     "\n",
-                    f"[dim]Tool registry: {len(self.agent.tool_registry._tools)} modules active.[/dim]\n",
+                    f"[dim]Tool registry: {len(self.agent.tool_registry.tools)} modules active.[/dim]\n",
                     f"[dim]Registry description payload: {self.agent.format_bytes(len(tools_description))}[/dim]\n",
                     sep="",
                 )
@@ -205,10 +207,10 @@ class AgentREPL:
             #         print(f"{chat}\n")
 
             case "/infocontext":
-                bytes = sum(len(str(item)) for item in self.agent.agent_history)
+                bytes_ = sum(len(str(item)) for item in self.agent.agent_history)
                 self.console.print(
                     f"[dim][bold]History:[/bold] {len(self.agent.agent_history)} messages[/dim]\n",
-                    f"[dim][bold]Context size:[/bold] ~{self.agent.format_bytes(bytes)}[/dim]\n",
+                    f"[dim][bold]Context size:[/bold] ~{self.agent.format_bytes(bytes_)}[/dim]\n",
                     sep="",
                 )
 
@@ -249,7 +251,7 @@ class AgentREPL:
     def repl(self):
         logger.setLevel(logging.CRITICAL)
         self.show_welcome()
-        self.pretty_print(f"----")
+        self.pretty_print("----")
 
         session = PromptSession(
             erase_when_done=True,
