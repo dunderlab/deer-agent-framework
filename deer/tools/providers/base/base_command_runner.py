@@ -14,6 +14,7 @@ def _failure(message: str) -> dict:
 
 
 class BaseCommandRunner(ToolProvider):
+    availableCommands: list[str]
 
     @property
     def allowed_commands(self):

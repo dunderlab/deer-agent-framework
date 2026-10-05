@@ -189,14 +189,9 @@ class ToolProvider:
 
 
 class Tool(ABC):
-    """Base contract for deterministic tools."""
-
-    # input_schema: Type[Any] | None = None
-    # output_schema: Type[Any] | None = None
-    #
-    # name: str = ""
-    # description: str = ""
-    # modifies_state: bool = False
+    params_type: Any
+    return_type: Any
+    name: str
 
     def __init__(self) -> None:
         if not self.name:

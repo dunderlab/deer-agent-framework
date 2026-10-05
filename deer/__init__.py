@@ -24,7 +24,7 @@ def load_env_file(env_path: Path) -> None:
 
                     # Set the environment variable
                     os.environ[key] = value
-    except IOError as e:
+    except IOError:
         # Log or handle the error if the file exists but can't be read
         pass
 

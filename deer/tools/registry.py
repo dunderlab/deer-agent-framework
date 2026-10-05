@@ -1,14 +1,14 @@
-from typing import Any, Dict, Iterable, Literal
+from tkinter.constants import NO
 
 from .base import Tool
 from .decorators import MethodTool, get_tool_metadata, is_tool_method
 from .schemas import Return
-from typing import Any, get_origin, get_args, Union, List, Dict, Optional
+from typing import Any, get_origin, get_args, Union, Dict, Iterable, Literal
 from pydantic import BaseModel
 
 
 class ToolRegistry:
-    def __init__(self, tools=[]) -> None:
+    def __init__(self, tools=None) -> None:
         self._tools: Dict[str, Tool] = {}
         self._providers: list = []
 

@@ -145,9 +145,7 @@ class OpenAIStandardDriver(LLMDriver):
             }
 
         try:
-            response_json = self._send_post_request(
-                self.url, payload, headers=self.headers
-            )
+            response_json = self._send_post_request(payload)
             content = response_json["choices"][0]["message"]["content"]
 
             if response_model:

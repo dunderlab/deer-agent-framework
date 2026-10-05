@@ -168,7 +168,7 @@ class VectorMemory:
                     "id": ids[i],
                     "hit_count": hit_count,
                     "size_bytes": total_bytes,
-                    "size_human": self._format_size(total_bytes),
+                    "size_human": self.format_bytes(total_bytes),
                     "text_preview": docs[i][:50] + "..." if docs[i] else "",
                 }
             )
@@ -178,24 +178,12 @@ class VectorMemory:
 
         return audit_list[:top_n] if top_n else audit_list
 
-    def _format_size(self, bytes: Union[float, int]) -> str:
-        """
-        Convert a number of bytes into a human-readable string format.
-
-        Parameters
-        ----------
-        bytes : float or int
-            The size in bytes to be formatted.
-
-        Returns
-        -------
-        str
-            The formatted size string (e.g., '1.23 MB').
-        """
+    def format_bytes(self, size):
         for unit in ["B", "KB", "MB", "GB"]:
-            if bytes < 1024.0:
-                return f"{bytes:.2f} {unit}"
-            bytes /= 1024.0
+            if size < 1024:
+                return f"{size:.1f} {unit}"
+            size /= 1024
+        return f"{size} bytes"
 
     def get_db_info(self) -> dict[str, int]:
         """
@@ -308,7 +296,7 @@ class VectorMemory:
             return 0
 
         bytes_to_free = current_estimated_total - target_bytes
-        logger.info(f"Estimated data to free: {self._format_size(bytes_to_free)}")
+        logger.info(f"Estimated data to free: {self.format_bytes(bytes_to_free)}")
 
         least_popular_first = audit_list[::-1]
         ids_to_delete = []

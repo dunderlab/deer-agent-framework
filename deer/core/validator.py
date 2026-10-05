@@ -1,5 +1,4 @@
 import re
-from pickle import FALSE
 from typing import Set
 import inspect
 import logging

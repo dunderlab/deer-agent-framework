@@ -129,6 +129,7 @@ class DeterministicAgent:
             if size < 1024:
                 return f"{size:.1f} {unit}"
             size /= 1024
+        return f"{size} bytes"
 
     def persist_state(self):
         context = {

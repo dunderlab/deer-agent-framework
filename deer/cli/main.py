@@ -55,6 +55,7 @@ def run_agent_in_process(agent_path, backend=None, model=None):
         return agent_module.main()
     else:
         logger.error("Agent does not have a 'main' function to run.")
+        exit(0)
 
 
 def main():

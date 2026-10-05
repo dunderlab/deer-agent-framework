@@ -51,3 +51,11 @@ include = ["deer*"]
 
 [project.scripts]
 deer = "deer.cli.main:main"
+
+[tool.pylint."MESSAGES CONTROL"]
+disable = [
+    "R0801",
+]
+
+[tool.pylint.MAIN]
+load-plugins = ["pylint_pydantic"]
