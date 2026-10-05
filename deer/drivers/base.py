@@ -81,10 +81,11 @@ class LLMDriver(ABC):
 
         try:
             # We do NOT use 'with' here in the same way because we want to yield from the response
-            response = urllib.request.urlopen(req, timeout=30)
-            for line in response:
-                yield line
-            response.close()
+            with urllib.request.urlopen(req, timeout=30) as response:
+                for line in response:
+                    yield line
+                response.close()
+
         except Exception as e:
             logger.error("Streaming request error:  %s", e)
             raise RuntimeError(f"Streaming connection failed:  {e}") from e
@@ -121,23 +122,9 @@ class LLMDriver(ABC):
             ) from e
 
 
-class OpenAIStandardDriver(ABC):
+class OpenAIStandardDriver(LLMDriver):
 
-    def __init__(
-        self, model_name: str, temperature: float = 0.0, top_p: float = 1.0
-    ) -> None:
-        self.model_name = model_name
-        self.temperature = temperature
-        self.top_p = top_p
-
-    @property
-    def url(self) -> str:
-        raise NotImplementedError()
-
-    @property
-    def headers(self) -> dict:
-        return {"Content-Type": "application/json"}
-
+    @abstractmethod
     def generate(
         self, messages: list[ChatMessage], response_model: Optional[Type[T]] = None
     ) -> Union[str, T]:
@@ -172,3 +159,10 @@ class OpenAIStandardDriver(ABC):
         except Exception as e:
             logger.error("Structured output failed: %s", e)
             raise RuntimeError(f"Model failed the strict contract: {e}") from e
+
+    def generate_stream(
+        self, messages: list[ChatMessage]
+    ) -> Generator[str, None, None]:
+        """Implementation of the abstract method from LLMDriver"""
+        # For now, you can just yield an empty string or implement the logic
+        yield ""

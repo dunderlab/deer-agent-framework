@@ -3,8 +3,8 @@ import json
 
 from pydantic import BaseModel
 
-from .base import LLMDriver, logger
 from deer.models import ChatMessage
+from .base import LLMDriver, logger
 
 T = TypeVar("T", bound=BaseModel)
 

@@ -57,6 +57,7 @@ disable = [
     "R0801",
     "W0718",
     "W0212",
+    "C0103", # Constant name "OperatingSystemAgent" doesn't conform to UPPER_CASE naming style (invalid-name)
     "C0301", # Line too long (110/100) (line-too-long)
     "C0302", # Too many lines in module (1014/1000) (too-many-lines)
     "C0114", # Missing module docstring (missing-module-docstring)
