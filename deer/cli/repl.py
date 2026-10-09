@@ -133,10 +133,8 @@ class AgentREPL:
 
     def show_welcome(self):
         commands_formated = ""
-        for command in COMMANDS.items():
-            commands_formated += (
-                f"- {('`'+command+'`').ljust(12, ' ')} → {COMMANDS[command]}\n "
-            )
+        for command, desc in COMMANDS.items():
+            commands_formated += f"- {('`'+command+'`').ljust(12, ' ')} → {desc}\n "
 
         self.console.clear()
         self.pretty_print(
@@ -257,7 +255,7 @@ class AgentREPL:
             erase_when_done=True,
             history=self.prompt_history,
             completer=self.completer,
-            mouse_support=True,
+            mouse_support=False,
         )
 
         def as_table(prompt, message="", color="cyan"):
@@ -268,6 +266,7 @@ class AgentREPL:
             table.add_row(
                 Text(prompt, style=f"bold {color}"),
                 Markdown(message),
+                # Text(message),
             )
             return table
 
@@ -280,6 +279,7 @@ class AgentREPL:
                 msg = session.prompt(
                     HTML(f"<ansicyan><b>{input_prompt}</b></ansicyan>")
                 )
+                # msg = input(">>> ")
                 self.save_prompt_history()
 
                 if self.agent.load_context:
@@ -290,8 +290,7 @@ class AgentREPL:
             except EOFError:
                 break
 
-            msg = msg.strip()
-            if not msg:
+            if not msg.strip():
                 continue
 
             match msg:
