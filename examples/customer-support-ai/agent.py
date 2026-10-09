@@ -46,10 +46,10 @@ CustomerSupportAI = DeterministicAgent(
     enable_verification=False,
 )
 
-CustomerSupportAI.vector_memory.load_json(
+CustomerSupportAI.vector_memory.load_from_json(
     CustomerSupportAI.working_dir / ".." / "memory.json"
 )
-CustomerSupportAI.vector_memory.load_json(
+CustomerSupportAI.vector_memory.load_from_json(
     CustomerSupportAI.working_dir / ".." / "memory_es.json"
 )
 
