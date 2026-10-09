@@ -29,7 +29,10 @@ class VectorMemory:
         )
 
     def add_document(
-        self, doc_id: str, doc: str, metadata: Optional[dict[str, Any]] = None
+        self,
+        doc_id: str,
+        doc: str,
+        metadata: Optional[dict[str, Any]] = None,
     ) -> None:
         """
         Add a document to the vector collection.
@@ -44,11 +47,96 @@ class VectorMemory:
             Additional metadata associated with the document.
             If 'hit_count' is not provided, it will be initialized to 0.
         """
-        meta = metadata if metadata else {}
+        meta = metadata.copy() if metadata else {}
         if "hit_count" not in meta:
             meta["hit_count"] = 0
 
-        self.collection.add(documents=[doc], metadatas=[meta], ids=[doc_id])
+        if doc:
+            self.collection.add(documents=[doc], metadatas=[meta], ids=[doc_id])
+
+    def read_document(
+        self,
+        doc_id: str,
+        path: Path,
+        metadata: Optional[dict[str, Any]] = None,
+    ) -> None:
+        """
+        Read a document from the filesystem and add it to the collection.
+
+        Parameters
+        ----------
+        doc_id : str
+            The unique identifier to assign to the document.
+        path : Path
+            The filesystem path to the document file.
+        metadata : dict of {str : Any}, optional
+            Additional metadata to associate with the document. If None,
+            an empty dictionary is used. Defaults to None.
+
+        Notes
+        -----
+        The method ensures that the metadata contains a 'hit_count' key,
+        initializing it to 0 if it is missing. The file is read using
+        UTF-8 encoding.
+        """
+        meta = metadata.copy() if metadata is not None else {}
+
+        if "hit_count" not in meta:
+            meta["hit_count"] = 0
+
+        if path.exists():
+            content = path.read_text(encoding="utf-8")
+            self.collection.add(documents=[content], metadatas=[meta], ids=[doc_id])
+
+    def read_directory(
+        self,
+        doc_id_prefix: str,
+        path: Path,
+        metadata: Optional[dict[str, Any]] = None,
+    ) -> None:
+        """
+        Recursively read all files in a directory and add them to the collection.
+
+        Parameters
+        ----------
+        doc_id_prefix : str
+            The prefix to use for generating unique document IDs.
+        path : Path
+            The root directory path to scan for files.
+        metadata : dict of {str : Any}, optional
+            Base metadata to associate with each document. If None,
+            an empty dictionary is used. Defaults to None.
+
+        Notes
+        -----
+        The method ensures that the metadata contains a 'hit_count' key,
+        initializing it to 0 if missing. For each file found, the filename
+        is added to the metadata under the 'path' key. Files that cannot
+        be read due to encoding or permission issues are skipped and logged.
+        """
+        base_meta = metadata.copy() if metadata is not None else {}
+        if "hit_count" not in base_meta:
+            base_meta["hit_count"] = 0
+
+        for file_path in path.rglob("*"):
+            if not file_path.is_file():
+                continue
+
+            try:
+                current_meta = base_meta.copy()
+
+                with file_path.open(mode="r", encoding="utf-8") as f:
+                    content = f.read()
+                    current_meta["path"] = file_path.name
+
+                    self.collection.add(
+                        documents=[content],
+                        metadatas=[current_meta],
+                        ids=[f"{doc_id_prefix}-{file_path.name}"],
+                    )
+
+            except (UnicodeDecodeError, PermissionError) as e:
+                logging.warning("Could not read %s: %s", file_path.name, e)
 
     def query(self, query_text: str, n_results: int = 3) -> list[dict[str, Any]]:
         """
@@ -321,15 +409,39 @@ class VectorMemory:
 
         return len(ids_to_delete)
 
-    def load_json(self, json_path: Path):
+    def load_from_json(self, json_path: Path) -> None:
+        """
+        Load documents from a JSON file and add them to the collection.
 
+        Parameters
+        ----------
+        json_path : Path
+            The filesystem path to the JSON file containing a list of
+            document data.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the file at `json_path` does not exist.
+        json.JSONDecodeError
+            If the file content is not valid JSON.
+
+        Notes
+        -----
+        The JSON file is expected to contain a list of dictionaries, where
+        each dictionary represents a document and its associated metadata
+        to be passed as keyword arguments to the `add_document` method.
+        """
         if not json_path.exists():
             raise FileNotFoundError(
                 f"The file does not exist at the following path: {json_path}"
             )
 
         with json_path.open("r", encoding="utf-8") as f:
-            memories = json.load(f)
+            memories: list[dict[str, Any]] = json.load(f)
 
         for memory in memories:
-            self.add_document(**memory)
+            if isinstance(memory, dict):
+                self.add_document(**memory)
+            else:
+                continue
