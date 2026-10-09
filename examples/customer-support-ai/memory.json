@@ -1,6 +1,6 @@
 [
   {
-    "id": "store_operational_hours",
+    "doc_id": "store_operational_hours",
     "doc": "Customer support operational hours: Monday to Friday from 09:00 to 18:00. Saturdays from 10:00 to 14:00. Sundays and national holidays: Closed. The average response time during business hours is 2 hours.",
     "metadata": {
       "category": "operational",
@@ -9,7 +9,7 @@
     }
   },
   {
-    "id": "contact_channels",
+    "doc_id": "contact_channels",
     "doc": "Official contact channels: Email: support@fictionalstore.com. Phone: +1-800-FICT-SHOP. Physical Address: 123 Innovation Ave, Tech District. Social Media: @FictionalStore on Instagram and X.",
     "metadata": {
       "category": "operational",
@@ -18,7 +18,7 @@
     }
   },
   {
-    "id": "shipping_policy",
+    "doc_id": "shipping_policy",
     "doc": "Shipping policies: Standard Shipping: 3 to 5 business days. Express Shipping: 24 to 48 hours. Shipping Cost: Free on orders over $50 USD. For orders under $50 USD, a shipping fee of $5.99 USD applies. Coverage: National and international shipping available.",
     "metadata": {
       "category": "policy",
@@ -27,7 +27,7 @@
     }
   },
   {
-    "id": "return_refund_policy",
+    "doc_id": "return_refund_policy",
     "doc": "Returns and refunds policy: Return window: 30 calendar days from the date of order receipt. Conditions: The product must be unused, in its original packaging, and with tags attached. Process: Customers must initiate the request via email including the order number. Refunds are processed within 5 to 10 business days.",
     "metadata": {
       "category": "policy",
@@ -36,7 +36,7 @@
     }
   },
   {
-    "id": "payment_methods",
+    "doc_id": "payment_methods",
     "doc": "Accepted payment methods: Credit and Debit Cards (Visa, Mastercard, American Express). Digital Wallets: PayPal, Apple Pay, Google Pay. Bank Transfers: Available for corporate purchases only. Cash and checks are not accepted.",
     "metadata": {
       "category": "operational",
