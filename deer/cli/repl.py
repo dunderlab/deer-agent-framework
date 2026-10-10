@@ -30,6 +30,7 @@ COMMANDS = {
     "/infocontext": "Displays context memory usage information.",
     "/loadcontext": "Restore a saved session context",
     "/savecontext": "Save the current session context",
+    "/infomemory": "Displays total document count and storage usage.",
 }
 
 WELCOME_MESSAGE = """
@@ -240,6 +241,15 @@ class AgentREPL:
                     self.console.print(
                         f"[bold red]Context restoration error:[/bold red] {e}\n"
                     )
+
+            case "/infomemory":
+                memory_info = self.agent.vector_memory.get_db_info()
+
+                self.console.print(
+                    f"[dim][bold]Number of documents:[/bold] {memory_info['total_documents']}[/dim]\n",
+                    f"[dim][bold]Database size:[/bold] ~{self.agent.format_bytes(memory_info['disk_size_bytes'])}[/dim]\n",
+                    sep="",
+                )
 
         self.console.print(
             Markdown("----"),
