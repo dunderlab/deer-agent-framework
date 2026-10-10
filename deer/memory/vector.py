@@ -1,5 +1,6 @@
 from typing import Any, Optional, Union
 from pathlib import Path
+import hashlib
 import logging
 import json
 import os
@@ -47,12 +48,35 @@ class VectorMemory:
             Additional metadata associated with the document.
             If 'hit_count' is not provided, it will be initialized to 0.
         """
+        if not doc:
+            return
+
+        # 1. Calculate the MD5 hash of the received document
+        doc_hash = hashlib.md5(doc.encode("utf-8")).hexdigest()
+
+        # 2. Query existing metadata for this ID
+        existing = self.collection.get(ids=[doc_id], include=["metadatas"])
+        existing_hash = None
+        current_hit_count = 0
+
+        if existing["ids"] and existing["metadatas"] and existing["metadatas"][0]:
+            meta_existing = existing["metadatas"][0]
+            existing_hash = meta_existing.get("content_hash")
+            current_hit_count = meta_existing.get("hit_count", 0)
+
+        # 3. If the document already exists and the hash matches, do nothing
+        if existing_hash == doc_hash:
+            return
+
+        # 4. Prepare metadata preserving the hit_count and adding the hash
         meta = metadata.copy() if metadata else {}
         if "hit_count" not in meta:
-            meta["hit_count"] = 0
+            meta["hit_count"] = current_hit_count
 
-        if doc:
-            self.collection.add(documents=[doc], metadatas=[meta], ids=[doc_id])
+        meta["content_hash"] = doc_hash
+
+        # 5. Save only if it is new or has changed
+        self.collection.upsert(documents=[doc], metadatas=[meta], ids=[doc_id])
 
     def read_document(
         self,
@@ -79,14 +103,44 @@ class VectorMemory:
         initializing it to 0 if it is missing. The file is read using
         UTF-8 encoding.
         """
-        meta = metadata.copy() if metadata is not None else {}
+        if not path.exists():
+            logging.warning("File does not exist: %s", path)
+            return
 
-        if "hit_count" not in meta:
-            meta["hit_count"] = 0
-
-        if path.exists():
+        try:
             content = path.read_text(encoding="utf-8")
-            self.collection.add(documents=[content], metadatas=[meta], ids=[doc_id])
+        except (UnicodeDecodeError, PermissionError) as e:
+            logging.warning("Could not read %s: %s", path.name, e)
+            return
+
+        # 1. Calculate the MD5 hash of the current content
+        file_hash = hashlib.md5(content.encode("utf-8")).hexdigest()
+
+        # 2. Query only the existing metadata for this ID
+        existing = self.collection.get(ids=[doc_id], include=["metadatas"])
+        existing_hash = None
+        current_hit_count = 0
+
+        if existing["ids"] and existing["metadatas"] and existing["metadatas"][0]:
+            meta_existing = existing["metadatas"][0]
+            existing_hash = meta_existing.get("content_hash")
+            current_hit_count = meta_existing.get("hit_count", 0)
+
+        # 3. If the file already exists and the hash matches, skip the write operation
+        if existing_hash == file_hash:
+            return
+
+        # 4. Prepare metadata preserving the previous hit_count if it existed
+        meta = metadata.copy() if metadata is not None else {}
+        if "hit_count" not in meta:
+            meta["hit_count"] = current_hit_count
+
+        meta["content_hash"] = file_hash
+        if "path" not in meta:
+            meta["path"] = path.name
+
+        # 5. Save only if it is new or has changed
+        self.collection.upsert(documents=[content], metadatas=[meta], ids=[doc_id])
 
     def read_directory(
         self,
@@ -99,13 +153,14 @@ class VectorMemory:
 
         Parameters
         ----------
+
         doc_id_prefix : str
-            The prefix to use for generating unique document IDs.
+        The prefix to use for generating unique document IDs.
         path : Path
-            The root directory path to scan for files.
+        The root directory path to scan for files.
         metadata : dict of {str : Any}, optional
-            Base metadata to associate with each document. If None,
-            an empty dictionary is used. Defaults to None.
+        Base metadata to associate with each document. If None,
+        an empty dictionary is used. Defaults to None.
 
         Notes
         -----
@@ -118,25 +173,50 @@ class VectorMemory:
         if "hit_count" not in base_meta:
             base_meta["hit_count"] = 0
 
+        files_to_process = []
+        doc_ids = []
+
+        # 1. Read files and calculate their MD5 hash locally
         for file_path in path.rglob("*"):
             if not file_path.is_file():
                 continue
 
             try:
-                current_meta = base_meta.copy()
+                content = file_path.read_text(encoding="utf-8")
+                file_hash = hashlib.md5(content.encode("utf-8")).hexdigest()
 
-                with file_path.open(mode="r", encoding="utf-8") as f:
-                    content = f.read()
-                    current_meta["path"] = file_path.name
-
-                    self.collection.add(
-                        documents=[content],
-                        metadatas=[current_meta],
-                        ids=[f"{doc_id_prefix}-{file_path.name}"],
-                    )
-
+                doc_id = f"{doc_id_prefix}-{file_path.name}"
+                files_to_process.append((doc_id, file_path.name, content, file_hash))
+                doc_ids.append(doc_id)
             except (UnicodeDecodeError, PermissionError) as e:
                 logging.warning("Could not read %s: %s", file_path.name, e)
+
+        if not doc_ids:
+            return
+
+        # 2. Retrieve only existing metadata from ChromaDB (much lighter)
+        existing = self.collection.get(ids=doc_ids, include=["metadatas"])
+        existing_hashes = {
+            id_: meta.get("content_hash")
+            for id_, meta in zip(existing["ids"], existing["metadatas"])
+            if meta is not None
+        }
+
+        # 3. Filter and upsert only new files or those with different hashes
+        for doc_id, file_name, content, file_hash in files_to_process:
+            if existing_hashes.get(doc_id) == file_hash:
+                # The file has not changed, skip writing to avoid inflating disk usage
+                continue
+
+            current_meta = base_meta.copy()
+            current_meta["path"] = file_name
+            current_meta["content_hash"] = file_hash  # Store the hash in the metadata
+
+            self.collection.upsert(
+                documents=[content],
+                metadatas=[current_meta],
+                ids=[doc_id],
+            )
 
     def query(self, query_text: str, n_results: int = 3) -> list[dict[str, Any]]:
         """
