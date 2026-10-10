@@ -1,3 +1,5 @@
+import os
+import shutil
 from typing import Optional, Literal, Any
 from datetime import datetime
 from pathlib import Path
@@ -42,6 +44,9 @@ class DeterministicAgent:
         self.working_dir = working_dir.resolve()
         self.enable_verification = enable_verification
         self.contex_file = self.agent_dir / "context"
+
+        if not self.agent_dir.exists():
+            os.makedirs(self.agent_dir, exist_ok=True)
 
         # LLMDriver
         self.driver = driver
