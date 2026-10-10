@@ -1,4 +1,3 @@
-from functools import lru_cache
 import itertools
 from dataclasses import dataclass, field
 from typing import Any
