@@ -30,7 +30,7 @@ COMMANDS = {
     "/infocontext": "Displays context memory usage information.",
     "/loadcontext": "Restore a saved session context",
     "/savecontext": "Save the current session context",
-    "/infomemory": "Displays total document count and storage usage.",
+    "/infoknowledge": "Displays total document count and storage usage.",
 }
 
 WELCOME_MESSAGE = """
@@ -134,8 +134,11 @@ class AgentREPL:
 
     def show_welcome(self):
         commands_formated = ""
+        max_command = max(len(cm) for cm in COMMANDS.keys()) + 2
         for command, desc in COMMANDS.items():
-            commands_formated += f"- {('`'+command+'`').ljust(12, ' ')} → {desc}\n "
+            commands_formated += (
+                f"- {('`'+command+'`').ljust(max_command, ' ')} → {desc}\n "
+            )
 
         self.console.clear()
         self.pretty_print(
@@ -242,12 +245,12 @@ class AgentREPL:
                         f"[bold red]Context restoration error:[/bold red] {e}\n"
                     )
 
-            case "/infomemory":
-                memory_info = self.agent.knowledge.get_db_info()
+            case "/infoknowledge":
+                knowledge_info = self.agent.knowledge.get_db_info()
 
                 self.console.print(
-                    f"[dim][bold]Number of documents:[/bold] {memory_info['total_documents']}[/dim]\n",
-                    f"[dim][bold]Database size:[/bold] ~{self.agent.format_bytes(memory_info['disk_size_bytes'])}[/dim]\n",
+                    f"[dim][bold]Number of documents:[/bold] {knowledge_info['total_documents']}[/dim]\n",
+                    f"[dim][bold]Database size:[/bold] ~{self.agent.format_bytes(knowledge_info['disk_size_bytes'])}[/dim]\n",
                     sep="",
                 )
 
