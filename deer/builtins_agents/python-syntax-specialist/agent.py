@@ -1,5 +1,4 @@
 from pathlib import Path
-import os
 
 from deer import DeterministicAgent
 from deer.cli import AgentREPL, get_path_from_parser, get_driver_from_parser
