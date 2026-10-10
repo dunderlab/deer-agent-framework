@@ -55,9 +55,9 @@ deer = "deer.cli.main:main"
 
 [tool.pylint."MESSAGES CONTROL"]
 disable = [
-    "R0801",
-    "W0718",
-    "W0212",
+    "R0801", # Similar lines in 2 files
+    "W0718", # Catching too general exception Exception (broad-exception-caught)
+    "W0212", # Access to a protected member _Element of a client class (protected-access)
     "R0902", # Too many instance attributes (11/7) (too-many-instance-attributes)
     "R0903", # Too few public methods (1/2) (too-few-public-methods)
     "R0911", # Too many return statements (7/6) (too-many-return-statements)
@@ -74,5 +74,6 @@ disable = [
     "C0116", # Missing function or method docstring (missing-function-docstring)
 ]
 
-[tool.pylint.MAIN]
+[tool.pylint.main]
 load-plugins = ["pylint_pydantic"]
+extension-pkg-allow-list = ["lxml"]
