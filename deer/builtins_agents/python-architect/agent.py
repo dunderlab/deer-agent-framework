@@ -7,7 +7,6 @@ from deer.tools.presets import Preset
 from deer.tools.providers import HTTPClient, SystemObserver
 from deer.drivers import OllamaDriver
 
-
 # Infrastructure
 driver = get_driver_from_parser() or OllamaDriver(model_name="gemma4:31b-cloud")
 registry = ToolRegistry(
@@ -18,7 +17,7 @@ registry = ToolRegistry(
 )
 working_dir = get_path_from_parser() or Path.cwd()
 
-PythonArchitectAgent = DeterministicAgent(
+agent = DeterministicAgent(
     description="AI specialist in Python architecture, runtime module resolution, and dependency management.",
     identity=(
         "You are an elite AI Agent operating as a Principal Python Architect and Core Ecosystem Specialist. "
@@ -35,7 +34,7 @@ PythonArchitectAgent = DeterministicAgent(
 
 
 def main():
-    repl = AgentREPL(PythonArchitectAgent)
+    repl = AgentREPL(agent)
     repl.repl()
 
 

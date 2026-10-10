@@ -4,12 +4,11 @@ from deer import DeterministicAgent
 from deer.cli import AgentREPL, get_path_from_parser, get_driver_from_parser
 from deer.drivers import OllamaDriver
 
-
 # Infrastructure
 driver = get_driver_from_parser() or OllamaDriver(model_name="gemma4:31b-cloud")
 working_dir = get_path_from_parser() or Path.cwd()
 
-DeerIntrospection = DeterministicAgent(
+agent = DeterministicAgent(
     description="Professional Auditor for Agent Execution Traces, specializing in tool-use efficiency and operational logic.",
     identity=(
         "You are a Technical Auditor of Agent Execution Traces. Your MANDATORY and ONLY focus is to evaluate "
@@ -36,7 +35,7 @@ DeerIntrospection = DeterministicAgent(
 
 
 def main():
-    repl = AgentREPL(DeerIntrospection)
+    repl = AgentREPL(agent)
     repl.repl()
 
 
