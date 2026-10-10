@@ -222,3 +222,5 @@ traces
 
 .idea
 .DS_Store
+
+.deer/
