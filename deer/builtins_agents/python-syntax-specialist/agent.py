@@ -8,7 +8,7 @@ from deer.memory import VectorMemory
 # Infrastructure
 driver = get_driver_from_parser() or OllamaDriver(model_name="gemma4:31b-cloud")
 working_dir = get_path_from_parser() or Path.cwd()
-knowledge = VectorMemory(path=working_dir / "pss_memory")
+knowledge = VectorMemory(path=working_dir / "pss_knowledge")
 
 identity = (Path(__file__).parent / "identity.md").read_text(encoding="utf-8")
 
