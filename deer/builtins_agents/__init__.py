@@ -1,9 +1,17 @@
 import os
+from pathlib import Path
 
 agents = {
-    "python_architect": os.path.join(os.path.dirname(__file__), "python_architect.py"),
-    "operating_system": os.path.join(os.path.dirname(__file__), "operating_system.py"),
-    "python_syntax_specialist": os.path.join(
-        os.path.dirname(__file__), "python-syntax-specialist/agent.py"
+    "deer-introspection": os.path.join(
+        Path(__file__).parent / "deer-introspection" / "agent.py"
+    ),
+    "operating-system": os.path.join(
+        Path(__file__).parent / "operating-system" / "agent.py"
+    ),
+    "python-architect": os.path.join(
+        Path(__file__).parent / "python-architect" / "agent.py"
+    ),
+    "python-syntax-specialist": os.path.join(
+        Path(__file__).parent / "python-syntax-specialist" / "agent.py"
     ),
 }
