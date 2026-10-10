@@ -26,16 +26,16 @@ curated vector memory.
 * **Vector Memory via JSON:** Knowledge is decoupled from the code. The agent loads its factual base from external JSON
   files, allowing for easy updates to store policies without modifying the source code.
 * **Multi-Language Support:** The agent supports multiple languages by loading separate memory files (e.g.,
-  `memory.json`
-  for English and `memory_es.json` for Spanish), enabling it to retrieve the correct factual data regardless of the
+  `knowledge.json`
+  for English and `knowledge_es.json` for Spanish), enabling it to retrieve the correct factual data regardless of the
   user's
   language.
 
 #### Project Structure
 
 * `agent.py`: Main entry point containing the agent configuration and REPL loop.
-* `memory.json`: English operational knowledge base.
-* `memory_es.json`: Spanish operational knowledge base.
+* `knowledge.json`: English operational knowledge base.
+* `knowledge_es.json`: Spanish operational knowledge base.
 
 #### Behavioral Constraints
 

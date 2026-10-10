@@ -172,8 +172,8 @@ from deer.memory import VectorMemory
 agent = DeterministicAgent(...)
 
 # Load pre-structured vector memory chunks from JSON files
-agent.vector_memory.load_from_json("memory.json")
-agent.vector_memory.load_from_json("memory_es.json")
+agent.knowledge.load_from_json("memory.json")
+agent.knowledge.load_from_json("memory_es.json")
 ```
 
 To incorporate external references, guidelines, or templates on the fly, agents can read single files directly into
@@ -187,11 +187,11 @@ from pathlib import Path
 agent = DeterministicAgent(...)
 
 # Read and embed individual files into the vector database
-agent.vector_memory.read_document(
+agent.knowledge.read_document(
     doc_id="ui_template_ref",
     path=Path("template.html"),
 )
-agent.vector_memory.read_document(
+agent.knowledge.read_document(
     doc_id="system_specs",
     path=Path("sample.txt"),
 )
@@ -208,7 +208,7 @@ from pathlib import Path
 agent = DeterministicAgent(...)
 
 # Recursively read and embed all supported files inside the memory directory
-agent.vector_memory.read_directory(
+agent.knowledge.read_directory(
     doc_id_prefix="doc",
     path=Path(__file__).parent / "memory",
 )

@@ -26,7 +26,7 @@ class DeterministicAgent:
         driver: LLMDriver,
         working_dir: Path,
         tool_registry: Optional[ToolRegistry | set[ToolProvider]] = None,
-        vector_memory: Optional[VectorMemory] = None,
+        knowledge: Optional[VectorMemory] = None,
         max_attempts: int = 3,
         enable_verification: bool = True,
         load_context: bool = False,
@@ -61,10 +61,10 @@ class DeterministicAgent:
         self.tool_registry.set_jail(working_dir)
 
         # Vector Memory
-        if vector_memory:
-            self.vector_memory = vector_memory
+        if knowledge:
+            self.knowledge = knowledge
         else:
-            self.vector_memory = VectorMemory(self.agent_dir / "vector_db")
+            self.knowledge = VectorMemory(self.agent_dir / "vector_db")
 
         # Planner
         self.planner = Planner(
@@ -175,7 +175,7 @@ class DeterministicAgent:
 
         plan, updated_history = self.planner.plan(
             goal=goal,
-            context=self.vector_memory.query(goal, n_results=self.vector_contex_limit),
+            context=self.knowledge.query(goal, n_results=self.vector_contex_limit),
             history=history,
         )
 

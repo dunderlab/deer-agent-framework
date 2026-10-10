@@ -243,7 +243,7 @@ class AgentREPL:
                     )
 
             case "/infomemory":
-                memory_info = self.agent.vector_memory.get_db_info()
+                memory_info = self.agent.knowledge.get_db_info()
 
                 self.console.print(
                     f"[dim][bold]Number of documents:[/bold] {memory_info['total_documents']}[/dim]\n",
