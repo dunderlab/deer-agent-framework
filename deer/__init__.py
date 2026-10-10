@@ -3,7 +3,7 @@ import os
 
 from deer.core import DeterministicAgent
 
-__version__ = "0.2"
+version_info = "0.2"
 
 
 def load_env_file(env_path: Path) -> None:
