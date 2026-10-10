@@ -389,5 +389,14 @@ class AgentREPL:
                                 sep="",
                             )
                             continue
+
+                        except RuntimeError as e:
+                            self.console.print(
+                                f"[dim]{e}[/dim]\n",
+                                Markdown("----"),
+                                sep="",
+                            )
+                            continue
+
                         except EOFError:
                             break
