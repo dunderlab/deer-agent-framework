@@ -1,4 +1,4 @@
-from typing import Any, get_origin, get_args, Union, Dict, Iterable, Literal
+from typing import Any, get_origin, get_args, Union, Iterable, Literal
 from pydantic import BaseModel
 
 from .base import Tool
@@ -8,7 +8,7 @@ from .schemas import Return
 
 class ToolRegistry:
     def __init__(self, tools=None, jail_path=None) -> None:
-        self.tools: Dict[str, Tool] = {}
+        self.tools: dict[str, Tool] = {}
         self._providers: list = []
 
         if tools:
