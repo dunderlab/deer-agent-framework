@@ -134,7 +134,7 @@ class AgentREPL:
 
     def show_welcome(self):
         commands_formated = ""
-        max_command = max(len(cm) for cm in COMMANDS.keys()) + 2
+        max_command = max(len(cm) for cm in COMMANDS) + 2
         for command, desc in COMMANDS.items():
             commands_formated += (
                 f"- {('`'+command+'`').ljust(max_command, ' ')} → {desc}\n "
