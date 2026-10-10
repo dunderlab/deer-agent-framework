@@ -105,6 +105,7 @@ class AgentREPL:
 
         if not history_file.exists():
             self.prompt_history = InMemoryHistory()
+            self.save_prompt_history()
             return
 
         with open(history_file, "rb") as f:
