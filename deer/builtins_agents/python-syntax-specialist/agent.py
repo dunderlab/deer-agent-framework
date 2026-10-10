@@ -17,6 +17,7 @@ pss = DeterministicAgent(
     description="Python Syntax Specialist",
     identity=identity,
     driver=driver,
+    vector_memory=memory,
     working_dir=working_dir,
     max_attempts=3,
     enable_verification=False,
