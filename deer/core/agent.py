@@ -1,5 +1,5 @@
+import json
 import os
-import shutil
 from typing import Optional, Literal, Any
 from datetime import datetime
 from pathlib import Path
@@ -32,7 +32,7 @@ class DeterministicAgent:
         max_attempts: int = 3,
         enable_verification: bool = True,
         load_context: bool = False,
-        vector_contex_limit=3,
+        vector_contex_limit: int = 5,
     ):
 
         # Context
@@ -174,6 +174,22 @@ class DeterministicAgent:
 
         return filename
 
+    def remove_context(self, history):
+        new_history = []
+
+        for chat in history:
+            if chat.role != Role.USER:
+                new_history.append(chat)
+                continue
+
+            new_chat = chat.copy()
+            new_chat.content = json.dumps(
+                {"goal": json.loads(new_chat.content)["goal"]}
+            )
+            new_history.append(new_chat)
+
+        return new_history
+
     def _execute_phase(
         self, goal: str, history: list[ChatMessage], update_history_attr: str
     ) -> tuple[ExecutionTrace, list[ChatMessage]]:
@@ -196,13 +212,16 @@ class DeterministicAgent:
                 overall_status="CRASHED",
             )
 
-        setattr(self, update_history_attr, updated_history)
-        return trace, updated_history
+        # Remove contex (knowledge) from the chat history
+        setattr(self, update_history_attr, self.remove_context(updated_history))
+        return trace
 
     def run_solution(self, goal: str) -> ExecutionTrace:
         """Executes the primary action plan to solve the goal."""
-        trace, _ = self._execute_phase(
-            goal=goal, history=self.agent_history, update_history_attr="agent_history"
+        trace = self._execute_phase(
+            goal=goal,
+            history=self.agent_history,
+            update_history_attr="agent_history",
         )
         return trace
 
@@ -211,7 +230,7 @@ class DeterministicAgent:
         verification_goal = (
             f"Verify that the following goal was successfully achieved: {goal}"
         )
-        trace, _ = self._execute_phase(
+        trace = self._execute_phase(
             goal=verification_goal,
             history=self.verificator_history,
             update_history_attr="verificator_history",
