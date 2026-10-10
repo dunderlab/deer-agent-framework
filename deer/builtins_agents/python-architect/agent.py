@@ -8,7 +8,7 @@ from deer.tools.providers import HTTPClient, SystemObserver
 from deer.drivers import OllamaDriver
 
 # Infrastructure
-driver = get_driver_from_parser() or OllamaDriver(model_name="gemma4:31b-cloud")
+driver = get_driver_from_parser()
 registry = ToolRegistry(
     Preset.CODE_REPAIR
     | Preset.CODE_EDITOR

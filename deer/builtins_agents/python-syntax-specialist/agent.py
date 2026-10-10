@@ -8,7 +8,7 @@ from deer.memory import VectorMemory
 from providers import PEPProvider
 
 # Infrastructure
-driver = get_driver_from_parser() or OllamaDriver(model_name="gemma4:31b-cloud")
+driver = get_driver_from_parser()
 working_dir = get_path_from_parser() or Path.cwd()
 knowledge = VectorMemory(path=working_dir / "pss_knowledge")
 registry = {PEPProvider}
@@ -26,6 +26,8 @@ agent = DeterministicAgent(
     enable_verification=False,
     vector_contex_limit=5,
 )
+
+print(driver.model_name)
 
 
 knowledge_path = Path(__file__).parent / "knowledge"

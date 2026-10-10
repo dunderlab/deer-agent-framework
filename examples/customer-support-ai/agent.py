@@ -4,9 +4,7 @@ from deer.drivers import OllamaDriver
 from pathlib import Path
 
 # Infrastructure
-driver = get_driver_from_parser() or OllamaDriver(
-    model_name="gemma4:31b-cloud", temperature=0.7
-)
+driver = get_driver_from_parser()
 working_dir = get_path_from_parser() or Path.cwd()
 
 CustomerSupportAI = DeterministicAgent(

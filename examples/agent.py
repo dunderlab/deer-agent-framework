@@ -8,7 +8,7 @@ from deer.tools.providers import HTTPClient
 from deer.drivers import OllamaDriver
 
 # Infrastructure
-driver = get_driver_from_parser() or OllamaDriver(model_name="gemma4:31b-cloud")
+driver = get_driver_from_parser()
 registry = ToolRegistry(Preset.SYSTEM_ADMIN | {HTTPClient})
 working_dir = get_path_from_parser() or Path.cwd()
 
