@@ -60,7 +60,7 @@ architect it by assembling three core pillars: **Identity**, **Capabilities**, a
 
 ### 1. Assembling the Agent's Core
 
-The agent is initialized by combining a driver (reasoning engine), a memory system (long-term knowledge), and a tool
+The agent is initialized by combining a driver (reasoning engine), a knowledge system (long-term knowledge), and a tool
 registry (operational capabilities). This ensures the agent's behavior is a result of its configured infrastructure, not
 probabilistic luck.
 
@@ -74,7 +74,7 @@ from deer.tools.presets import Preset
 
 # Infrastructure
 driver = OllamaDriver(model_name="llama3")
-memory = VectorMemory(path="./agent_memory")
+knowledge = VectorMemory(path="./agent_knowledge")
 registry = ToolRegistry(Preset.CODE_REPAIR | Preset.CODE_EDITOR | Preset.DATA_ANALYST)
 
 agent = DeterministicAgent(
@@ -84,7 +84,7 @@ agent = DeterministicAgent(
         "in advanced module resolution and dependency management."
     ),
     driver=driver,
-    memory=memory,
+    knowledge=knowledge,
     tool_registry=registry,
     jail_path=Path.cwd() / "sandbox",
     max_attempts=5,
@@ -129,10 +129,11 @@ class MyCustomProvider(ToolProvider):
 
 ```
 
-### 4. Memory
+### 4. Knowledge
 
-The memory system in DEER is powered by an adaptive vector store (`VectorMemory`) that allows agents to retain context,
-documentation, and historical runtime information across executions. You can load memory into the agent **before
+The knowledge system in DEER is powered by an adaptive vector store (`VectorMemory`) that allows agents to retain
+context,
+documentation, and historical runtime information across executions. You can load knowledge into the agent **before
 initialization** or dynamically **after the agent has been created** using various data sources such as JSON files,
 individual documents, or entire directories.
 
@@ -143,14 +144,14 @@ the `DeterministicAgent` constructor:
 from deer.core.agent import DeterministicAgent
 from deer.memory import VectorMemory
 
-memory = VectorMemory(path="./agent_memory")
+knowledge = VectorMemory(path="./agent_knowledge")
 
-memory.add_document(
+knowledge.add_document(
     doc_id="",
     doc="",
     metadata={},
 )
-memory.add_document(
+knowledge.add_document(
     doc_id="",
     doc="",
     metadata={},
@@ -158,7 +159,7 @@ memory.add_document(
 
 agent = DeterministicAgent(
     ...,
-    memory=memory,
+    knowledge=knowledge,
 )
 ```
 
@@ -171,13 +172,13 @@ from deer.memory import VectorMemory
 
 agent = DeterministicAgent(...)
 
-# Load pre-structured vector memory chunks from JSON files
-agent.knowledge.load_from_json("memory.json")
-agent.knowledge.load_from_json("memory_es.json")
+# Load pre-structured vector knowledge chunks from JSON files
+agent.knowledge.load_from_json("knowledge.json")
+agent.knowledge.load_from_json("knowledge_es.json")
 ```
 
 To incorporate external references, guidelines, or templates on the fly, agents can read single files directly into
-their memory space:
+their knowledge space:
 
 ```python
 from deer.core.agent import DeterministicAgent
@@ -207,10 +208,10 @@ from pathlib import Path
 
 agent = DeterministicAgent(...)
 
-# Recursively read and embed all supported files inside the memory directory
+# Recursively read and embed all supported files inside the knowledge directory
 agent.knowledge.read_directory(
     doc_id_prefix="doc",
-    path=Path(__file__).parent / "memory",
+    path=Path(__file__).parent / "knowledge",
 )
 ```
 
