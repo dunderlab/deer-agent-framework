@@ -21,6 +21,7 @@ pss = DeterministicAgent(
     working_dir=working_dir,
     max_attempts=3,
     enable_verification=False,
+    vector_contex_limit=5,
 )
 
 pss.vector_memory.read_directory(

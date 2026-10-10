@@ -30,12 +30,14 @@ class DeterministicAgent:
         max_attempts: int = 3,
         enable_verification: bool = True,
         load_context: bool = False,
+        vector_contex_limit=3,
     ):
 
         # Context
         self.identity = identity
         self.description = description
         self.max_attempts = max_attempts
+        self.vector_contex_limit = vector_contex_limit
         self.agent_dir = (working_dir / ".deer").resolve()
         self.working_dir = working_dir.resolve()
         self.enable_verification = enable_verification
@@ -173,7 +175,7 @@ class DeterministicAgent:
 
         plan, updated_history = self.planner.plan(
             goal=goal,
-            context=self.vector_memory.query(goal, n_results=3),
+            context=self.vector_memory.query(goal, n_results=self.vector_contex_limit),
             history=history,
         )
 
