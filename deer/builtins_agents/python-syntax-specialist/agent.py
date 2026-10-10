@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from tomlkit import document
+
 from deer import DeterministicAgent
 from deer.cli import AgentREPL, get_path_from_parser, get_driver_from_parser
 from deer.drivers import OllamaDriver
@@ -23,8 +25,15 @@ agent = DeterministicAgent(
     vector_contex_limit=5,
 )
 
-agent.knowledge.read_directory(
-    doc_id_prefix="pss", path=Path(__file__).parent / "knowledge"
+
+knowledge_path = Path(__file__).parent / "knowledge"
+agent.knowledge.read_directory(doc_id_prefix="pss", path=knowledge_path)
+
+documents = ", ".join([f.name for f in knowledge_path.iterdir() if f.is_file()])
+agent.knowledge.add_document(
+    doc_id="all_knowledge",
+    doc=f"This is the list of all documents and PEPs that you can access: {documents}",
+    metadata="",
 )
 
 
