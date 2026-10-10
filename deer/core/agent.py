@@ -183,9 +183,12 @@ class DeterministicAgent:
                 continue
 
             new_chat = chat.copy()
-            new_chat.content = json.dumps(
-                {"goal": json.loads(new_chat.content)["goal"]}
-            )
+            try:
+                new_chat.content = json.dumps(
+                    {"goal": json.loads(new_chat.content)["goal"]}
+                )
+            except json.JSONDecodeError:
+                pass
             new_history.append(new_chat)
 
         return new_history
