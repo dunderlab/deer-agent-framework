@@ -13,7 +13,7 @@ from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.completion import Completer, WordCompleter
 
 from deer.core import DeterministicAgent
-from deer import __version__
+from deer import version_info
 
 logger = logging.getLogger(f"DEER.{__name__}")
 
@@ -143,7 +143,7 @@ class AgentREPL:
 
         self.console.clear()
         self.pretty_print(
-            WELCOME_MESSAGE.format(version=__version__, commands=commands_formated)
+            WELCOME_MESSAGE.format(version=version_info, commands=commands_formated)
         )
         self.show_identity()
 
