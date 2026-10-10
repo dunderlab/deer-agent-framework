@@ -18,18 +18,18 @@ from deer import __version__
 logger = logging.getLogger(f"DEER.{__name__}")
 
 COMMANDS = {
-    "/tools": "Show tools and capabilities",
-    "/clear": "Clear the console and reset the session",
-    "/exit": "Terminate the session",
+    "/tools": "Show tools and capabilities.",
+    "/clear": "Clear the console.",
+    "/exit": "Terminate the session.",
     # "/rollback": "Revert the system to the last stable state",
     "/trace": "Display the detailed execution trace and variable resolution of recent plans.",
     "/savetrace": "Saves the current execution trace to a file for later analysis.",
-    "/history": "Display the history of messages and commands",
+    "/history": "Display the history of messages and commands.",
     "/clearhistory": "Purge all session history and reset memory state.",
     # "/vhistory": "Display the history of verifier messages and commands",
     "/infocontext": "Displays context memory usage information.",
-    "/loadcontext": "Restore a saved session context",
-    "/savecontext": "Save the current session context",
+    "/loadcontext": "Restore a saved session context.",
+    "/savecontext": "Save the current session context.",
     "/infoknowledge": "Displays total document count and storage usage.",
 }
 
