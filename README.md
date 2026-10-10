@@ -1,3 +1,5 @@
+from isort.identify import Path
+
 # DEER: Deterministic Executable Engine for Runtime Agents
 
 ### **Stop building "Vibe-based" Agents. Start Engineering Deterministic Systems.**
@@ -17,8 +19,6 @@ physically verified.
 ![GitHub last commit](https://img.shields.io/github/last-commit/dunderlab/deer-agent-framework)
 ![CodeFactor Grade](https://img.shields.io/codefactor/grade/github/dunderlab/deer-agent-framework)
 ![Upload Python Package](https://github.com/dunderlab/deer-agent-framework/actions/workflows/python-publish.yml/badge.svg)
-
----
 
 ## Why DEER?
 
@@ -52,8 +52,6 @@ probabilistic exercise in prompt engineering into a programmatic and traceable p
 > through its `ToolRegistry`. If a capability is not explicitly defined as a typed Tool, it does not exist for the
 > agent.
 > This ensures that the model can only interact with the world through secure, validated, and audited interfaces.
-
----
 
 ## The DEER Workflow: Architecting Deterministic Agents
 
@@ -131,14 +129,95 @@ class MyCustomProvider(ToolProvider):
 
 ```
 
----
+### 4. Memory
+
+The memory system in DEER is powered by an adaptive vector store (`VectorMemory`) that allows agents to retain context,
+documentation, and historical runtime information across executions. You can load memory into the agent **before
+initialization** or dynamically **after the agent has been created** using various data sources such as JSON files,
+individual documents, or entire directories.
+
+You can instantiate a `VectorMemory` repository, inject documents explicitly with metadata, and pass it directly into
+the `DeterministicAgent` constructor:
+
+```python
+from deer.core.agent import DeterministicAgent
+from deer.memory import VectorMemory
+
+memory = VectorMemory(path="./agent_memory")
+
+memory.add_document(
+    doc_id="",
+    doc="",
+    metadata={},
+)
+memory.add_document(
+    doc_id="",
+    doc="",
+    metadata={},
+)
+
+agent = DeterministicAgent(
+    ...,
+    memory=memory,
+)
+```
+
+f you maintain structured datasets or pre-exported memories, you can ingest them directly from JSON files into an
+existing agent's vector memory:
+
+```python
+from deer.core.agent import DeterministicAgent
+from deer.memory import VectorMemory
+
+agent = DeterministicAgent(...)
+
+# Load pre-structured vector memory chunks from JSON files
+agent.vector_memory.load_from_json("memory.json")
+agent.vector_memory.load_from_json("memory_es.json")
+```
+
+To incorporate external references, guidelines, or templates on the fly, agents can read single files directly into
+their memory space:
+
+```python
+from deer.core.agent import DeterministicAgent
+from deer.memory import VectorMemory
+from pathlib import Path
+
+agent = DeterministicAgent(...)
+
+# Read and embed individual files into the vector database
+agent.vector_memory.read_document(
+    doc_id="ui_template_ref",
+    path=Path("template.html"),
+)
+agent.vector_memory.read_document(
+    doc_id="system_specs",
+    path=Path("sample.txt"),
+)
+```
+
+When dealing with extensive knowledge bases, documentation folders, or project guidelines, you can instruct the agent to
+recursively parse and ingest an entire directory:
+
+```python
+from deer.core.agent import DeterministicAgent
+from deer.memory import VectorMemory
+from pathlib import Path
+
+agent = DeterministicAgent(...)
+
+# Recursively read and embed all supported files inside the memory directory
+agent.vector_memory.read_directory(
+    doc_id_prefix="doc",
+    path=Path(__file__).parent / "memory",
+)
+```
 
 ## Built-in Deterministic Agents
 
 The framework includes pre-configured **Deterministic Agents** in the `deer/builtins/` directory. These serve as both
 ready-to-use tools and reference implementations for building your own specialized architects and managers.
-
----
 
 ## Technical Differentiation
 
@@ -152,8 +231,6 @@ ready-to-use tools and reference implementations for building your own specializ
 | **Debugging**         | Black box / Tricky logs                  | **Step-by-Step Execution Trace Replay**          |
 | **Output**            | Raw Text                                 | **Validated & Humanized Synthesis**              |
 | **Memory**            | Static Window / Basic RAG                | **Adaptive** (Popularity-Aware & Auto-Pruning)   |
-
----
 
 ## The "Assembly Line" Lifecycle
 
@@ -177,8 +254,6 @@ audited production line:
    backed by
    the evidence gathered during the verification phase.
 
----
-
 ## Installation
 
 From PyPI:
@@ -195,11 +270,8 @@ pip install git+https://github.com/dunderlab/deer-agent-framework.git
 
 *Requires Python 3.12+ and a valid LLM API Key (Gemini, Ollama, etc.).*
 
----
-
 ## License
 
 Licensed under the **BSD 2-Clause License**. See [LICENSE](LICENSE) for details.
 
----
 **Built for developers who trust code, not prompts.**
