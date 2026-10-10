@@ -12,7 +12,7 @@ knowledge = VectorMemory(path=working_dir / "pss_knowledge")
 
 identity = (Path(__file__).parent / "identity.md").read_text(encoding="utf-8")
 
-pss = DeterministicAgent(
+agent = DeterministicAgent(
     description="Python Syntax Specialist",
     identity=identity,
     driver=driver,
@@ -23,13 +23,13 @@ pss = DeterministicAgent(
     vector_contex_limit=5,
 )
 
-pss.knowledge.read_directory(
+agent.knowledge.read_directory(
     doc_id_prefix="pss", path=Path(__file__).parent / "knowledge"
 )
 
 
 def main():
-    repl = AgentREPL(pss)
+    repl = AgentREPL(agent)
     repl.repl()
 
 
