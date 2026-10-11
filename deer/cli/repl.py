@@ -129,7 +129,7 @@ class AgentREPL:
             f">**Agent Profile**  \n"
             f"*{self.agent.description}*  \n"
             f"root: {self.agent.tool_registry.jail_path}  \n"
-            f"{self.agent.driver}: {self.agent.driver.model_name}  \n"
+            f"{self.agent.driver}  \n"
         )
         print("")
 
