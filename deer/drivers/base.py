@@ -53,7 +53,7 @@ class LLMDriver(ABC):
             with urllib.request.urlopen(req, timeout=30) as response:
                 return json.loads(response.read().decode("utf-8"))
         except Exception as e:
-            logger.error("Request error: %s", e)
+            # logger.error("Request error: %s", e)
             raise RuntimeError(f"API request failed: {e}") from e
 
     def _send_streaming_request(self, payload: dict) -> Generator[bytes, None, None]:
