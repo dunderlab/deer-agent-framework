@@ -1,5 +1,3 @@
-from isort.identify import Path
-
 # DEER: Deterministic Executable Engine for Runtime Agents
 
 ### **Stop building "Vibe-based" Agents. Start Engineering Deterministic Systems.**
@@ -181,9 +179,9 @@ To incorporate external references, guidelines, or templates on the fly, agents 
 their knowledge space:
 
 ```python
+from pathlib import Path
 from deer.core.agent import DeterministicAgent
 from deer.memory import VectorMemory
-from pathlib import Path
 
 agent = DeterministicAgent(...)
 
@@ -202,9 +200,9 @@ When dealing with extensive knowledge bases, documentation folders, or project g
 recursively parse and ingest an entire directory:
 
 ```python
+from pathlib import Path
 from deer.core.agent import DeterministicAgent
 from deer.memory import VectorMemory
-from pathlib import Path
 
 agent = DeterministicAgent(...)
 
