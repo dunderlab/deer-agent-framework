@@ -25,7 +25,7 @@ class OllamaDriver(LLMDriver):
         return f"{self.base_url}/api/chat"
 
     def __repr__(self) -> str:
-        return "Ollama"
+        return f"Ollama | {self.model_name}"
 
     def generate(
         self,
