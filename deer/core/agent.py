@@ -48,6 +48,10 @@ class DeterministicAgent:
         if not self.agent_dir.exists():
             os.makedirs(self.agent_dir, exist_ok=True)
 
+        # Environs
+        os.environ.setdefault("DEER_WORKING_DIR", str(self.working_dir))
+        os.environ.setdefault("DEER_AGENT_DIR", str(self.agent_dir))
+
         # LLMDriver
         self.driver = driver
 
