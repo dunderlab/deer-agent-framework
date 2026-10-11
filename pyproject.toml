@@ -39,6 +39,7 @@ dependencies = [
     "libcst>=1.9.0",
     "chromadb>=1.5.9",
     "prompt_toolkit>=3.0.53",
+    "dotenv>=0.9.9",
 ]
 
 [project.optional-dependencies]
