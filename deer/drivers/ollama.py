@@ -1,3 +1,4 @@
+import os
 from typing import Generator, TypeVar
 import json
 
@@ -9,23 +10,7 @@ from .base import LLMDriver, logger
 T = TypeVar("T", bound=BaseModel)
 
 
-class OllamaDriver(LLMDriver):
-    def __init__(
-        self,
-        model_name: str,
-        host: str = "http://localhost:11434",
-        temperature: float = 0.0,
-        top_p: float = 1.0,
-    ):
-        super().__init__(model_name, temperature, top_p)
-        self.base_url = host.rstrip("/")
-
-    @property
-    def url(self) -> str:
-        return f"{self.base_url}/api/chat"
-
-    def __repr__(self) -> str:
-        return f"Ollama | {self.model_name}"
+class BaseOllama:
 
     def generate(
         self,
@@ -106,3 +91,51 @@ class OllamaDriver(LLMDriver):
         except Exception as e:
             logger.error("Ollama streaming failed: %s", e)
             yield f"\n[ERROR]: Stream interrupted: {e}"
+
+
+class OllamaLocalDriver(BaseOllama, LLMDriver):
+    def __init__(
+        self,
+        model_name: str,
+        host: str = "http://localhost:11434",
+        temperature: float = 0.0,
+        top_p: float = 1.0,
+    ):
+        super().__init__(model_name, temperature, top_p)
+        self.base_url = host.rstrip("/")
+
+    @property
+    def url(self) -> str:
+        return f"{self.base_url}/api/chat"
+
+    def __repr__(self) -> str:
+        return f"Ollama [Local] | {self.model_name}"
+
+
+class OllamaKeyDriver(BaseOllama, LLMDriver):
+    def __init__(
+        self,
+        model_name: str,
+        temperature: float = 0.0,
+        top_p: float = 1.0,
+    ):
+        self.api_key = os.getenv("OLLAMA_API_KEY")
+        if not self.api_key:
+            raise ValueError("OLLAMA_API_KEY environment variable is not set.")
+
+        super().__init__(model_name.rstrip("-cloud"), temperature, top_p)
+
+    @property
+    def url(self) -> str:
+        return f"https://api.ollama.com/api/chat"
+
+    @property
+    def headers(self) -> dict:
+        return {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.api_key}",
+            "User-Agent": "curl/8.4.0",
+        }
+
+    def __repr__(self) -> str:
+        return f"Ollama [Key] | {self.model_name}"
