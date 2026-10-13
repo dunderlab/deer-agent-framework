@@ -1,11 +1,10 @@
 from pathlib import Path
 
 from deer import DeterministicAgent
-from deer.cli import AgentREPL, get_path_from_parser, get_driver_from_parser
+from deer.cli import get_path_from_parser, get_driver_from_parser
 from deer.tools import ToolRegistry
 from deer.tools.presets import Preset
 from deer.tools.providers import HTTPClient
-from deer.drivers import OllamaDriver
 
 # Infrastructure
 driver = get_driver_from_parser()
@@ -36,8 +35,6 @@ def main():
 
     response = agent.run("Esta Chrome ejecitandose ahora mismo?")
     print(response)
-    # repl = AgentREPL(agent)
-    # repl.repl()
 
 
 if __name__ == "__main__":
