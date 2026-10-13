@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import TypeVar, Type, Optional, Union, Generator, Any
 from abc import ABC, abstractmethod
 import urllib.error
@@ -37,16 +38,19 @@ class LLMDriver(ABC):
         # We use a helper function to recursively convert everything.
         def sanitize_payload(obj: Any) -> Any:
             if isinstance(obj, BaseModel):
-                return obj.model_dump()  # Convert Pydantic model to dict
+                return obj.model_dump()
+            if isinstance(obj, Enum):
+                return (
+                    obj.value
+                )  # Extracts the primitive value (e.g., 'system' instead of Role.SYSTEM)
             if isinstance(obj, list):
                 return [sanitize_payload(item) for item in obj]
             if isinstance(obj, dict):
-                return {k: sanitize_payload(v) for k, v in obj.items()}
+                return {str(k): sanitize_payload(v) for k, v in obj.items()}
             return obj
 
         sanitized_payload = sanitize_payload(payload)
         data = json.dumps(sanitized_payload).encode("utf-8")
-
         req = urllib.request.Request(self.url, data=data, headers=self.headers)
 
         try:
