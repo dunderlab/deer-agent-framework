@@ -3,12 +3,20 @@ import os
 from pathlib import Path
 
 from deer.utils.console import ConsoleColor
-from deer.drivers import GeminiDriver, OllamaDriver, OpenAIDriver, AzureOpenAIDriver
+from deer.drivers import (
+    GeminiDriver,
+    OllamaLocalDriver,
+    OllamaKeyDriver,
+    OpenAIDriver,
+    AzureOpenAIDriver,
+)
 
 backends = {
     "gemini",
     "openai",
     "ollama",
+    "ollama_local",
+    "ollama_key",
     "azure",
 }
 
@@ -83,7 +91,13 @@ def get_driver_from_parser():
             return GeminiDriver(model_name=args.model)
 
         case "ollama":
-            return OllamaDriver(model_name=args.model)
+            return OllamaLocalDriver(model_name=args.model)
+
+        case "ollama_local":
+            return OllamaLocalDriver(model_name=args.model)
+
+        case "ollama_key":
+            return OllamaKeyDriver(model_name=args.model)
 
         case "openai":
             return OpenAIDriver(model_name=args.model)
