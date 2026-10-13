@@ -66,12 +66,12 @@ probabilistic luck.
 from pathlib import Path
 from deer.core.agent import DeterministicAgent
 from deer.memory import VectorMemory
-from deer.drivers import OllamaDriver
+from deer.drivers import OllamaLocalDriver
 from deer.tools import ToolRegistry
 from deer.tools.presets import Preset
 
 # Infrastructure
-driver = OllamaDriver(model_name="llama3")
+driver = OllamaLocalDriver(model_name="llama3")
 knowledge = VectorMemory(path="./agent_knowledge")
 registry = ToolRegistry(Preset.CODE_REPAIR | Preset.CODE_EDITOR | Preset.DATA_ANALYST)
 
