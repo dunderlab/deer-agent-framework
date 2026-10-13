@@ -1,7 +1,7 @@
 import pytest
 from deer.tools import ToolRegistry
 from deer.tools.providers import FileManager
-from deer.drivers import OllamaDriver
+from deer.drivers import OllamaLocalDriver
 
 from deer.core.planner import Planner, Role, ChatMessage
 from deer.core.validator import PlanValidator
@@ -16,7 +16,7 @@ def tool_registry():
 
 @pytest.fixture
 def driver():
-    driver = OllamaDriver(model_name="gemma4:31b-cloud")
+    driver = OllamaLocalDriver(model_name="gemma4:31b-cloud")
     return driver
 
 

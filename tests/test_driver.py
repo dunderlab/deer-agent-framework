@@ -1,11 +1,11 @@
 import pytest
-from deer.drivers import OllamaDriver
+from deer.drivers import OllamaLocalDriver
 from deer.models import ChatMessage, Role
 
 
 @pytest.fixture
 def driver():
-    driver = OllamaDriver(model_name="gemma4:31b-cloud")
+    driver = OllamaLocalDriver(model_name="gemma4:31b-cloud")
     return driver
 
 
