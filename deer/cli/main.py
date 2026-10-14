@@ -42,6 +42,8 @@ def example():
 def run_agent_in_process(agent_path, backend=None, model=None):
     command_args = [agent_path]
 
+    sys.path.insert(0, str(agent_path.parent))
+
     if backend:
         command_args.extend(["--backend", backend])
     if model:
