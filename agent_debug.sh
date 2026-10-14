@@ -16,10 +16,10 @@ fi
 # This prevents errors when running the script from a different folder
 PROJECT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 VENV_PATH="$PROJECT_DIR/.venv/bin/activate"
-WORKING_DIR="$PROJECT_DIR/sandbox"
 
 # Set the default agent (can be changed or passed as an argument)
 AGENT="python-syntax-specialist"
+#AGENT="operating-system"
 
 # --- 3. COMMAND BUILDER FUNCTION ---
 # This function encapsulates the command logic to make it modular and reusable
@@ -28,13 +28,13 @@ build_agent_command() {
 
     # FIX: We use single quotes (') instead of escaped double quotes (\")
     # This prevents AppleScript (osascript) from getting confused.
-    local cmd="source '$VENV_PATH' && \
+    local cmd="if [ -f '$ENV_PATH' ]; then set -a; source '$ENV_PATH'; set +a; fi && \
+               source '$VENV_PATH' && \
                export PYTHONPATH='\$PYTHONPATH:$PROJECT_DIR' && \
                python '$PROJECT_DIR/deer/builtins_agents/$agent_name/agent.py' \
                --path '$WORKING_DIR' \
                --backend '$DEER_BACKEND' \
                --model '$DEER_BACKEND_MODEL'"
-
     echo "$cmd"
 }
 
@@ -45,5 +45,3 @@ CMD=$(build_agent_command "$AGENT")
 # Use osascript to open a new macOS Terminal window and execute the command.
 # We wrap the command in escaped quotes to ensure it is passed as a single string.
 osascript -e "tell application \"Terminal\" to do script \"$CMD\""
-
-echo "Agent '$AGENT' has been launched in a new terminal window."
