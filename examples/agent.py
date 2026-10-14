@@ -33,7 +33,7 @@ def main():
     response = agent.run("Cual es el proceso que mas memoria comsume actualmente?")
     print(response)
 
-    response = agent.run("Esta Chrome ejecitandose ahora mismo?")
+    response = agent.run("Esta Chrome ejecutándose ahora mismo?")
     print(response)
 
 
