@@ -26,14 +26,6 @@ class ToolProvider:
         # pass
         self.jail_ = None
 
-        for command in self.commands or []:
-            self.check_command(command)
-
-    @property
-    def commands(self):
-        """Return the list of commands to be verified at agent startup."""
-        return []
-
     @property
     def allowed_commands(self):
         """Return the list of allowed execution commands.
@@ -119,6 +111,8 @@ class ToolProvider:
         if not args:
             raise CommandRunnerError("Command cannot be empty.")
 
+        self.assert_command(args[0])
+
         if self.allowed_commands:
             is_allowed = False
             for allowed_cmd in self.allowed_commands:
@@ -156,7 +150,7 @@ class ToolProvider:
             "message": "",
         }
 
-    def check_command(self, command: str | Path) -> None:
+    def assert_command(self, command: str | Path) -> None:
         """
         Validates if a command exists in the operating system.
         Raises CommandRunnerError if the executable is not found in the PATH.
@@ -168,6 +162,17 @@ class ToolProvider:
                 f"The command '{cmd_str}' is not available on the system. "
                 f"Please ensure it is installed and configured in your PATH."
             )
+        if cmd_str not in self.allowed_commands:
+            raise CommandRunnerError(
+                f"The command '{cmd_str}' is not allowed. "
+                f"Please use one of the permitted commands."
+            )
+
+    def is_command_authorized(self, command: str | Path) -> bool:
+        cmd_str = str(command)
+        if cmd_str in self.allowed_commands:
+            return not shutil.which(cmd_str) is None
+        return False
 
     def _sanitize_path(self, path: str | Path) -> str:
 
@@ -186,6 +191,10 @@ class ToolProvider:
         abs_target = self.jailed_path(target)
 
         return str(abs_target.relative_to(abs_path))
+
+    def _failure(self, message: str) -> dict:
+        """Helper to construct a standardized failure response."""
+        return {"stdout": "", "stderr": message, "returncode": -1, "message": ""}
 
 
 class Tool(ABC):
