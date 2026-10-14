@@ -3,22 +3,10 @@ import shlex
 from deer.tools import ToolProvider
 from deer.tools.schemas import CommandOut
 
-# --- Global Constants ---
 MAX_TIMEOUT = 300
-REJECTED = {"stdout": "", "stderr": str, "returncode": -1, "message": str}
-
-
-def _failure(message: str) -> dict:
-    """Helper to construct a standardized failure response."""
-    return {"stdout": "", "stderr": message, "returncode": -1, "message": message}
 
 
 class BaseCommandRunner(ToolProvider):
-    availableCommands: list[str]
-
-    @property
-    def allowed_commands(self):
-        return list(get_args(self.availableCommands))
 
     def _execute_command(
         self, binary: str, args: List[str], path: str, timeout_seconds: int = 60
@@ -28,13 +16,9 @@ class BaseCommandRunner(ToolProvider):
 
         # 2. Validate timeout constraints
         if not 1 <= timeout_seconds <= MAX_TIMEOUT:
-            return _failure(f"timeout_seconds must be between 1 and {MAX_TIMEOUT}.")
-
-        # 3. Verify binary exists in environment
-        try:
-            self.check_command(binary)
-        except Exception as e:
-            return _failure(f"Environment error: {e}")
+            return self._failure(
+                f"timeout_seconds must be between 1 and {MAX_TIMEOUT}."
+            )
 
         # 4. Execution
         try:
@@ -43,7 +27,7 @@ class BaseCommandRunner(ToolProvider):
                 safe_command, cwd=path, timeout_seconds=timeout_seconds
             )
         except Exception as e:
-            return _failure(f"Execution error: {e}")
+            return self._failure(f"Execution error: {e}")
 
         # 5. Response formatting
         exit_code = result.get("returncode", -1)
