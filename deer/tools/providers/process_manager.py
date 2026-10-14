@@ -13,6 +13,10 @@ class ProcessManager(ToolProvider):
     Used for managing servers, long-running scripts, or cleaning up hung tasks.
     """
 
+    @property
+    def allowed_commands(self):
+        return ["pgrep", "ps", "kill"]
+
     @tool(
         tests=[
             # Test: Process is running
@@ -29,42 +33,29 @@ class ProcessManager(ToolProvider):
         self, process_name: str
     ) -> Return(running=bool, message=str):
         """Checks if a background process is currently active. Use this to verify if a service or script is still running."""
-        try:
-            # Attempt check using pgrep first (more precise)
-            if "pgrep" in self.allowed_commands:
-                try:
-                    self.check_command("pgrep")
-                    # Use -x to match the exact process name
-                    result = self.run_command(
-                        f"pgrep -x {shlex.quote(process_name)}",
-                        cwd=".",
-                        timeout_seconds=5,
-                    )
-                    return {
-                        "running": result["returncode"] == 0,
-                        "message": "Checked via pgrep.",
-                    }
-                except Exception:
-                    pass  # Fallback to ps
 
-            # Fallback to ps if pgrep is unavailable or fails
-            if "ps" in self.allowed_commands:
-                try:
-                    self.check_command("ps")
-                    result = self.run_command("ps -e", cwd=".", timeout_seconds=5)
-                    return {
-                        "running": process_name in result["stdout"],
-                        "message": "Checked via ps.",
-                    }
-                except Exception:
-                    pass
-
+        if self.is_command_authorized("pgrep"):
+            result = self.run_command(
+                f"pgrep -x {shlex.quote(process_name)}",
+                cwd=".",
+                timeout_seconds=5,
+            )
             return {
-                "running": False,
-                "message": "No process monitoring tools available in the environment.",
+                "running": result["returncode"] == 0,
+                "message": "Checked via pgrep.",
             }
-        except Exception as e:
-            return {"running": False, "message": f"Status check error: {str(e)}"}
+
+        if self.is_command_authorized("ps"):
+            result = self.run_command("ps -e", cwd=".", timeout_seconds=5)
+            return {
+                "running": process_name in result["stdout"],
+                "message": "Checked via ps.",
+            }
+
+        return {
+            "running": False,
+            "message": "No process monitoring tools available in the environment.",
+        }
 
     @tool(
         modifies_state=True,
@@ -85,27 +76,21 @@ class ProcessManager(ToolProvider):
         self, process_name: str, signal: Literal["TERM", "KILL"]
     ) -> Return(success=bool, message=str):
         """Stops a running process by sending a termination signal. Use 'TERM' for a graceful stop or 'KILL' for an immediate force-stop."""
-        try:
-            self.check_command("kill")
 
-            # We use pgrep inside a subshell to get the PIDs.
-            # shlex.quote is used to prevent injection via process_name.
-            safe_name = shlex.quote(process_name)
-            command = f"kill -{signal} $(pgrep -x {safe_name})"
+        safe_name = shlex.quote(process_name)
+        command = f"kill -{signal} $(pgrep -x {safe_name})"
 
-            result = self.run_command(
-                command,
-                cwd=".",
-                timeout_seconds=5,
-            )
+        result = self.run_command(
+            command,
+            cwd=".",
+            timeout_seconds=5,
+        )
 
-            return {
-                "success": result["returncode"] == 0,
-                "message": (
-                    f"Process '{process_name}' signaled with {signal} successfully."
-                    if result["returncode"] == 0
-                    else "Process not found or could not be killed."
-                ),
-            }
-        except Exception as e:
-            return {"success": False, "message": f"Termination error: {str(e)}"}
+        return {
+            "success": result["returncode"] == 0,
+            "message": (
+                f"Process '{process_name}' signaled with {signal} successfully."
+                if result["returncode"] == 0
+                else "Process not found or could not be killed."
+            ),
+        }

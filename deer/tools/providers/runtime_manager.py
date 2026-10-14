@@ -1,10 +1,9 @@
 from dataclasses import dataclass
-from typing import Literal, List
+from typing import Literal, List, get_args
 
 from deer.tools import tool
 from deer.tools.schemas import Case, CommandOut
 from .base.base_command_runner import BaseCommandRunner
-
 
 # --- Specialized Command Sets ---
 # We define Literals separately so each Agent sees only its relevant commands
@@ -45,7 +44,10 @@ AdminCommand = Literal[
 
 @dataclass
 class DevCommandRunner(BaseCommandRunner):
-    availableCommands = DevCommand
+
+    @property
+    def allowed_commands(self):
+        return list(get_args(DevCommand))
 
     @tool(
         modifies_state=True,
@@ -58,9 +60,9 @@ class DevCommandRunner(BaseCommandRunner):
                 {"binary": "git", "args": ["status"]},
                 {
                     "stdout": str,
-                    "stderr": "Command 'git status' is not allowed.",
+                    "stderr": "Execution error: The command 'git' is not allowed. Please use one of the permitted commands.",
                     "returncode": -1,
-                    "message": "Command failed with exit code -1.",
+                    "message": "",
                 },
             ),
         ],
@@ -81,7 +83,10 @@ class DevCommandRunner(BaseCommandRunner):
 
 @dataclass
 class SysAdminRunner(BaseCommandRunner):
-    availableCommands = AdminCommand
+
+    @property
+    def allowed_commands(self):
+        return list(get_args(AdminCommand))
 
     @tool(
         modifies_state=True,

@@ -8,18 +8,15 @@ from deer.tools.schemas import CommandOut, Case
 
 # NOTE: Intentionally untested. Every tool is a thin wrapper over git, with no own logic.
 
-# --- Global Constants ---
 MAX_TIMEOUT = 300
-REJECTED = {"stdout": "", "stderr": str, "returncode": -1, "message": str}
-
-
-def _failure(message: str) -> dict:
-    """Helper to construct a standardized failure response."""
-    return {"stdout": "", "stderr": message, "returncode": -1, "message": message}
 
 
 @dataclass
 class GitManager(ToolProvider):
+
+    @property
+    def allowed_commands(self):
+        return ["git"]
 
     # def git(self, path: str, *args: str | int) -> CommandOut:
     def git(self, path: str, args: List[str], timeout_seconds: int = 60) -> CommandOut:
@@ -31,13 +28,9 @@ class GitManager(ToolProvider):
 
         # 2. Validate timeout constraints
         if not 1 <= timeout_seconds <= MAX_TIMEOUT:
-            return _failure(f"timeout_seconds must be between 1 and {MAX_TIMEOUT}.")
-
-        # 3. Verify binary exists in environment
-        try:
-            self.check_command(binary)
-        except Exception as e:
-            return _failure(f"Environment error: {e}")
+            return self._failure(
+                f"timeout_seconds must be between 1 and {MAX_TIMEOUT}."
+            )
 
         if not "clone" in args:
             try:
@@ -46,11 +39,11 @@ class GitManager(ToolProvider):
                     "git rev-parse --is-inside-work-tree", cwd=str(path)
                 )
                 if check_repo["returncode"] != 0:
-                    return _failure(
+                    return self._failure(
                         f"The path '{path}' is not inside a git repository."
                     )
             except Exception as e:
-                return _failure(f"Error verifying git repository: {e}")
+                return self._failure(f"Error verifying git repository: {e}")
 
         # 4. Execution
         try:
@@ -59,7 +52,7 @@ class GitManager(ToolProvider):
                 safe_command, cwd=path, timeout_seconds=timeout_seconds
             )
         except Exception as e:
-            return _failure(f"Execution error: {e}")
+            return self._failure(f"Execution error: {e}")
 
         # 5. Response formatting
         exit_code = result.get("returncode", -1)
@@ -101,10 +94,6 @@ class GitManager(ToolProvider):
 
         # Fallback: return as is (assumed to be a branch, tag, or non-path reference)
         return target
-
-    @property
-    def commands(self):
-        return ["git"]
 
     @tool(
         modifies_state=True,

@@ -23,6 +23,10 @@ class SystemObserver(ToolProvider):
     Used for monitoring environment variables, network ports, resource usage, and global process lists.
     """
 
+    @property
+    def allowed_commands(self):
+        return ["top", "df", "ps", "netstat"]
+
     @tool(
         tests=[
             # Test: Retrieve a known, safe environment variable
