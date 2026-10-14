@@ -59,6 +59,7 @@ include-package-data = true
 
 [project.scripts]
 deer = "deer.cli.main:main"
+deer_menu = "deer.cli.main_menu:main"
 
 [tool.pylint."MESSAGES CONTROL"]
 disable = [
