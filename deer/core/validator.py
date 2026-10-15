@@ -132,4 +132,4 @@ class PlanValidator:
             rules.validate()
             return True, ""
         except Exception as e:
-            return False, e
+            return False, str(e)
