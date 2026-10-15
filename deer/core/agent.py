@@ -135,11 +135,10 @@ class DeterministicAgent:
         ]
 
     def format_bytes(self, size):
-        for unit in ["B", "KB", "MB", "GB"]:
+        for unit in ["B", "kB", "MB", "GB"]:
             if size < 1024:
                 return f"{size:.1f} {unit}"
             size /= 1024
-        return f"{size} bytes"
 
     def persist_state(self):
         context = {
