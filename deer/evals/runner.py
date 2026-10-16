@@ -13,15 +13,15 @@ class AgentRunner:
         for i in range(repetitions):
 
             print(f"Working on iteration: {i+1}/{repetitions}")
-            self.agent.clear_traces()
-            self.agent.clear_agent_history()
+            self.agent.reset_traces()
+            self.agent.reset_history()
             self.clear_working_dir()
             self.agent.run(goal)
-            self.agent.save_trace()
+            self.agent.dump_trace()
 
     def clear_working_dir(self):
 
-        for item in self.agent.working_dir.iterdir():
+        for item in self.agent.working_dir_path.iterdir():
             if item.name.startswith("."):
                 continue
 
