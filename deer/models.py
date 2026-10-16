@@ -1,7 +1,9 @@
-from enum import Enum
+from turtledemo.penrose import star
 from typing import List, Dict, Any, Optional
+from datetime import datetime
+from enum import Enum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer
 
 
 class Role(str, Enum):
@@ -20,14 +22,34 @@ class Role(str, Enum):
 class ChatMessage(BaseModel):
     """
     A single message in a conversation history.
-    Ensures that every message has a role and content.
+    Ensures that every message has an explicit state, role, content, and an auto-generated timestamp.
     """
+
+    state: Optional[str] = Field(
+        None, description="Unique identifier for the message (optional)."
+    )
 
     role: Role = Field(..., description="The role of the message sender.")
     content: str = Field(..., description="The actual text content of the message.")
+    date: datetime = Field(
+        default_factory=datetime.now,
+        description="Timestamp when the message was created (auto-generated).",
+    )
+
+    @field_serializer("date")
+    def serialize_date(self, dt: datetime) -> str:
+        """Converts datetime to ISO string automatically whenever dumped to JSON or dict."""
+        return dt.isoformat()
 
     def __str__(self) -> str:
-        return f"Role: {self.role.value}\n" f"Content: {self.content.strip()}"
+        # return f"Role: {self.role.value}\n" f"Content: {self.content.strip()}"
+
+        if self.state:
+            start = f"State: {self.state}\n"
+        else:
+            start = ""
+
+        return f"{start}Date: {self.date}\nRole: {self.role.value}\nContent: {self.content.strip()}"
 
 
 class ToolStep(BaseModel):
