@@ -11,6 +11,7 @@ from deer.tools import ToolRegistry, ToolProvider
 from deer.tools.presets import LogicProvider
 from deer.memory import VectorMemory
 from deer.drivers import LLMDriver
+from deer.state_manager import GitDirectoryManager
 
 from .planner import Planner
 from .executor import PipelineExecutor
@@ -34,6 +35,7 @@ class DeterministicAgent:
         load_history: bool = False,
         vector_contex_limit: int = 5,
         read_only: bool = False,
+        state_manager: bool = False,
     ):
 
         # Context
@@ -78,6 +80,16 @@ class DeterministicAgent:
             self.knowledge = knowledge
         else:
             self.knowledge = VectorMemory(self.agent_dir_path / "vector_db")
+
+        # State Manager
+        if state_manager:
+            self.state_manager = GitDirectoryManager(
+                target_dir=self.working_dir_path,
+                storage_dir=self.agent_dir_path / "dir_states",
+                ignore_patterns=[".deer"],
+            )
+        else:
+            self.state_manager = None
 
         # Planner
         self.planner = Planner(
@@ -216,6 +228,7 @@ class DeterministicAgent:
             goal=goal,
             context=self.knowledge.query(goal, n_results=self.vector_contex_limit),
             history=history,
+            state_manager=self.state_manager,
         )
 
         # Validate
@@ -239,7 +252,7 @@ class DeterministicAgent:
         trace = self._execute_phase(
             goal=goal,
             history=self.history,
-            update_history_attr="agent_history",
+            update_history_attr="history",
         )
         return trace
 
@@ -359,3 +372,9 @@ class DeterministicAgent:
         ]
 
         return self.driver.generate(messages=messages, response_model=AgentConclusion)
+
+    def restore_previous_state(self):
+        if self.state_manager:
+            states = self.state_manager.list_states()
+            commit_hash = states[0].split(" ")[0]
+            self.state_manager.restore_state(commit_hash)
