@@ -53,7 +53,7 @@ def agent_v2(tmp_path):
         working_dir=Path(tmp_path),
         max_attempts=3,
         enable_verification=True,
-        load_context=True,
+        load_history=True,
     )
 
     return agent
@@ -76,7 +76,7 @@ def agent_v3(tmp_path):
         working_dir=Path(tmp_path),
         max_attempts=3,
         enable_verification=True,
-        load_context=True,
+        load_history=True,
     )
     return agent
 
@@ -89,34 +89,27 @@ def test_agent_v3(agent_v3):
     pass
 
 
-# def test_agent_response(agent):
-#     response = agent.run("Hola")
-#     assert isinstance(response, str)
-
-
 def test_agent_format_bytes(agent):
-    assert agent.format_bytes(2**15) == "32.0 kB"
-    assert agent.format_bytes(10) == "10.0 B"
+    assert agent._format_bytes(2**15) == "32.0 kB"
+    assert agent._format_bytes(10) == "10.0 B"
 
 
 def test_agent_persist(agent):
-    agent.persist_state()
-    agent.restore_state()
+    agent.dump_history()
+    agent.restore_history()
 
 
 def test_agent_trace(agent):
-    agent.save_trace()
-    # agent.save_trace_solution()
-    # agent.save_trace_verification()
+    agent.dump_trace()
 
 
 def test_agent_state(agent):
-    agent.persist_state()
-    agent.restore_state()
-    os.remove(agent.contex_file)
-    agent.restore_state()
+    agent.dump_history()
+    agent.restore_history()
+    os.remove(agent.history_file_path)
+    agent.restore_history()
 
 
 def test_agent_remove_context_JSONDecodeError(agent):
     history = [ChatMessage(role=Role.USER, content="Hola")]
-    agent.remove_context(history)
+    agent._remove_context(history)
