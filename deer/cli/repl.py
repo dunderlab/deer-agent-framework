@@ -101,7 +101,7 @@ class AgentREPL:
         return SmartCommandCompleter(internal_commands)
 
     def load_prompt_history(self):
-        history_file = self.agent.agent_dir / "prompt_history"
+        history_file = self.agent.agent_dir_path / "prompt_history"
 
         if not history_file.exists():
             self.prompt_history = InMemoryHistory()
@@ -113,7 +113,7 @@ class AgentREPL:
         return
 
     def save_prompt_history(self):
-        history_file = self.agent.agent_dir / "prompt_history"
+        history_file = self.agent.agent_dir_path / "prompt_history"
         with open(history_file, "wb") as f:
             pickle.dump(self.prompt_history, f)
 
@@ -150,7 +150,7 @@ class AgentREPL:
     def run_command(self, command):
         match command:
             case "/exit":
-                self.agent.persist_state()
+                self.agent.dump_history()
                 self.console.print(
                     "[dim]Context state persisted to disk.[/dim]\n",
                     Markdown("----"),
@@ -167,9 +167,9 @@ class AgentREPL:
             case "/clearhistory":
                 self.clear_history()
                 self.console.clear()
-                self.agent.clear_agent_history()
-                self.agent.clear_traces()
-                self.agent.persist_state()
+                self.agent.reset_history()
+                self.agent.reset_traces()
+                self.agent.dump_history()
                 self.show_identity()
                 self.console.print(
                     "[dim]Session history purged. Memory state reset.[/dim]\n",
@@ -181,7 +181,7 @@ class AgentREPL:
                     Markdown(tools_description),
                     "\n",
                     f"[dim]Tool registry: {len(self.agent.tool_registry.tools)} modules active.[/dim]\n",
-                    f"[dim]Registry description payload: {self.agent.format_bytes(len(tools_description))}[/dim]\n",
+                    f"[dim]Registry description payload: {self.agent._format_bytes(len(tools_description))}[/dim]\n",
                     sep="",
                 )
 
@@ -197,11 +197,11 @@ class AgentREPL:
                     print(f"{step}\n")
 
             case "/history":
-                for i, chat in enumerate(self.agent.agent_history[1:]):
+                for i, chat in enumerate(self.agent.history[1:]):
                     self.console.print(f"[bold yellow]Chat {i+1}:[/bold yellow]")
                     print(f"{chat}\n")
                 self.console.print(
-                    f"[dim]Session history payload: {self.agent.format_bytes(len(str(self.agent.agent_history)))}[/dim]\n",
+                    f"[dim]Session history payload: {self.agent._format_bytes(len(str(self.agent.history)))}[/dim]\n",
                 )
 
             # case "/vhistory":
@@ -210,16 +210,16 @@ class AgentREPL:
             #         print(f"{chat}\n")
 
             case "/infocontext":
-                bytes_ = sum(len(str(item)) for item in self.agent.agent_history)
+                bytes_ = sum(len(str(item)) for item in self.agent.history)
                 self.console.print(
-                    f"[dim][bold]History:[/bold] {len(self.agent.agent_history)} messages[/dim]\n",
-                    f"[dim][bold]Context size:[/bold] ~{self.agent.format_bytes(bytes_)}[/dim]\n",
+                    f"[dim][bold]History:[/bold] {len(self.agent.history)} messages[/dim]\n",
+                    f"[dim][bold]Context size:[/bold] ~{self.agent._format_bytes(bytes_)}[/dim]\n",
                     sep="",
                 )
 
             case "/savetrace":
                 try:
-                    filename = self.agent.save_trace()
+                    filename = self.agent.dump_trace()
                     self.console.print(f"[dim]Trace saved in {filename}[/dim]\n")
                 except Exception as e:
                     self.console.print(
@@ -228,7 +228,7 @@ class AgentREPL:
 
             case "/savecontext":
                 try:
-                    self.agent.persist_state()
+                    self.agent.dump_history()
                     self.console.print("[dim]Context state persisted to disk.[/dim]\n")
                 except Exception as e:
                     self.console.print(
@@ -237,7 +237,7 @@ class AgentREPL:
 
             case "/loadcontext":
                 try:
-                    self.agent.restore_state()
+                    self.agent.restore_history()
                     self.console.print(
                         "[dim]Context recovered. Session state synchronized.[/dim]\n"
                     )
@@ -251,7 +251,7 @@ class AgentREPL:
 
                 self.console.print(
                     f"[dim][bold]Number of documents:[/bold] {knowledge_info['total_documents']}[/dim]\n",
-                    f"[dim][bold]Database size:[/bold] ~{self.agent.format_bytes(knowledge_info['disk_size_bytes'])}[/dim]\n",
+                    f"[dim][bold]Database size:[/bold] ~{self.agent._format_bytes(knowledge_info['disk_size_bytes'])}[/dim]\n",
                     sep="",
                 )
 
@@ -296,8 +296,8 @@ class AgentREPL:
                 # msg = input(">>> ")
                 self.save_prompt_history()
 
-                if self.agent.load_context:
-                    self.agent.persist_state()
+                if self.agent.load_history:
+                    self.agent.dump_history()
 
             except KeyboardInterrupt:
                 continue
