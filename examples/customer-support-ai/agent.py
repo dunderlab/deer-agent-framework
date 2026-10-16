@@ -44,10 +44,10 @@ CustomerSupportAI = DeterministicAgent(
 )
 
 CustomerSupportAI.knowledge.load_from_json(
-    CustomerSupportAI.working_dir / ".." / "knowledge.json"
+    CustomerSupportAI.working_dir_path / ".." / "knowledge.json"
 )
 CustomerSupportAI.knowledge.load_from_json(
-    CustomerSupportAI.working_dir / ".." / "knowledge_es.json"
+    CustomerSupportAI.working_dir_path / ".." / "knowledge_es.json"
 )
 
 
