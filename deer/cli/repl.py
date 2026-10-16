@@ -21,7 +21,7 @@ COMMANDS = {
     "/tools": "Show tools and capabilities.",
     "/clear": "Clear the console.",
     "/exit": "Terminate the session.",
-    # "/rollback": "Revert the system to the last stable state",
+    "/rollback": "Revert the system to the last stable state",
     "/trace": "Display the detailed execution trace and variable resolution of recent plans.",
     "/savetrace": "Saves the current execution trace to a file for later analysis.",
     "/history": "Display the history of messages and commands.",
@@ -253,6 +253,12 @@ class AgentREPL:
                     f"[dim][bold]Number of documents:[/bold] {knowledge_info['total_documents']}[/dim]\n",
                     f"[dim][bold]Database size:[/bold] ~{self.agent._format_bytes(knowledge_info['disk_size_bytes'])}[/dim]\n",
                     sep="",
+                )
+
+            case "/rollback":
+                self.agent.restore_previous_state()
+                self.console.print(
+                    "[dim]State rolled back to previous checkpoint.[/dim]\n"
                 )
 
         self.console.print(
