@@ -91,7 +91,7 @@ class DeterministicAgent:
 
         self.load_context = load_context
         if load_context:
-            self.persist_state()
+            self.restore_state()
 
         else:
             # Agent History
