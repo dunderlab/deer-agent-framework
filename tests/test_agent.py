@@ -1,4 +1,5 @@
 import os
+from idlelib import history
 from pathlib import Path
 
 import pytest
@@ -52,41 +53,41 @@ def agent_v2(tmp_path):
         working_dir=Path(tmp_path),
         max_attempts=3,
         enable_verification=True,
+        load_context=True,
     )
 
     return agent
 
 
-# @pytest.fixture
-# def agent_v3(tmp_path):
-#     driver = OllamaKeyDriver(model_name="nemotron-3-nano:30b")
-#
-#     agent = DeterministicAgent(
-#         description="Advanced OS Agent for secure system management.",
-#         identity=(
-#             "You are a capable Operating System Agent. "
-#             "Your goal is to assist the user by managing the system, executing tasks, and solving problems efficiently. "
-#             "You act as a direct interface to the OS, balancing helpfulness with a strict commitment to security: "
-#             "never perform destructive actions without confirmation and always stay within your designated boundaries."
-#         ),
-#         driver=driver,
-#         tool_registry={HTTPClient},
-#         working_dir=Path(tmp_path),
-#         max_attempts=3,
-#         enable_verification=True,
-#         load_context=True,
-#     )
-#     return agent
+@pytest.fixture
+def agent_v3(tmp_path):
+    driver = OllamaKeyDriver(model_name="nemotron-3-nano:30b")
+
+    agent = DeterministicAgent(
+        description="Advanced OS Agent for secure system management.",
+        identity=(
+            "You are a capable Operating System Agent. "
+            "Your goal is to assist the user by managing the system, executing tasks, and solving problems efficiently. "
+            "You act as a direct interface to the OS, balancing helpfulness with a strict commitment to security: "
+            "never perform destructive actions without confirmation and always stay within your designated boundaries."
+        ),
+        driver=driver,
+        tool_registry={HTTPClient},
+        working_dir=Path(tmp_path),
+        max_attempts=3,
+        enable_verification=True,
+        load_context=True,
+    )
+    return agent
 
 
 def test_agent_v2(agent_v2):
     pass
 
 
-#
-# def test_agent_v3(agent_v3):
-#     pass
-#
+def test_agent_v3(agent_v3):
+    pass
+
 
 # def test_agent_response(agent):
 #     response = agent.run("Hola")
@@ -114,3 +115,8 @@ def test_agent_state(agent):
     agent.restore_state()
     os.remove(agent.contex_file)
     agent.restore_state()
+
+
+def test_agent_remove_context_JSONDecodeError(agent):
+    history = [ChatMessage(role=Role.USER, content="Hola")]
+    agent.remove_context(history)

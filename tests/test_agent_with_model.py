@@ -28,8 +28,34 @@ def agent(tmp_path):
     return agent
 
 
+@pytest.fixture
+def agent_v2(tmp_path):
+    driver = OllamaKeyDriver(model_name="nemotron-3-nano:30b")
+
+    agent = DeterministicAgent(
+        description="Advanced OS Agent for secure system management.",
+        identity=(
+            "You are a capable Operating System Agent. "
+            "Your goal is to assist the user by managing the system, executing tasks, and solving problems efficiently. "
+            "You act as a direct interface to the OS, balancing helpfulness with a strict commitment to security: "
+            "never perform destructive actions without confirmation and always stay within your designated boundaries."
+        ),
+        driver=driver,
+        working_dir=Path(tmp_path),
+        max_attempts=3,
+        enable_verification=False,
+    )
+
+    return agent
+
+
 def test_agent_response(agent):
     response = agent.run("Hola")
+    assert isinstance(response, str)
+
+
+def test_agent_response(agent_v2):
+    response = agent_v2.run("Hola")
     assert isinstance(response, str)
 
 
