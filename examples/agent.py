@@ -24,6 +24,7 @@ agent = DeterministicAgent(
     working_dir=working_dir,
     max_attempts=3,
     enable_verification=False,
+    state_manager=True,
 )
 
 agent.knowledge.add_document(doc_id="doc", doc="procesos, consume, chrome")
