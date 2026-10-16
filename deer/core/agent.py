@@ -31,26 +31,30 @@ class DeterministicAgent:
         knowledge: Optional[VectorMemory] = None,
         max_attempts: int = 3,
         enable_verification: bool = True,
-        load_context: bool = False,
+        load_history: bool = False,
         vector_contex_limit: int = 5,
+        read_only: bool = False,
     ):
 
         # Context
         self.identity = identity
         self.description = description
-        self.max_attempts = max_attempts
+        self.attempts = max_attempts
         self.vector_contex_limit = vector_contex_limit
-        self.agent_dir = (working_dir / ".deer").resolve()
-        self.working_dir = working_dir.resolve()
         self.enable_verification = enable_verification
-        self.contex_file = self.agent_dir / "context"
+        self.tool_registry_state_filter = "READ_ONLY" if read_only else "BOTH"
 
-        if not self.agent_dir.exists():
-            os.makedirs(self.agent_dir, exist_ok=True)
+        # Paths
+        self.agent_dir_path = (working_dir / ".deer").resolve()
+        self.working_dir_path = working_dir.resolve()
+        self.history_file_path = self.agent_dir_path / "history"
+
+        if not self.agent_dir_path.exists():
+            os.makedirs(self.agent_dir_path, exist_ok=True)
 
         # Environs
-        os.environ.setdefault("DEER_WORKING_DIR", str(self.working_dir))
-        os.environ.setdefault("DEER_AGENT_DIR", str(self.agent_dir))
+        os.environ.setdefault("DEER_WORKING_DIR", str(self.working_dir_path))
+        os.environ.setdefault("DEER_AGENT_DIR", str(self.agent_dir_path))
 
         # LLMDriver
         self.driver = driver
@@ -73,7 +77,7 @@ class DeterministicAgent:
         if knowledge:
             self.knowledge = knowledge
         else:
-            self.knowledge = VectorMemory(self.agent_dir / "vector_db")
+            self.knowledge = VectorMemory(self.agent_dir_path / "vector_db")
 
         # Planner
         self.planner = Planner(
@@ -89,36 +93,42 @@ class DeterministicAgent:
         # Pipeline Executer
         self.pipeline_executor = PipelineExecutor(tool_registry=self.tool_registry)
 
-        self.load_context = load_context
-        if load_context:
-            self.restore_state()
+        self.load_history = load_history
+        if load_history:
+            self.restore_history()
 
         else:
             # Agent History
-            self.agent_history: list[ChatMessage] = []
-            self.clear_agent_history()
+            self.history: list[ChatMessage] = []
+            self.reset_history()
 
             # Validator History
             self.verificator_history: list[ChatMessage] = []
-            self.clear_verificator_history()
+            self.reset_verificator_history()
 
         # Traces
         self.traces: dict[Literal["solution", "verification"], list[Any]] = {}
-        self.clear_traces()
+        self.reset_traces()
 
+        self.show_start_logger()
+
+    def show_start_logger(self):
         logger.info("DEER - Deterministic Executable Engine for Runtime-agents")
         logger.info(
-            "Initialized DeterministicAgent with '%s' model", self.driver.model_name
+            "Initialized DeterministicAgent with '%s' model",
+            self.driver.model_name,
         )
         logger.info("Identity: %s", self.identity)
         logger.info(
-            "Available tools:\n%s", self.tool_registry.describe(state_filter="BOTH")
+            "Available tools:\n%s",
+            self.tool_registry.describe(state_filter=self.tool_registry_state_filter),
         )
         logger.info(
-            "Authorized filesystem scope is restricted to: %s", str(working_dir)
+            "Authorized filesystem scope is restricted to: %s",
+            str(self.working_dir_path),
         )
 
-    def clear_verificator_history(self):
+    def reset_verificator_history(self):
         self.verificator_history = [
             ChatMessage(
                 role=Role.SYSTEM,
@@ -126,50 +136,52 @@ class DeterministicAgent:
             )
         ]
 
-    def clear_agent_history(self):
-        self.agent_history = [
+    def reset_history(self):
+        self.history = [
             ChatMessage(
                 role=Role.SYSTEM,
-                content=self.planner.build_system_prompt(),
+                content=self.planner.build_system_prompt(
+                    state_filter=self.tool_registry_state_filter
+                ),
             )
         ]
 
-    def format_bytes(self, size):
+    def _format_bytes(self, size):
         for unit in ["B", "kB", "MB", "GB"]:
             if size < 1024:
                 return f"{size:.1f} {unit}"
             size /= 1024
 
-    def persist_state(self):
+    def dump_history(self):
         context = {
-            "agent_history": self.agent_history,
+            "agent_history": self.history,
             "verificator_history": self.verificator_history,
         }
-        with self.contex_file.open("wb") as f:
+        with self.history_file_path.open("wb") as f:
             pickle.dump(context, f)
 
-    def restore_state(self):
-        if not self.contex_file.exists():
+    def restore_history(self):
+        if not self.history_file_path.exists():
             return
 
-        with self.contex_file.open("rb") as f:
+        with self.history_file_path.open("rb") as f:
             context = pickle.load(f)
-            self.agent_history = context.get("agent_history", self.agent_history)
+            self.history = context.get("agent_history", self.history)
             self.verificator_history = context.get(
                 "verificator_history", self.verificator_history
             )
 
-    def save_trace(self):
+    def dump_trace(self):
         obj = {
             "tools": list(self.tool_registry.list_tools()),
             "traces": {
                 "solution": self.traces["solution"],
                 "verification": self.traces["verification"],
             },
-            "history": self.agent_history,
+            "history": self.history,
         }
 
-        filename = self.agent_dir / "traces" / f"trace-{datetime.now()}.trace"
+        filename = self.agent_dir_path / "traces" / f"trace-{datetime.now()}.trace"
         filename.parent.mkdir(parents=True, exist_ok=True)
 
         with open(filename, "wb") as f:
@@ -177,7 +189,7 @@ class DeterministicAgent:
 
         return filename
 
-    def remove_context(self, history):
+    def _remove_context(self, history):
         new_history = []
 
         for chat in history:
@@ -219,19 +231,19 @@ class DeterministicAgent:
             )
 
         # Remove contex (knowledge) from the chat history
-        setattr(self, update_history_attr, self.remove_context(updated_history))
+        setattr(self, update_history_attr, self._remove_context(updated_history))
         return trace
 
-    def run_solution(self, goal: str) -> ExecutionTrace:
+    def _run_solution(self, goal: str) -> ExecutionTrace:
         """Executes the primary action plan to solve the goal."""
         trace = self._execute_phase(
             goal=goal,
-            history=self.agent_history,
+            history=self.history,
             update_history_attr="agent_history",
         )
         return trace
 
-    def run_verification(self, goal: str) -> ExecutionTrace:
+    def _run_verification(self, goal: str) -> ExecutionTrace:
         """Executes a verification plan to audit the solution."""
         verification_goal = (
             f"Verify that the following goal was successfully achieved: {goal}"
@@ -243,15 +255,15 @@ class DeterministicAgent:
         )
         return trace
 
-    def save_trace_solution(self, trace_solution):
+    def _save_trace_solution(self, trace_solution):
         if trace_solution.steps:
             self.traces["solution"].append(trace_solution)
 
-    def save_trace_verification(self, trace_verification):
+    def _save_trace_verification(self, trace_verification):
         if trace_verification.steps:
             self.traces["verification"].append(trace_verification)
 
-    def clear_traces(self):
+    def reset_traces(self):
         self.traces = {"solution": [], "verification": []}
 
     def run(
@@ -262,19 +274,19 @@ class DeterministicAgent:
         iteration: int = 0,
     ):
         if iteration == 0:
-            self.clear_verificator_history()
+            self.reset_verificator_history()
 
         if trace_solution is None:
-            trace_solution = self.run_solution(goal)
-            self.save_trace_solution(trace_solution)
+            trace_solution = self._run_solution(goal)
+            self._save_trace_solution(trace_solution)
 
         if (
             (trace_verification is None)
             and trace_solution.steps
             and self.enable_verification
         ):
-            trace_verification = self.run_verification(goal)
-            self.save_trace_verification(trace_verification)
+            trace_verification = self._run_verification(goal)
+            self._save_trace_verification(trace_verification)
 
         if (
             not trace_solution.steps
@@ -292,11 +304,11 @@ class DeterministicAgent:
             # The conclusion finds that the goal has been achieved
             return conclusion.user_message
 
-        if iteration >= self.max_attempts:
+        if iteration >= self.attempts:
             return "I couldn't find a reliable way to solve this request after several attempts. Please try rephrasing your goal."
 
         if conclusion.needs_resolution:
-            self.agent_history.append(
+            self.history.append(
                 ChatMessage(
                     role=Role.SYSTEM,
                     content=f"EXECUTION FAILURE: {conclusion.summary}. Please redesign the plan.",
