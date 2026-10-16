@@ -42,4 +42,7 @@ CMD=$(build_agent_command "$AGENT")
 
 # Use osascript to open a new macOS Terminal window and execute the command.
 # We wrap the command in escaped quotes to ensure it is passed as a single string.
-osascript -e "tell application \"Terminal\" to do script \"$CMD\""
+osascript -e "tell application \"Terminal\"" \
+            -e "activate" \
+            -e "do script \"cd '$PROJECT_DIR/sandbox' && $CMD\"" \
+            -e "end tell"
