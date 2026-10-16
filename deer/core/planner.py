@@ -1,7 +1,8 @@
 import json
 import logging
-from typing import List, Dict
+from typing import List, Dict, Optional
 
+from deer.state_manager import GitDirectoryManager
 from deer.tools import ToolRegistry
 from deer.models import ExecutionPlan, ChatMessage, Role
 
@@ -97,6 +98,7 @@ class Planner:
         context: List[Dict],
         history: List[ChatMessage],
         iteration: int = 0,
+        state_manager: Optional["GitDirectoryManager"] = None,
     ) -> tuple["ExecutionPlan", List[ChatMessage]]:
 
         # 1. Creamos la copia local para el proceso de refinamiento
@@ -112,7 +114,17 @@ class Planner:
             else:
                 user_content = json.dumps({"goal": goal})
 
-            local_history.append(ChatMessage(role=Role.USER, content=user_content))
+            local_history.append(
+                ChatMessage(
+                    state=(
+                        state_manager.save_state("USER-STATE")
+                        if state_manager
+                        else None
+                    ),
+                    role=Role.USER,
+                    content=user_content,
+                )
+            )
 
         try:
             # Generamos el plan
@@ -131,9 +143,6 @@ class Planner:
         except Exception as e:
             if iteration >= self.max_attempts:
                 raise
-                # raise RuntimeError(f"Planning failed after {iteration} attempts: {e}")
-
-            # logger.warning("Planning attempt %i failed: %s. Retrying...", iteration, e)
 
             # Añadimos el error a la historia local
             local_history.append(
