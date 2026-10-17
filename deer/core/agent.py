@@ -163,6 +163,7 @@ class DeterministicAgent:
             if size < 1024:
                 return f"{size:.1f} {unit}"
             size /= 1024
+        return f"{size} bytes"
 
     def dump_history(self):
         context = {
