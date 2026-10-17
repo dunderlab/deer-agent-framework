@@ -48,7 +48,7 @@ class ChatMessage(BaseModel):
         else:
             start = ""
 
-        return f"{start}Date: {self.date}\nRole: {self.role.value}\nContent: {self.content.strip()}"
+        return f"Role: {self.role.value}\n{start}Date: {self.date}\nContent: {self.content.strip()}"
 
 
 class ToolStep(BaseModel):
