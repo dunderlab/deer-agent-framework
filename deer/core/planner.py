@@ -98,7 +98,7 @@ class Planner:
         context: List[Dict],
         history: List[ChatMessage],
         iteration: int = 0,
-        state_manager: Optional["GitDirectoryManager"] = None,
+        state=None,
     ) -> tuple["ExecutionPlan", List[ChatMessage]]:
 
         # 1. Creamos la copia local para el proceso de refinamiento
@@ -116,11 +116,7 @@ class Planner:
 
             local_history.append(
                 ChatMessage(
-                    state=(
-                        state_manager.save_state("USER-STATE")
-                        if state_manager
-                        else None
-                    ),
+                    state=state,
                     role=Role.USER,
                     content=user_content,
                 )
