@@ -253,6 +253,38 @@ audited production line:
    backed by
    the evidence gathered during the verification phase.
 
+## Architectural Position: Why No MCPs or Open Plugins?
+
+At DEER, we explicitly reject support for **Model Context Protocol (MCP)** and dynamic open-plugin ecosystems (e.g.,
+OpenAI Plugins).
+
+While open plugin protocols are built for probabilistic, text-generator frameworks, they introduce fundamental
+architectural conflicts with DEER’s core mission: **engineering deterministic, verifiable systems.**
+
+### 1. Dynamic OpenAPI Schemas vs. Strict Typed Contracts
+
+Open plugin architectures rely on LLMs dynamically parsing OpenAPI specifications or natural language tool descriptions
+at runtime to construct API requests. This reintroduces **hallucinated arguments**, schema drift, and runtime
+uncertainty. DEER enforces compile-time/initialization safety through native **Pydantic models** registered via
+`ToolRegistry`. If a contract cannot be strictly validated before execution, it does not belong in DEER.
+
+### 2. Failure of the Static Audit
+
+In DEER’s "Assembly Line" lifecycle, a generated plan must pass a **Static Audit** (`PlanValidator`) to verify type
+safety, reference integrity, and security compliance *before* a single tool call is executed. Remote, loosely-typed MCP
+servers bypass static analysis, turning the execution pipeline into an unauditable black box.
+
+### 3. Compromised Security & Jail Boundaries
+
+DEER operates under the **Principle of Least Privilege**, using a scoped filesystem jail and an AST binary allow-list to
+sandbox agent operations. Offloading capabilities to external, arbitrary protocol endpoints breaks this security
+perimeter and invalidates our read-only **Physical Evidence Verification** phase.
+
+> **Extensibility Without Ambiguity**  
+> DEER is fully extensible, but capabilities must be introduced programmatically. To add custom external integrations or
+> API connections, inherit from `ToolProvider`, define strict input/output Pydantic schemas, and register them explicitly
+> in your `ToolRegistry`. We prioritize explicit, version-controlled code over runtime magic.
+
 ## Installation
 
 From PyPI:
