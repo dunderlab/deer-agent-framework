@@ -1,4 +1,3 @@
-from turtledemo.penrose import star
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 from enum import Enum
