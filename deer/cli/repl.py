@@ -147,7 +147,7 @@ class AgentREPL:
         )
         self.show_identity()
 
-    def run_command(self, command):
+    def run_command(self, command, args):
         match command:
             case "/exit":
                 self.agent.dump_history()
@@ -183,11 +183,6 @@ class AgentREPL:
                     f"[dim]Tool registry: {len(self.agent.tool_registry.tools)} modules active.[/dim]\n",
                     f"[dim]Registry description payload: {self.agent._format_bytes(len(tools_description))}[/dim]\n",
                     sep="",
-                )
-
-            case "/rollback":
-                self.console.print(
-                    "[dim][bold]Rollback executed.[/bold] System reverted to the last stable state.[/dim]\n",
                 )
 
             case "/trace":
@@ -256,18 +251,46 @@ class AgentREPL:
                 )
 
             case "/rollback":
-                self.agent.restore_previous_state()
-                self.console.print(
-                    "[dim]State rolled back to previous checkpoint.[/dim]\n"
-                )
+                if (
+                    not self.agent.state_manager
+                    or not self.agent.state_manager.get_states()
+                ):
+                    self.console.print(
+                        "[dim]No state manager available to perform rollback.[/dim]\n"
+                    )
+                    return
+
+                if not args:
+                    commit_hash = self.agent.restore_previous_state()
+                    self.console.print(
+                        f"[dim]State rolled back to previous checkpoint [{commit_hash}].[/dim]\n"
+                    )
+                else:
+                    restored = self.agent.state_manager.restore_state(args[0])
+                    if restored:
+                        self.console.print(
+                            f"[dim]State successfully restored to {args[0]}.[/dim]\n"
+                        )
+                    else:
+                        self.console.print(
+                            f"[dim]Failed to restore state: commit '{args[0]}' not found or invalid.[/dim]\n"
+                        )
 
         self.console.print(
             Markdown("----"),
             end="",
         )
 
+    def is_command(self, command):
+        command, args = command.split(" ", 1)
+        return command in COMMANDS
+
+    def get_command(self, command):
+        command, *args = command.split(" ")
+        return command, args
+
     def repl(self):
-        logger.setLevel(logging.CRITICAL)
+        logging.basicConfig(level=logging.CRITICAL)
         self.show_welcome()
         self.pretty_print("----")
 
@@ -313,96 +336,96 @@ class AgentREPL:
             if not msg.strip():
                 continue
 
-            match msg:
-                case command if command in COMMANDS:
-                    self.console.print(
-                        as_table(f"[{command}]", color="cyan"),
-                        Text("\n"),
-                        end="",
+            if self.get_command(msg)[0] in COMMANDS:
+                command, args = self.get_command(msg)
+                self.console.print(
+                    as_table(f"[{command}]", color="cyan"),
+                    Text("\n"),
+                    end="",
+                )
+                self.run_command(command, args)
+
+            elif msg.startswith("!"):
+                cmd_to_run = msg[1:].strip()
+
+                self.console.print(
+                    as_table(f"[{cmd_to_run}]", color="cyan"),
+                    Text("\n"),
+                    end="",
+                )
+
+                try:
+                    # Execute the command
+                    result = subprocess.run(
+                        cmd_to_run,
+                        shell=True,
+                        capture_output=True,
+                        text=True,
+                        check=True,
                     )
-                    self.run_command(command)
-
-                case command if command.startswith("!"):
-                    # Remove the '!' from the start to get only the command
-                    cmd_to_run = command[1:].strip()
-
                     self.console.print(
-                        as_table(f"[{cmd_to_run}]", color="cyan"),
-                        Text("\n"),
-                        end="",
+                        Text(result.stdout),
+                        Markdown("----"),
+                        sep="",
                     )
 
+                except subprocess.CalledProcessError as e:
+                    self.console.print(
+                        f"[dim]Error executing command: {e.stderr}[/dim]",
+                        Markdown("----"),
+                        sep="",
+                    )
+                except Exception as e:
+                    self.console.print(
+                        f"[dim]An unexpected error occurred: {e}[/dim]",
+                        Markdown("----"),
+                        sep="",
+                    )
+
+            elif msg.startswith("/"):
+                self.pretty_print(
+                    f"Command `{msg}` not recognized. Did you mean one of these: {list(COMMANDS)}"
+                )
+
+            else:
+
+                with self.console.status(
+                    "[dim]processing request[/]",
+                    spinner="point",
+                    spinner_style="dim",
+                ):
                     try:
-                        # Execute the command
-                        result = subprocess.run(
-                            cmd_to_run,
-                            shell=True,
-                            capture_output=True,
-                            text=True,
-                            check=True,
-                        )
                         self.console.print(
-                            Text(result.stdout),
-                            Markdown("----"),
-                            sep="",
+                            as_table(input_prompt_history, msg),
+                            Text("\n"),
+                            end="",
                         )
 
-                    except subprocess.CalledProcessError as e:
+                        # Call the LLM model
+                        response = self.agent.run(msg)
+
                         self.console.print(
-                            f"[dim]Error executing command: {e.stderr}[/dim]",
+                            as_table(output_prompt_history, response),
+                            Text("\n"),
                             Markdown("----"),
-                            sep="",
-                        )
-                    except Exception as e:
-                        self.console.print(
-                            f"[dim]An unexpected error occurred: {e}[/dim]",
-                            Markdown("----"),
-                            sep="",
+                            end="",
                         )
 
-                case _:
-                    if msg.startswith("/"):
-                        self.pretty_print(
-                            f"Command `{msg}` not recognized. Did you mean one of these: {list(COMMANDS)}"
+                    except KeyboardInterrupt:
+                        self.console.print(
+                            "[dim]Command aborted by user[/dim]\n",
+                            Markdown("----"),
+                            sep="",
                         )
                         continue
-                    with self.console.status(
-                        "[dim]processing request[/]",
-                        spinner="point",
-                        spinner_style="dim",
-                    ):
-                        try:
-                            self.console.print(
-                                as_table(input_prompt_history, msg),
-                                Text("\n"),
-                                end="",
-                            )
 
-                            # Call the LLM model
-                            response = self.agent.run(msg)
+                    except RuntimeError as e:
+                        self.console.print(
+                            f"[dim]{e}[/dim]\n",
+                            Markdown("----"),
+                            sep="",
+                        )
+                        continue
 
-                            self.console.print(
-                                as_table(output_prompt_history, response),
-                                Text("\n"),
-                                Markdown("----"),
-                                end="",
-                            )
-
-                        except KeyboardInterrupt:
-                            self.console.print(
-                                "[dim]Command aborted by user[/dim]\n",
-                                Markdown("----"),
-                                sep="",
-                            )
-                            continue
-
-                        except RuntimeError as e:
-                            self.console.print(
-                                f"[dim]{e}[/dim]\n",
-                                Markdown("----"),
-                                sep="",
-                            )
-                            continue
-
-                        except EOFError:
-                            break
+                    except EOFError:
+                        break
