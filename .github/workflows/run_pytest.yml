@@ -47,6 +47,7 @@ jobs:
           # pytest tests/test_drivers.py
           pytest tests/test_executor.py
           # pytest tests/test_planner.py 
+          # pytest tests/test_state_manager.py 
           pytest tests/test_tools.py
           pytest tests/test_tools_definition.py
           pytest tests/test_vector_memory.py
