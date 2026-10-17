@@ -41,7 +41,7 @@ class DeterministicAgent:
         # Context
         self.identity = identity
         self.description = description
-        self.attempts = max_attempts
+        self.attempts = max(max_attempts, 1)
         self.vector_contex_limit = vector_contex_limit
         self.enable_verification = enable_verification
         self.tool_registry_state_filter = "READ_ONLY" if read_only else "BOTH"
@@ -222,14 +222,18 @@ class DeterministicAgent:
         return new_history
 
     def _execute_phase(
-        self, goal: str, history: list[ChatMessage], update_history_attr: str
+        self,
+        goal: str,
+        history: list[ChatMessage],
+        update_history_attr: str,
+        state: Optional[str] = None,
     ) -> tuple[ExecutionTrace, list[ChatMessage]]:
 
         plan, updated_history = self.planner.plan(
             goal=goal,
             context=self.knowledge.query(goal, n_results=self.vector_contex_limit),
             history=history,
-            state_manager=self.state_manager,
+            state=state,
         )
 
         # Validate
@@ -248,12 +252,13 @@ class DeterministicAgent:
         setattr(self, update_history_attr, self._remove_context(updated_history))
         return trace
 
-    def _run_solution(self, goal: str) -> ExecutionTrace:
+    def _run_solution(self, goal: str, state: Optional[str] = None) -> ExecutionTrace:
         """Executes the primary action plan to solve the goal."""
         trace = self._execute_phase(
             goal=goal,
             history=self.history,
             update_history_attr="history",
+            state=state,
         )
         return trace
 
@@ -287,11 +292,17 @@ class DeterministicAgent:
         trace_verification=None,
         iteration: int = 0,
     ):
+        state = None
         if iteration == 0:
             self.reset_verificator_history()
+            state = (
+                self.state_manager.save_state(f"{goal[:32]}...")
+                if self.state_manager
+                else None
+            )
 
         if trace_solution is None:
-            trace_solution = self._run_solution(goal)
+            trace_solution = self._run_solution(goal, state)
             self._save_trace_solution(trace_solution)
 
         if (
@@ -375,7 +386,5 @@ class DeterministicAgent:
         return self.driver.generate(messages=messages, response_model=AgentConclusion)
 
     def restore_previous_state(self):
-        if self.state_manager:
-            states = self.state_manager.list_states()
-            commit_hash = states[0].split(" ")[0]
-            self.state_manager.restore_state(commit_hash)
+        if self.state_manager and self.state_manager.get_states():
+            return self.state_manager.rollback()
