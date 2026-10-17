@@ -3,7 +3,7 @@ import subprocess
 from pathlib import Path
 from typing import List, Optional
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(f"DEER.{__name__}")
 
 
 class GitDirectoryManager:
@@ -122,19 +122,50 @@ class GitDirectoryManager:
             logger.error("Git command failed '%s': %s", " ".join(cmd), error_output)
             raise
 
+    # def save_state(self, message: str) -> str:
+    #     """Saves the current state as a Git commit using absolute paths."""
+    #     try:
+    #         # Forzar el add usando la ruta absoluta del work-tree para evitar problemas de contexto
+    #         self._run_git(["add", "-A", str(self.target_dir)])
+    #
+    #         # Verificar si hay cambios pendientes
+    #         status = self._run_git(["status", "--porcelain"])
+    #         if not status:
+    #             logger.info("No changes to save. Returning current HEAD commit hash.")
+    #             return self._run_git(["rev-parse", "--short", "HEAD"])
+    #
+    #         # Hacer el commit
+    #         self._run_git(["commit", "-m", message])
+    #
+    #         # Obtener el hash del commit
+    #         commit_hash = self._run_git(["rev-parse", "--short", "HEAD"])
+    #         logger.info("State saved successfully with commit: %s", commit_hash)
+    #         return commit_hash
+    #
+    #     except Exception as e:
+    #         logger.error("Failed to save state with message '%s': %s", message, e)
+    #         raise
+
     def save_state(self, message: str) -> str:
         """Saves the current state as a Git commit using absolute paths."""
         try:
-            # Forzar el add usando la ruta absoluta del work-tree para evitar problemas de contexto
+            # Forzar el add usando la ruta absoluta del work-tree
             self._run_git(["add", "-A", str(self.target_dir)])
 
             # Verificar si hay cambios pendientes
             status = self._run_git(["status", "--porcelain"])
+            has_commits = self._has_any_commits()
+
             if not status:
                 logger.info("No changes to save.")
-                return "no_changes"
+                if not has_commits:
+                    # Si el repositorio está totalmente vacío y no hay cambios,
+                    # creamos el primer commit permitiendo un commit vacío para inicializar la historia.
+                    self._run_git(["commit", "--allow-empty", "-m", message])
 
-            # Hacer el commit
+                return self._run_git(["rev-parse", "--short", "HEAD"])
+
+            # Hacer el commit normal si hay cambios
             self._run_git(["commit", "-m", message])
 
             # Obtener el hash del commit
@@ -146,12 +177,41 @@ class GitDirectoryManager:
             logger.error("Failed to save state with message '%s': %s", message, e)
             raise
 
-    def list_states(self) -> str:
-        """Lists the commit history."""
-        return self._run_git(["log", "--oneline"]).split("\n")
+    def _has_any_commits(self) -> bool:
+        """Helper para verificar si el repositorio tiene al menos un commit."""
+        try:
+            self._run_git(["rev-parse", "--verify", "HEAD"])
+            return True
+        except subprocess.CalledProcessError:
+            return False
 
-    def restore_state(self, commit_hash: str) -> None:
-        """Restores the directory to a specific git commit."""
-        logger.info("Restoring directory to commit: %s", commit_hash)
-        self._run_git(["checkout", commit_hash, "--", "."])
-        self._run_git(["commit", "-m", f"Restored to {commit_hash}"])
+    def get_states(self) -> str:
+        """Lists the commit history."""
+        states = self._run_git(["log", "--oneline"]).split("\n")
+        return dict(line.split(" ", 1) for line in states[::-1])
+
+    def restore_state(self, commit_hash: str) -> bool:
+        """Restores the directory to a specific git commit. Returns False if the commit doesn't exist or fails."""
+        try:
+            logger.info("Restoring directory to commit: %s", commit_hash)
+
+            # Si el commit no existe, git checkout fallará y lanzará una excepción
+            self._run_git(["checkout", commit_hash, "--", "."])
+
+            # Registrar la restauración como un nuevo commit en el historial
+            self._run_git(["add", "-A", str(self.target_dir)])
+
+            # Verificar si hay cambios antes de hacer commit
+            status = self._run_git(["status", "--porcelain"])
+            if status:
+                self._run_git(["commit", "-m", f"Restored to {commit_hash}"])
+
+            return True
+        except Exception as e:
+            logger.error("Could not restore state to commit '%s': %s", commit_hash, e)
+            return False
+
+    def rollback(self) -> str:
+        commit_hash = list(self.get_states().keys())[-1]
+        self.restore_state(commit_hash)
+        return commit_hash
