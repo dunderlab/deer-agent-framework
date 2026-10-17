@@ -1,5 +1,5 @@
 import os
-from typing import Generator, TypeVar
+from typing import Generator, TypeVar, Callable
 import json
 
 from pydantic import BaseModel
@@ -11,6 +11,12 @@ T = TypeVar("T", bound=BaseModel)
 
 
 class BaseOllama:
+    model_name: str
+    temperature: float | int
+    top_p: float | int
+    extract_json: Callable[[str], str]
+    _send_post_request: Callable[[dict], str | T]
+    _send_streaming_request: Callable[[dict], Generator[bytes, None, None]]
 
     def generate(
         self,
@@ -127,7 +133,7 @@ class OllamaKeyDriver(BaseOllama, LLMDriver):
 
     @property
     def url(self) -> str:
-        return f"https://api.ollama.com/api/chat"
+        return "https://api.ollama.com/api/chat"
 
     @property
     def headers(self) -> dict:
