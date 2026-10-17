@@ -70,10 +70,10 @@ def main():
 
     kb = KeyBindings()
 
-    @kb.add("c-c")
-    @kb.add("c-q")
-    def _(event):
-        app.exit()
+    # @kb.add("c-c")
+    # @kb.add("c-q")
+    # def _(event):
+    #     app.exit()
 
     # Style that uses terminal's native background (no forced bg colors)
     working_style = Style.from_dict(
