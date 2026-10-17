@@ -29,6 +29,8 @@ agent = DeterministicAgent(
     tool_registry=registry,
     working_dir=working_dir,
     max_attempts=3,
+    state_manager=True,
+    enable_verification=False,
 )
 
 
