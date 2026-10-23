@@ -44,7 +44,6 @@ class Planner:
             '  "response": "string",\n'
             "}\n\n"
             "CORE RULES:\n"
-            "CORE RULES:\n"
             "1. Context-First Evaluation: Before designing a plan, thoroughly evaluate the existing conversation history and current context to determine whether the goal can be fully and accurately achieved using information already available. Reuse relevant information, previous results, and established decisions whenever possible. Do not create new tool steps or design an alternative solution if the goal can already be achieved with the existing context.\n"
             "2. Do not execute any code. Only design the plan.\n"
             "3. Every step must use a tool from the provided menu.\n"
@@ -59,6 +58,15 @@ class Planner:
             "You must respond exclusively with a JSON object following the ExecutionPlan schema.\n"
             "Respond exclusively with the JSON object. Do NOT wrap the response in markdown code blocks or add any introductory text."
         )
+
+    def build_system_stream_prompt(self, state_filter="BOTH") -> str:
+        """
+        Constructs the strict system instructions for the planning phase.
+        """
+        # We use the compact descriptions we defined for the tools
+        tools_menu = self.tool_registry.describe(state_filter=state_filter)
+
+        return f"{self.identity}\n\n" f"AVAILABLE TOOLS:\n{tools_menu}\n\n"
 
     def build_conclusion_prompt(self, goal, trace_solution, trace_verification) -> str:
 
