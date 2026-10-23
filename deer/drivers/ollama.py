@@ -1,6 +1,7 @@
 import os
 from typing import Generator, TypeVar, Callable
 import json
+import urllib.request
 
 from pydantic import BaseModel
 
@@ -116,6 +117,23 @@ class OllamaLocalDriver(BaseOllama, LLMDriver):
 
     def __repr__(self) -> str:
         return f"Ollama [Local] | {self.model_name}"
+
+    def unload_model(self):
+        payload = {"model": self.model_name, "keep_alive": 0}
+        data = json.dumps(payload).encode("utf-8")
+
+        req = urllib.request.Request(
+            self.url, data=data, headers=self.headers, method="POST"
+        )
+
+        try:
+            # Execute the HTTP request
+            with urllib.request.urlopen(req) as response:
+                response_body = response.read().decode("utf-8")
+                logger.info("Model unloaded successfully from memory.")
+                print(response_body)
+        except Exception as e:
+            logger.warning(f"Failed to communicate with Ollama: {e}")
 
 
 class OllamaKeyDriver(BaseOllama, LLMDriver):
