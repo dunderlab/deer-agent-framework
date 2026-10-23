@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from deer import DeterministicAgent
-from deer.cli import get_path_from_parser, get_driver_from_parser
+from deer.cli import get_path_from_parser, get_driver_from_parser, AgentREPL
 from deer.tools import ToolRegistry
 from deer.tools.presets import Preset
 from deer.tools.providers import HTTPClient
@@ -28,6 +28,10 @@ agent = DeterministicAgent(
 )
 
 agent.knowledge.add_document(doc_id="doc", doc="procesos, consume, chrome")
+agent.driver.unload_model()
+
+# repl = AgentREPL(agent)
+# repl.repl()
 
 
 def main():
