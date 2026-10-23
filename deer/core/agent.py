@@ -388,3 +388,34 @@ class DeterministicAgent:
     def restore_previous_state(self):
         if self.state_manager and self.state_manager.get_states():
             return self.state_manager.rollback()
+
+    def run_stream(self, goal: str):
+        local_history = list(self.history)
+        context = self.knowledge.query(goal, n_results=self.vector_contex_limit)
+
+        local_history[0] = ChatMessage(
+            role=Role.SYSTEM,
+            content=self.planner.build_system_stream_prompt(
+                state_filter=self.tool_registry_state_filter
+            ),
+        )
+
+        goal_ext = "\n\nYou are a helpful assistant. Always respond using plain text with clear, well-structured Markdown formatting. Get straight to the point without filler phrases."
+
+        if context:
+            context_block = {f"context-{i}": c["text"] for i, c in enumerate(context)}
+            user_content = json.dumps(
+                {"context": context_block, "goal": goal + goal_ext}
+            )
+        else:
+            user_content = json.dumps({"goal": goal + goal_ext})
+
+        local_history.append(
+            ChatMessage(
+                state=None,
+                role=Role.USER,
+                content=user_content,
+            )
+        )
+
+        return self.driver.generate_stream(messages=local_history)
