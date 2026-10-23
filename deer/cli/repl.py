@@ -6,6 +6,7 @@ import subprocess
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.table import Table
+from rich.live import Live
 from rich.text import Text
 from prompt_toolkit import PromptSession
 from prompt_toolkit.formatted_text import HTML
@@ -63,7 +64,8 @@ An LLM agent orchestration framework built for:
 
 ## System Escapes
 
-- `!<command>` → Execute an OS shell command (e.g., `!ls -la` or `!pwd`)
+- `!<command>`  → Execute an OS shell command (e.g., `!ls -la` or `!pwd`)
+- `? <message>` → Use the model as simple chat without context generation
 
 ## Shortcuts
 
@@ -171,6 +173,8 @@ class AgentREPL:
                 self.agent.reset_traces()
                 self.agent.dump_history()
                 self.show_identity()
+                if unload_model := getattr(self.agent.driver, "unload_model"):
+                    unload_model()
                 self.console.print(
                     "[dim]Session history purged. Memory state reset.[/dim]\n",
                 )
@@ -309,7 +313,6 @@ class AgentREPL:
             table.add_row(
                 Text(prompt, style=f"bold {color}"),
                 Markdown(message),
-                # Text(message),
             )
             return table
 
@@ -386,6 +389,64 @@ class AgentREPL:
                 self.pretty_print(
                     f"Command `{msg}` not recognized. Did you mean one of these: {list(COMMANDS)}"
                 )
+
+            elif msg.startswith("?"):
+                status = self.console.status(
+                    "[dim]processing request[/]\n",
+                    spinner="point",
+                    spinner_style="dim",
+                )
+                status.start()
+
+                try:
+                    self.console.print(
+                        as_table(input_prompt_history, msg),
+                        Text("\n"),
+                        end="",
+                    )
+                    status.stop()
+
+                    # Call the LLM model
+                    full_response = ""
+                    with Live(
+                        "",
+                        console=self.console,
+                        refresh_per_second=60,
+                        vertical_overflow="visible",
+                    ) as live:
+                        for token in self.agent.run_stream(msg):
+                            full_response += token
+                            live.update(
+                                as_table(
+                                    output_prompt_history,
+                                    full_response.strip(),
+                                )
+                            )
+
+                    self.console.print(
+                        Text("\n"),
+                        Markdown("----"),
+                        end="",
+                    )
+
+                except KeyboardInterrupt:
+                    self.console.print(
+                        "[dim]Command aborted by user[/dim]\n",
+                        Markdown("----"),
+                        sep="",
+                    )
+                    continue
+
+                except RuntimeError as e:
+                    self.console.print(
+                        f"[dim]{e}[/dim]\n",
+                        Markdown("----"),
+                        sep="",
+                    )
+                    continue
+
+                except EOFError:
+                    break
 
             else:
 
