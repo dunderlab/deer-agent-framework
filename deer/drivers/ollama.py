@@ -127,12 +127,10 @@ class OllamaLocalDriver(BaseOllama, LLMDriver):
         )
 
         try:
-            # Execute the HTTP request
-            with urllib.request.urlopen(req) as response:
-                response_body = response.read().decode("utf-8")
+            with urllib.request.urlopen(req):
                 logger.info("Model unloaded successfully from memory.")
         except Exception as e:
-            logger.warning(f"Failed to communicate with Ollama: {e}")
+            logger.warning("Failed to communicate with Ollama: %s", e)
 
 
 class OllamaKeyDriver(BaseOllama, LLMDriver):

@@ -1,8 +1,7 @@
 import json
 import logging
-from typing import List, Dict, Optional
+from typing import List, Dict
 
-from deer.state_manager import GitDirectoryManager
 from deer.tools import ToolRegistry
 from deer.models import ExecutionPlan, ChatMessage, Role
 

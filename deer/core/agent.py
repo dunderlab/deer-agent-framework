@@ -388,6 +388,7 @@ class DeterministicAgent:
     def restore_previous_state(self):
         if self.state_manager and self.state_manager.get_states():
             return self.state_manager.rollback()
+        return None
 
     def run_stream(self, goal: str):
         local_history = list(self.history)

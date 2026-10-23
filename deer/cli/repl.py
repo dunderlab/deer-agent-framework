@@ -286,7 +286,7 @@ class AgentREPL:
         )
 
     def is_command(self, command):
-        command, args = command.split(" ", 1)
+        command, _ = command.split(" ", 1)
         return command in COMMANDS
 
     def get_command(self, command):
