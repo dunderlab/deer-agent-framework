@@ -131,7 +131,6 @@ class OllamaLocalDriver(BaseOllama, LLMDriver):
             with urllib.request.urlopen(req) as response:
                 response_body = response.read().decode("utf-8")
                 logger.info("Model unloaded successfully from memory.")
-                print(response_body)
         except Exception as e:
             logger.warning(f"Failed to communicate with Ollama: {e}")
 
