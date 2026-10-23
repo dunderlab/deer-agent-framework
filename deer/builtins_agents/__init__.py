@@ -8,4 +8,5 @@ agents = {
     "python-syntax-specialist": Path(__file__).parent
     / "python-syntax-specialist"
     / "agent.py",
+    "base": Path(__file__).parent / "base" / "agent.py",
 }
