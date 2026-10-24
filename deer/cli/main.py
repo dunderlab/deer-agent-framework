@@ -4,9 +4,9 @@ import sys
 
 from rich.text import Text
 
-from deer.utils.console import ConsoleColor
 from deer.builtins_agents import agents
 
+from .console_color import ConsoleColor
 from .parser import drivers_parser
 
 logger = logging.getLogger(f"DEER.{__name__}")

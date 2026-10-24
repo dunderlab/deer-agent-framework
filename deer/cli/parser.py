@@ -2,7 +2,7 @@ import argparse
 import os
 from pathlib import Path
 
-from deer.utils.console import ConsoleColor
+from .console_color import ConsoleColor
 from deer.drivers import (
     GeminiDriver,
     OllamaLocalDriver,

@@ -2,6 +2,7 @@ import sys
 import pickle
 import logging
 import subprocess
+from typing import Callable, Optional
 
 from rich.console import Console
 from rich.markdown import Markdown
@@ -87,7 +88,9 @@ class SmartCommandCompleter(Completer):
 
 class AgentREPL:
 
-    def __init__(self, agent: DeterministicAgent):
+    def __init__(
+        self, agent: DeterministicAgent, formater: Optional[list[Callable]] = None
+    ):
         self.agent = agent
 
         self.prompt_history: InMemoryHistory
@@ -96,6 +99,7 @@ class AgentREPL:
 
         self.history = []
         self.trace = []
+        self.formater_list = formater
 
     @property
     def completer(self):
@@ -456,6 +460,11 @@ class AgentREPL:
                     spinner_style="dim",
                 ):
                     try:
+
+                        # Formaters
+                        for formater in self.formater_list:
+                            msg = formater(msg)
+
                         self.console.print(
                             as_table(input_prompt_history, msg),
                             Text("\n"),
@@ -464,6 +473,10 @@ class AgentREPL:
 
                         # Call the LLM model
                         response = self.agent.run(msg)
+
+                        # Formaters
+                        for formater in self.formater_list:
+                            response = formater(response)
 
                         self.console.print(
                             as_table(output_prompt_history, response),
