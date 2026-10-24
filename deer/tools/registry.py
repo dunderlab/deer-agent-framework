@@ -130,46 +130,55 @@ class ToolRegistry:
         Recursively converts a Python type (including nested Generics)
         into a clean, human-readable string for the LLM.
         """
-        # 1. Handle Basic Types (str, int, float, bool, etc.)
         if hasattr(t, "__name__") and not hasattr(t, "__origin__"):
             return t.__name__
 
-        # 2. Handle Pydantic Models
         if isinstance(t, type) and issubclass(t, BaseModel):
             return t.__name__
 
-        # 3. Handle Generic Aliases (list[str], dict[str, int], Optional[...], etc.)
         origin = get_origin(t)
         if origin is not None:
             args = get_args(t)
-            # Clean the origin name (e.g., 'list' instead of 'typing.List')
             origin_name = getattr(origin, "__name__", str(origin))
 
-            # Special case for Optional/Union
             if origin is Union:
-                # If it's Optional[T], it's actually Union[T, NoneType]
                 if len(args) == 2 and type(None) in args:
-                    # Find the non-None type
                     actual_type = args[0] if args[1] is type(None) else args[1]
                     return f"Optional[{self.stringify_type(actual_type)}]"
 
-                # Standard Union: Union[str, int]
                 return f"Union[{', '.join(self.stringify_type(a) for a in args)}]"
 
-            # Standard Generics: list[str], dict[str, int]
             args_str = ", ".join(self.stringify_type(a) for a in args)
             return f"{origin_name}[{args_str}]"
 
-        # 4. Fallback for everything else
         return str(t)
 
 
 class EchoTool(Tool):
+    """A tool that echoes the input value or a specified parameter.
+
+    Attributes:
+    name (str): The name of the tool.
+    description (str): A brief description of the tool's functionality.
+    modifies_state (bool): Indicates whether the tool modifies the state.
+
+    Methods:
+    run(params: dict[str, Any] | None = None) -> Return(echo=dict): Executes the tool with the given parameters.
+    """
+
     name = "echo"
     description = "Returns params['echo'] when provided; otherwise returns the input value unchanged."
     modifies_state = False
 
     def run(self, params: dict[str, Any] | None = None) -> Return(echo=dict):
+        """Executes the tool with the given parameters.
+
+        Args:
+        params (dict[str, Any] | None): A dictionary of parameters, where 'echo' is an optional key.
+
+        Returns:
+        Return(echo=dict): A dictionary containing the echoed value.
+        """
         params = params or {}
         return params
 
