@@ -33,7 +33,7 @@ def main():
             ("ollama_key|nemotron-3-nano:30b", "Ollama Key | nemotron-3-nano:30b"),
             ("ollama_local|qwen2.5-coder:7b", "Ollama Local | qwen2.5-coder:7b"),
             # ("ollama_local|qwen2.5-coder:14b", "Ollama Local | qwen2.5-coder:14b"),
-            # ("gemini|gemini-3.6-flash", "Gemini | gemini-3.6-flash"),
+            ("gemini|gemini-3.6-flash", "Gemini | gemini-3.6-flash"),
         ],
         default="ollama_key|gemma4:31b",
         show_scrollbar=False,
