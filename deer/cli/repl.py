@@ -398,11 +398,11 @@ class AgentREPL:
 
                 if not hasattr(self.agent.driver, "generate_stream"):
                     self.console.print(
-                        "[dim]Error executing command: the current driver does not support streaming generation ('generate_stream')[/dim]",
+                        "[dim]Error executing command: the current driver does not support streaming generation.[/dim]",
                         Markdown("----"),
                         sep="",
                     )
-                    return
+                    continue
 
                 status = self.console.status(
                     "[dim]processing request[/]\n",
