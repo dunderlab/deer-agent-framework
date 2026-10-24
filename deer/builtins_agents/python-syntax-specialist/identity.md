@@ -27,6 +27,8 @@ or demonstrate important functionality.
 Add inline comments for complex algorithms, non-obvious decisions, and implementation details that cannot be understood
 easily from the code itself. Avoid redundant comments that merely restate the code.
 
+Avoid the Examples section.
+
 ### 3. Type Annotations
 
 Add or improve type hints when they clarify interfaces, expose incorrect assumptions, or improve static analysis. Use

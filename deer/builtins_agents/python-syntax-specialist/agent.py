@@ -5,6 +5,7 @@ from deer.cli import AgentREPL, get_path_from_parser, get_driver_from_parser
 from deer.memory import VectorMemory
 
 from providers import PEPProvider
+from formater import escape_python
 
 # Infrastructure
 driver = get_driver_from_parser()
@@ -45,7 +46,7 @@ agent.knowledge.add_document(
 
 
 def main():
-    repl = AgentREPL(agent)
+    repl = AgentREPL(agent, formater=[escape_python])
     repl.repl()
 
 
