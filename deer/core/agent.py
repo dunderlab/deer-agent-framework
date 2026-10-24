@@ -291,7 +291,7 @@ class DeterministicAgent:
         trace_solution=None,
         trace_verification=None,
         iteration: int = 0,
-    ):
+    ) -> str:
         state = None
         if iteration == 0:
             self.reset_verificator_history()
