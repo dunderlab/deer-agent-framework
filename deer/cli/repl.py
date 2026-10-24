@@ -4,6 +4,8 @@ import logging
 import subprocess
 from typing import Callable, Optional
 
+from prompt_toolkit.application import get_app
+from prompt_toolkit.styles import Style
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.table import Table
@@ -302,11 +304,36 @@ class AgentREPL:
         self.show_welcome()
         self.pretty_print("----")
 
+        # # Función auxiliar para manejar clics y escribir comandos automáticamente en el prompt
+        # def make_clickable(command_text):
+        #     def handler(mouse_event):
+        #         app = get_app()
+        #         app.layout.current_buffer.text = command_text
+        #
+        #     return handler
+        #
+        # # Definición de la barra inferior con clics interactivos
+        # def bottom_toolbar_tokens():
+        #     return [
+        #         ("class:toolbar-btn", " [ /help ] ", make_clickable("/help")),
+        #         ("class:toolbar-btn", " [ /history ] ", make_clickable("/history")),
+        #         # ("class:toolbar-btn", " [ Exit ] ", lambda e: get_app().exit()),
+        #     ]
+        #
+        # # Estilos opcionales para que se distingan como botones
+        # toolbar_style = Style(
+        #     [
+        #         ("toolbar-btn", "bg:#333333 #00ffff bold"),
+        #     ]
+        # )
+
         session = PromptSession(
             erase_when_done=True,
             history=self.prompt_history,
             completer=self.completer,
-            mouse_support=False,
+            mouse_support=True,
+            # bottom_toolbar=bottom_toolbar_tokens,  # <--- Aquí añades la barra fija inferior
+            # style=toolbar_style,
         )
 
         def as_table(prompt, message="", color="cyan"):
